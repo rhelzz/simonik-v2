@@ -66,7 +66,7 @@ class Activity extends Model
     protected function image(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value): ?string => $value ? asset('/storage/'.$value) : null,
+            get: fn (?string $value): ?string => $value ? asset("/storage/{$value}") : null,
         );
     }
 }
