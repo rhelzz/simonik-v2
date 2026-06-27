@@ -88,3 +88,9 @@ These are distilled from the Laravel Boost guidelines bundled with this project 
 - If you touched PHP, run `vendor/bin/pint --dirty` to auto-format (don't fix style manually, and don't use `--test` to "check only" — just let it fix).
 - Run the affected test(s) with `php artisan test --filter=...`, then offer to run the full suite.
 - Run the full gate that CI enforces: `composer ci:check` (PHP lint + Prettier + `tsc` + tests), or the pieces individually (`composer test`, `npm run lint`, `npm run types:check`).
+
+### Git & progress workflow
+- **One changed folder = one commit.** When committing/pushing, group the changed files by their folder and create a separate commit per folder (e.g. `database/migrations/`, `app/Models/`, `database/factories/`). Stage and commit each folder on its own; don't mix folders in a single commit. Files that don't belong to a clear feature folder (e.g. root files) get their own commit.
+- **Do not add a `Co-Authored-By` trailer** to commit messages.
+- Push to `main`.
+- **After every commit/push, update [`docs/PROGRESS.md`](docs/PROGRESS.md)** so it reflects the latest state: what was just done (current step) and the next step(s) as a few best options. Keep it the single living source of "where we are" in the migration from the legacy `backend/` + `frontend/` apps to this Inertia monolith.
