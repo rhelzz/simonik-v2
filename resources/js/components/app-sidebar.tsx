@@ -1,5 +1,6 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { GraduationCap, LogOut } from 'lucide-react';
+import { destroy as logout } from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import { navForRoles } from '@/lib/nav';
 import { cn } from '@/lib/utils';
 import type { SharedData } from '@/types';
@@ -112,9 +113,9 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                 </span>
                 <button
                     type="button"
-                    title="Keluar tersedia setelah modul autentikasi"
-                    disabled
-                    className="grid size-8 place-items-center rounded-lg text-muted disabled:opacity-40"
+                    onClick={() => router.post(logout.url())}
+                    title="Keluar"
+                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
                 >
                     <LogOut className="size-4" />
                 </button>
