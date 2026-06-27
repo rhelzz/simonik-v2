@@ -9,6 +9,18 @@ export type User = {
     [key: string]: unknown; // This allows for additional properties...
 };
 
+export type Role =
+    | 'admin'
+    | 'kaprog'
+    | 'guru'
+    | 'pembimbing'
+    | 'siswa'
+    | 'orangtua'
+    | 'industri'
+    | 'mitra'
+    | 'kepala_sekolah';
+
 export type Auth = {
-    user: User;
+    user: User | null;
+    roles: Role[];
 };
