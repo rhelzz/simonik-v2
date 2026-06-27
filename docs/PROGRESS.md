@@ -38,17 +38,25 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **Ikon**: `lucide-react`. **Catatan**: belum ada login → `auth.user` null & roles kosong (shell jatuh ke mode demo, menu penuh). Tombol logout masih placeholder.
 - ✅ ESLint + tsc + Prettier + `vite build` lolos; route `/dashboard` 200; Pint + PHPStan lolos.
 
+### 6. Auth pages & flow
+- **Login/logout** (`AuthenticatedSessionController` + `LoginRequest` dengan throttle 5x): `GET/POST /login` (guest), `POST /logout` (auth). `/dashboard` kini di-protect `auth`.
+- **Redirect**: setelah login → `intended(dashboard)`; logout → `/`; guest buka `/dashboard` → `/login`.
+- **Role middleware**: alias Spatie `role` / `permission` / `role_or_permission` didaftarkan di `bootstrap/app.php` (siap dipakai mis. `->middleware('role:admin')`).
+- **UI** (`pages/auth/login.tsx` + `layouts/auth-layout.tsx`): kartu login on-brand (lavender/indigo), `<Form>` Inertia + Wayfinder action, error & throttle tampil, ada hint akun demo. Tombol logout di sidebar **aktif**.
+- ✅ Feature test `tests/Feature/Auth` (6 test) hijau; **`composer test` penuh: Pint + PHPStan 0 error + 8 test passed**.
+
 ---
 
 ## 📍 Current step
-App shell + dashboard sudah jalan dan ter-build. Yang belum: **autentikasi (login)** sehingga role-gating aktif sungguhan, dan fitur-fitur modul (masih "Soon").
+Auth aktif: login/logout jalan, role-gating sudah enforce-able. Login dengan akun demo (`admin@simonik.test` … `siswa@simonik.test`, password `password`) → diarahkan ke dashboard sesuai role; sidebar menyaring menu per role.
 
-Akun demo (siap dipakai begitu login dibuat): `admin@simonik.test` … `siswa@simonik.test` (password: `password`).
+Fitur-fitur modul masih placeholder "Soon" (Siswa, Guru, Industri, dst.). **Register sengaja tidak dibuat** — user dikelola admin.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik
 
-1. **Auth pages & flow (Rekomendasi)** — Login/logout + redirect, middleware `role:` pada route, aktifkan logout di sidebar. Ini mengaktifkan role-gating yang sudah disiapkan & membuat shell jadi "nyata".
-2. **Vertical slice fitur pertama** — Satu fitur end-to-end (Controller + FormRequest + Inertia page React), mis. CRUD Siswa, sebagai pola yang direplikasi (mengganti item "Soon" pertama).
-3. **Seeder data demo penuh** — Isi semua tabel pakai factory supaya dashboard & tabel terisi data realistis.
+1. **Vertical slice CRUD Siswa (Rekomendasi)** — Fitur end-to-end pertama (Controller + FormRequest + Inertia index/create/edit + Wayfinder), menggantikan item "Soon" pertama. Jadi pola/template untuk modul lain.
+2. **Seeder data demo penuh** — Isi semua tabel pakai factory supaya dashboard, daftar siswa, dsb. terisi data realistis untuk demo & uji UI.
+3. **Master data dulu (Jurusan & Kelas)** — CRUD entitas pendukung (departemens, classes) sebelum Siswa, karena Siswa bergantung padanya.
+4. **Halaman landing + profil/ganti password** — Ganti splash Laravel dengan landing SIMONIK + halaman pengaturan akun (update profil, ubah password).
