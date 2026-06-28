@@ -80,17 +80,23 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **Staf (monitoring + verifikasi)**: `ActivityMonitorController` (`index/show/verify`) gate `role:admin|kaprog|guru|pembimbing|industri|mitra`. **Role-scoped** (`scopedQuery`): admin/kaprog = semua; guru = siswa yg dia bimbing (`students.teacher_id`); pembimbing = siswa di industri yg dia bimbing (`industries.pembimbing_id`); industri/mitra = siswa di industrinya (`industries.user_id`). **Verifikasi** (set kolom `verified` '0'/'1') gate `role:pembimbing|industri|mitra` + cek scope. UI `pages/activity-monitor/{index,show}`. Menu **Kegiatan** (staf).
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 67 test passed** (+16 Kegiatan). ESLint + tsc + Prettier + `vite build` lolos.
 
+### 12. Modul Absensi (monitoring) — rekap kehadiran staf + verifikasi
+- **Staf (monitoring + verifikasi)**: `AttendanceMonitorController` (`index/show/verify`) gate `role:admin|kaprog|guru|pembimbing|industri|mitra`. **Role-scoped** sama persis pola `ActivityMonitorController` (`scopedQuery`: admin/kaprog = semua; guru = `students.teacher_id`; pembimbing = `industries.pembimbing_id`; industri/mitra = `industries.user_id`). **Verifikasi** (set `attendances.verified` '0'/'1') gate `role:pembimbing|industri|mitra` + cek scope. Index: filter nama siswa + tanggal + **status** (opsi status diisi dari nilai distinct dalam scope); detail menampilkan **foto** (accessor `image` → URL), **geolokasi** (lat/long + link Google Maps), jam masuk/pulang, alasan, keterangan.
+- **Tanpa input web**: pembuatan absensi tetap di mobile (butuh kamera/GPS); web fokus pantau + verifikasi (read-only + verify).
+- **UI**: `pages/attendance-monitor/{index,show}` + helper `lib/attendance.ts` (badge & label status, case-insensitive: hadir/masuk/pulang/izin/sakit/alpha). Menu **Absensi** aktif (staf).
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 74 test passed** (+7 Absensi). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
-Modul transaksional pertama jalan: **Kegiatan/jurnal** — siswa menulis jurnal harian (rich-text), staf memantau & memverifikasi (role-scoped). Master data penempatan lengkap (Siswa, Jurusan, Kelas, Industri, Guru, Pembimbing). Pola baru yang kini tersedia: **rich-text editor (Tiptap) + render aman (DOMPurify)**, **monitoring role-scoped**, **verifikasi**.
+Modul harian lengkap untuk pemantauan: **Kegiatan/jurnal** (siswa input rich-text + staf monitor/verifikasi) & **Absensi** (staf monitor/verifikasi; input absensi via mobile). Master data penempatan lengkap (Siswa, Jurusan, Kelas, Industri, Guru, Pembimbing). Pola monitoring role-scoped + verifikasi kini dipakai 2 modul (Kegiatan, Absensi) dan siap dipakai ulang.
 
-Sisa "Soon": Absensi, Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan.
+Sisa "Soon": Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik
 
-1. **Absensi (monitoring) (Rekomendasi)** — Lengkapi modul harian: rekap kehadiran siswa untuk staf (foto, geolokasi, jam masuk/pulang, status Masuk/Pulang/Sakit/Izin, verifikasi). Pembuatan absensi tetap di mobile (kamera/GPS); web fokus monitoring + verifikasi. Pola `ActivityMonitorController` bisa dipakai ulang.
-2. **Halaman profil/ganti password + landing** — Pengaturan akun & ganti splash Laravel dengan landing SIMONIK.
+1. **Halaman profil/ganti password + landing (Rekomendasi)** — Pengaturan akun (semua role) & ganti splash Laravel dengan landing SIMONIK. Cepat & melengkapi UX dasar.
+2. **Kunjungan (Visits) atau Bimbingan (GuidanceReport)** — Modul monitoring lapangan berikutnya; bisa reuse pola monitoring role-scoped.
 3. **Master data sisa** — Periode PKL & Orang tua/Wali (saat ini hanya terisi via seeder; belum ada UI CRUD).
