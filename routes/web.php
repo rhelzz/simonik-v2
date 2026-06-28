@@ -1,15 +1,14 @@
 <?php
 
-use App\Http\Controllers\ActivityController;
-use App\Http\Controllers\ActivityMonitorController;
-use App\Http\Controllers\AttendanceMonitorController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\IndustryController;
+use App\Http\Controllers\ParentController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PembimbingController;
+use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
@@ -37,50 +36,19 @@ Route::middleware('auth')->group(function () {
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
-    Route::resource('students', StudentController::class)
-        ->except('show')
-        ->middleware('role:admin|kaprog|guru|pembimbing');
+    // Master data pengguna (dikelola admin/kaprog).
+    Route::middleware('role:admin|kaprog')->group(function () {
+        Route::resource('students', StudentController::class)->except('show');
+        Route::resource('industries', IndustryController::class)->except('show');
+        Route::resource('teachers', TeacherController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('pembimbings', PembimbingController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('parents', ParentController::class)->only(['index', 'store', 'update', 'destroy']);
 
-    Route::resource('industries', IndustryController::class)
-        ->except('show')
-        ->middleware('role:admin|kaprog|guru|pembimbing');
+        // Data referensi akademik.
+        Route::resource('departemens', DepartemenController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('classes', ClassController::class)->only(['index', 'store', 'update', 'destroy']);
 
-    Route::resource('teachers', TeacherController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('role:admin|kaprog');
-
-    Route::resource('pembimbings', PembimbingController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('role:admin|kaprog');
-
-    Route::resource('departemens', DepartemenController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('role:admin|kaprog');
-
-    Route::resource('classes', ClassController::class)
-        ->only(['index', 'store', 'update', 'destroy'])
-        ->middleware('role:admin|kaprog');
-
-    // Jurnal kegiatan harian milik siswa sendiri.
-    Route::resource('activities', ActivityController::class)
-        ->except('show')
-        ->middleware('role:siswa');
-
-    // Pemantauan jurnal kegiatan siswa oleh staf (role-scoped) + verifikasi.
-    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|mitra')->group(function () {
-        Route::get('kegiatan', [ActivityMonitorController::class, 'index'])->name('kegiatan.index');
-        Route::get('kegiatan/{activity}', [ActivityMonitorController::class, 'show'])->name('kegiatan.show');
+        // Periode / gelombang PKL.
+        Route::resource('periods', PeriodController::class)->only(['index', 'store', 'update', 'destroy']);
     });
-    Route::patch('kegiatan/{activity}/verify', [ActivityMonitorController::class, 'verify'])
-        ->name('kegiatan.verify')
-        ->middleware('role:pembimbing|industri|mitra');
-
-    // Pemantauan kehadiran (absensi) siswa oleh staf (role-scoped) + verifikasi.
-    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|mitra')->group(function () {
-        Route::get('absensi', [AttendanceMonitorController::class, 'index'])->name('absensi.index');
-        Route::get('absensi/{attendance}', [AttendanceMonitorController::class, 'show'])->name('absensi.show');
-    });
-    Route::patch('absensi/{attendance}/verify', [AttendanceMonitorController::class, 'verify'])
-        ->name('absensi.verify')
-        ->middleware('role:pembimbing|industri|mitra');
 });
