@@ -1,6 +1,8 @@
 import {
     Award,
+    BookOpen,
     Building2,
+    Camera,
     CalendarDays,
     ClipboardCheck,
     ClipboardList,
@@ -9,12 +11,13 @@ import {
     GraduationCap,
     LayoutDashboard,
     MapPin,
-    MessageSquareText,
+    MessagesSquare,
     Network,
     NotebookPen,
     School,
     Settings,
     UserCheck,
+    UserCog,
     Users,
 } from 'lucide-react';
 import { index as activitiesIndex } from '@/actions/App/Http/Controllers/ActivityController';
@@ -24,6 +27,7 @@ import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassContr
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
+import { edit as profileEdit } from '@/actions/App/Http/Controllers/ProfileController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
 import { dashboard } from '@/routes';
@@ -43,6 +47,7 @@ export const navSections: NavSection[] = [
                 icon: LayoutDashboard,
                 href: dashboard().url,
             },
+            { label: 'Panduan PKL', icon: BookOpen },
         ],
     },
     {
@@ -103,6 +108,11 @@ export const navSections: NavSection[] = [
                 ],
             },
             {
+                label: 'Absen Foto + Geo',
+                icon: Camera,
+                roles: ['siswa'],
+            },
+            {
                 label: 'Jurnal Saya',
                 icon: NotebookPen,
                 href: activitiesIndex.url(),
@@ -131,18 +141,14 @@ export const navSections: NavSection[] = [
                 icon: MapPin,
                 roles: ['admin', 'kaprog', 'guru', 'pembimbing'],
             },
-            {
-                label: 'Bimbingan',
-                icon: MessageSquareText,
-                roles: ['admin', 'kaprog', 'guru', 'pembimbing', 'siswa'],
-            },
+            { label: 'Forum PKL', icon: MessagesSquare },
         ],
     },
     {
         title: 'Penilaian',
         items: [
             {
-                label: 'Penilaian',
+                label: 'Rekap Penilaian',
                 icon: ClipboardCheck,
                 roles: [
                     'admin',
@@ -151,6 +157,7 @@ export const navSections: NavSection[] = [
                     'pembimbing',
                     'industri',
                     'mitra',
+                    'siswa',
                 ],
             },
             {
@@ -166,8 +173,11 @@ export const navSections: NavSection[] = [
         ],
     },
     {
-        title: 'Sistem',
-        items: [{ label: 'Pengaturan', icon: Settings, roles: ['admin'] }],
+        title: 'Akun',
+        items: [
+            { label: 'Profil', icon: UserCog, href: profileEdit.url() },
+            { label: 'Pengaturan', icon: Settings, roles: ['admin'] },
+        ],
     },
 ];
 
