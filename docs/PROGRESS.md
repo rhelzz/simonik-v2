@@ -45,18 +45,26 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **UI** (`pages/auth/login.tsx` + `layouts/auth-layout.tsx`): kartu login on-brand (lavender/indigo), `<Form>` Inertia + Wayfinder action, error & throttle tampil, ada hint akun demo. Tombol logout di sidebar **aktif**.
 - ✅ Feature test `tests/Feature/Auth` (6 test) hijau; **`composer test` penuh: Pint + PHPStan 0 error + 8 test passed**.
 
+### 7. Vertical slice — CRUD Siswa
+- **Backend**: `StudentController` resourceful (`index/create/store/edit/update/destroy`, tanpa `show`) + `StoreStudentRequest`/`UpdateStudentRequest`. `store` membuat **akun User (role siswa) + profil siswa** dalam satu transaksi; `update` sinkron akun + ganti foto; `destroy` hapus user (cascade ke siswa). Index: search (nama/NIS) + filter kelas + pagination 10.
+- **Routes**: `Route::resource('students')` di-gate `role:admin|kaprog|guru|pembimbing`.
+- **UI**: `pages/students/{index,create,edit}.tsx` + komponen `StudentForm` (akun, data diri, foto, PKL & penempatan). Flash sukses via `HandleInertiaRequests` + banner di `app-layout`. Menu **Siswa** aktif di sidebar.
+- **Seeder**: `DemoDataSeeder` (2 jurusan, 4 kelas, guru, 3 industri, 1 periode, 12 siswa). `migrate:fresh --seed` → data langsung terisi.
+- **Fix penting**: relasi `belongsTo` bernama jamak (`users()`) butuh FK eksplisit `user_id` (Laravel menebak `users_id`); diperbaiki di semua model + `SidangScore::aspect()` (`sidang_aspect_id`). Migration baru: `students.image` jadi nullable.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 14 test passed** (6 CRUD siswa). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
-Auth aktif: login/logout jalan, role-gating sudah enforce-able. Login dengan akun demo (`admin@simonik.test` … `siswa@simonik.test`, password `password`) → diarahkan ke dashboard sesuai role; sidebar menyaring menu per role.
+Modul **Siswa** end-to-end jalan: list/cari/filter, tambah (sekaligus buat akun login siswa), edit, hapus — semuanya role-gated & tervalidasi. Data demo tersedia (12 siswa). Ini jadi **pola/template** untuk modul berikutnya.
 
-Fitur-fitur modul masih placeholder "Soon" (Siswa, Guru, Industri, dst.). **Register sengaja tidak dibuat** — user dikelola admin.
+Modul lain masih "Soon" (Guru, Pembimbing, Industri, Jurusan, Kelas, Absensi, dst.).
 
 ---
 
 ## ⏭️ Next step — opsi terbaik
 
-1. **Vertical slice CRUD Siswa (Rekomendasi)** — Fitur end-to-end pertama (Controller + FormRequest + Inertia index/create/edit + Wayfinder), menggantikan item "Soon" pertama. Jadi pola/template untuk modul lain.
-2. **Seeder data demo penuh** — Isi semua tabel pakai factory supaya dashboard, daftar siswa, dsb. terisi data realistis untuk demo & uji UI.
-3. **Master data dulu (Jurusan & Kelas)** — CRUD entitas pendukung (departemens, classes) sebelum Siswa, karena Siswa bergantung padanya.
-4. **Halaman landing + profil/ganti password** — Ganti splash Laravel dengan landing SIMONIK + halaman pengaturan akun (update profil, ubah password).
+1. **Master data: Jurusan & Kelas (Rekomendasi)** — CRUD `departemens` & `classes` (entitas paling fundamental yang dipakai Siswa). Cepat karena meniru pola slice Siswa; melengkapi rantai data.
+2. **Modul Industri & Guru/Pembimbing** — Lanjutkan CRUD entitas master lain yang dipakai penempatan siswa.
+3. **Absensi & Kegiatan (jurnal)** — Modul harian siswa (data transaksional), lebih kompleks tapi inti monitoring PKL.
+4. **Halaman profil/ganti password + landing** — Pengaturan akun & ganti splash Laravel dengan landing SIMONIK.
