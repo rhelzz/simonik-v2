@@ -41,7 +41,7 @@ class Visits extends Model
     /** @return BelongsTo<User, $this> */
     public function users(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /** @return BelongsTo<Industry, $this> */

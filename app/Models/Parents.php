@@ -31,7 +31,7 @@ class Parents extends Model
     /** @return BelongsTo<User, $this> */
     public function users(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /** @return HasMany<Student, $this> */

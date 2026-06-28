@@ -29,7 +29,7 @@ class Pembimbing extends Model
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /** @return HasMany<Student, $this> */

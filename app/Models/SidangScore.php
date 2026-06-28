@@ -38,7 +38,7 @@ class SidangScore extends Model
     /** @return BelongsTo<SidangAspect, $this> */
     public function aspect(): BelongsTo
     {
-        return $this->belongsTo(SidangAspect::class);
+        return $this->belongsTo(SidangAspect::class, 'sidang_aspect_id');
     }
 
     /** @return BelongsTo<Student, $this> */
