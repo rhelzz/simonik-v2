@@ -91,17 +91,23 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **Profil (semua role)**: `ProfileController` (`edit`/`update`) + `ProfileUpdateRequest` (name, email unik-ignore-self) dan `PasswordController` (`update`: rule `current_password` + `Password::defaults()` + `confirmed`). Routes `GET/PATCH /profile`, `PUT /password` di grup `auth` (tanpa role gate — semua role). UI `pages/profile/edit.tsx` (2 kartu: info akun & ganti sandi) pakai `<Form>` Inertia. Kartu user di sidebar kini link ke profil.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 82 test passed** (+8: profil & landing). ESLint + tsc + Prettier + `vite build` lolos.
 
+### 14. Tata ulang sidebar + roadmap baru
+- **Keputusan**: aplikasi **web-only** (tak ada mobile) → siswa wajib bisa absen lewat web. Sistem "Bimbingan" **diganti Forum PKL** (tanya-jawab).
+- **Sidebar (`lib/nav.ts`) ditata ulang** dengan item "Soon" baru: **Panduan PKL** (Utama), **Absen Foto + Geo** (siswa), **Forum PKL** (ganti Bimbingan), **Rekap Penilaian** (ganti "Penilaian"); **Profil** kini jadi menu (seksi **Akun**, aktif). Item lain tetap.
+- **Dokumentasi jadi 2**: [`PROGRESS.md`](PROGRESS.md) (log selesai) + [`ROADMAP.md`](ROADMAP.md) (konteks + rencana/spec fitur). Spec fitur "Soon" lengkap ada di ROADMAP.
+- ✅ ESLint + tsc + `vite build` lolos (perubahan nav only).
+
 ---
 
 ## 📍 Current step
-UX dasar lengkap: **landing publik** di `/`, **pengaturan akun** (profil + ganti sandi) untuk semua role. Modul fungsional sejauh ini: master data penempatan (Siswa, Jurusan, Kelas, Industri, Guru, Pembimbing) + modul harian (Kegiatan/jurnal, Absensi monitoring). Pola tersedia: page-based & modal CRUD, monitoring role-scoped + verifikasi, rich-text (Tiptap+DOMPurify), auth/profile.
+UX dasar lengkap (landing, profil+sandi). Sidebar sudah memetakan seluruh rencana fitur. Modul fungsional: master data penempatan (Siswa, Jurusan, Kelas, Industri, Guru, Pembimbing) + modul harian (Kegiatan, Absensi monitoring). **Rencana & spec fitur berikutnya ada di [`ROADMAP.md`](ROADMAP.md).**
 
-Sisa "Soon": Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan (app-level).
+Sisa "Soon": Panduan PKL, Absen Foto + Geolokasi (siswa), Forum PKL, Rekap Penilaian, Jadwal, Kunjungan, Sidang, Sertifikat, Pengaturan.
 
 ---
 
-## ⏭️ Next step — opsi terbaik
+## ⏭️ Next step — opsi terbaik (detail di ROADMAP)
 
-1. **Kunjungan (Visits) (Rekomendasi)** — Monitoring kunjungan industri oleh guru/pembimbing; reuse pola monitoring role-scoped + verifikasi.
-2. **Bimbingan (GuidanceReport)** — Laporan bimbingan siswa; bisa pakai pola rich-text + monitoring.
-3. **Master data sisa** — Periode PKL & Orang tua/Wali (saat ini hanya terisi via seeder; belum ada UI CRUD).
+1. **Absen Foto + Geolokasi (siswa) (Rekomendasi)** — krusial krn web-only: siswa absen via web (foto + `navigator.geolocation`), tampil di monitoring Absensi yang sudah ada.
+2. **Rekap Penilaian (+ input nilai)** — pembimbing (non-teknikal) & mitra/industri (teknikal); siswa lihat nilai sendiri.
+3. **Forum PKL** — tanya-jawab pengganti bimbingan (model `Post`/`Comment`).
