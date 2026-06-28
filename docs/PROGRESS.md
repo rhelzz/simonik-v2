@@ -110,17 +110,25 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Frontend**: sidebar baru sesuai desain admin — **dropdown "Data User"** (Siswa, Guru Pembimbing, Industri, Pembimbing Industri, Orang Tua), Data Jurusan/Kelas, Periode PKL, + grup Dokumen/Monitoring/Penilaian (Soon). `NavItem` dukung `children`; `app-sidebar` render dropdown. Halaman baru `pages/parents`, `pages/periods`.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 74 test passed**. ESLint + tsc + Prettier + `vite build` lolos. `migrate:fresh --seed` sukses.
 
+### 17. Dashboard analytical ✅
+- **`DashboardController`** kini analitik: **5 ringkasan kuantitatif** (jumlah siswa [archived=false], siswa aktif PKL [status `proses`], guru pembimbing, pembimbing industri, industri/PT) + **2 metrik partisipasi**:
+  - **Rate Absensi** = % siswa aktif yang hadir (status `hadir`/`masuk`) — hari-siswa unik / (siswa aktif × hari efektif).
+  - **Rate Pengisian Jurnal** = % siswa aktif yang mengisi jurnal — formula sama.
+  - Tiap metrik dihitung untuk 4 rentang server-side (**hari ini / minggu ini / bulan ini / keseluruhan**); hari efektif: today=1, week=hari berjalan minggu ini, month=tanggal hari ini, all=jumlah tanggal distinct yang ada datanya. Capped 100%.
+- **UI** `pages/dashboard.tsx`: kartu `RateCard` dengan **segmented filter** (toggle rentang, client-side) + progress bar. 5 stat card lama dipertahankan.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 77 test passed** (+3 Dashboard). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
-**Fondasi master data admin solid & ter-adaptasi** sesuai ROADMAP. Relasi inti via industri: PT punya guru pembimbing + pembimbing industri; siswa ditempatkan di PT → guru/pembimbingnya ikut PT. Master data lengkap di-CRUD admin/kaprog: **Siswa, Guru Pembimbing, Industri, Pembimbing Industri, Orang Tua, Jurusan, Kelas, Periode PKL**. Sidebar memakai dropdown Data User + grup terstruktur. Modul transaksional & analitik = Soon (akan dibangun ulang di atas fondasi ini).
+**Dashboard analytical jalan** di atas fondasi master data. Admin melihat 5 ringkasan + rate absensi/jurnal (filter waktu). Master data penuh (Siswa, Guru Pembimbing, Industri, Pembimbing Industri, Orang Tua, Jurusan, Kelas, Periode PKL) + dashboard analitik. **Catatan**: rate absensi/jurnal memakai tabel `attendances`/`activities` yang masih ada datanya, tapi **input siswa & monitoring drill-down belum dibangun ulang** (data riil akan mengalir setelah modul Absen/Jurnal siswa jadi).
 
-Sisa "Soon": Panduan PKL, Forum PKL, Data Absen (drill-down), Data Jurnal (drill-down), Kalender, Rekap Penilaian, Sertifikat, Dashboard analytical, Absen Foto+Geo (siswa).
+Sisa "Soon": Rekap Penilaian, Absen Foto+Geo (siswa), Data Absen (drill-down), Data Jurnal (drill-down), Panduan PKL, Sertifikat, Forum PKL, Kalender.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Dashboard analytical (Rekomendasi)** — 5 ringkasan kuantitatif + rate absensi & jurnal (filter waktu); fondasi datanya siap.
-2. **Rekap Penilaian** — master aspek teknis/non-teknis (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu).
-3. **Absen Foto + Geolokasi (siswa)** + rework **Data Absen/Data Jurnal drill-down** (Jurusan→Kelas→Murid→detail).
+1. **Rekap Penilaian (Rekomendasi)** — master aspek teknis/non-teknis (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu); auto-konversi grade A/B/C/D.
+2. **Absen Foto + Geolokasi (siswa)** — input absen web (foto + `navigator.geolocation`); mengisi data untuk rate absensi & Data Absen.
+3. **Data Absen / Data Jurnal drill-down** (Jurusan→Kelas→Murid→detail) + verifikasi.

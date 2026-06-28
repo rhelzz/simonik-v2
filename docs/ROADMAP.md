@@ -74,7 +74,7 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 
 | Menu | Status | Catatan |
 |---|---|---|
-| **Dashboard** | 🔄 | Masih ringkas; perluas jadi analytical (§4). |
+| **Dashboard** | ✅ | Analytical: 5 ringkasan kuantitatif + rate absensi & rate jurnal dengan filter waktu (§4). |
 | **Data User** (dropdown) | ✅ | Dropdown jalan. Submenu: Data Siswa ✅, Guru Pembimbing ✅, Data Industri ✅, Pembimbing Industri ✅, Orang Tua ✅. Relasi via industri sudah terpasang (§3). |
 | **Data Jurusan** | ✅ | Referensi relasi murid & industri. |
 | **Data Kelas** | ✅ | Referensi relasi murid. |
@@ -166,14 +166,13 @@ C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 
 ## 11. Status implementasi & urutan rekomendasi
 
-**Sudah jadi**: Auth/login, Profil+sandi, Landing, Dashboard (ringkas). **Master data admin penuh**: CRUD Siswa, Guru Pembimbing, Industri, Pembimbing Industri, **Orang Tua** (akun `orangtua`), Jurusan, Kelas, **Periode PKL** — semua gate `admin|kaprog`, relasi via industri terpasang (§3), sidebar dropdown Data User.
+**Sudah jadi**: Auth/login, Profil+sandi, Landing, **Dashboard analytical** (5 ringkasan + rate absensi/jurnal filter waktu). **Master data admin penuh**: CRUD Siswa, Guru Pembimbing, Industri, Pembimbing Industri, **Orang Tua** (akun `orangtua`), Jurusan, Kelas, **Periode PKL** — semua gate `admin|kaprog`, relasi via industri terpasang (§3), sidebar dropdown Data User.
 
-> Modul transaksional lama (Jurnal Saya siswa, monitoring Kegiatan & Absensi flat) **sudah dihapus**; akan dibangun ulang sebagai Data Absen/Data Jurnal drill-down + input siswa.
+> Modul transaksional lama (Jurnal Saya siswa, monitoring Kegiatan & Absensi flat) **sudah dihapus**; akan dibangun ulang sebagai Data Absen/Data Jurnal drill-down + input siswa. Rate di dashboard akan terisi data riil setelah input absen/jurnal siswa jadi.
 
 **Urutan rekomendasi berikutnya:**
-1. **Dashboard analytical** — 5 ringkasan kuantitatif + rate absensi & jurnal (filter hari/minggu/bulan/keseluruhan).
-2. **Rekap Penilaian** — master aspek teknis/non-teknis (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu).
-3. **Absen Foto + Geolokasi (siswa)** — input absen web (foto + `navigator.geolocation`).
-4. **Data Absen & Data Jurnal drill-down** — monitoring 4 layer (Jurusan→Kelas→Murid→detail) + verifikasi.
-5. **Panduan PKL** (upload dokumen), lalu **Sertifikat**.
-6. **Forum PKL** & **Kalender** — prioritas rendah.
+1. **Rekap Penilaian** — master aspek teknis/non-teknis (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu); auto-konversi grade A/B/C/D.
+2. **Absen Foto + Geolokasi (siswa)** — input absen web (foto + `navigator.geolocation`).
+3. **Data Absen & Data Jurnal drill-down** — monitoring 4 layer (Jurusan→Kelas→Murid→detail) + verifikasi.
+4. **Panduan PKL** (upload dokumen), lalu **Sertifikat**.
+5. **Forum PKL** & **Kalender** — prioritas rendah.
