@@ -86,17 +86,22 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **UI**: `pages/attendance-monitor/{index,show}` + helper `lib/attendance.ts` (badge & label status, case-insensitive: hadir/masuk/pulang/izin/sakit/alpha). Menu **Absensi** aktif (staf).
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 74 test passed** (+7 Absensi). ESLint + tsc + Prettier + `vite build` lolos.
 
+### 13. Profil & ganti sandi + Landing SIMONIK
+- **Landing**: route `/` kini menampilkan **landing SIMONIK** untuk tamu (hero + fitur + CTA Masuk) & redirect ke `/dashboard` untuk user login (closure `Auth::check()`). Mengganti redirect `/`→login sebelumnya dan splash Laravel (`pages/welcome.tsx` ditulis ulang on-brand). Logout (`redirect('/')`) kini mendarat di landing.
+- **Profil (semua role)**: `ProfileController` (`edit`/`update`) + `ProfileUpdateRequest` (name, email unik-ignore-self) dan `PasswordController` (`update`: rule `current_password` + `Password::defaults()` + `confirmed`). Routes `GET/PATCH /profile`, `PUT /password` di grup `auth` (tanpa role gate — semua role). UI `pages/profile/edit.tsx` (2 kartu: info akun & ganti sandi) pakai `<Form>` Inertia. Kartu user di sidebar kini link ke profil.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 82 test passed** (+8: profil & landing). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
-Modul harian lengkap untuk pemantauan: **Kegiatan/jurnal** (siswa input rich-text + staf monitor/verifikasi) & **Absensi** (staf monitor/verifikasi; input absensi via mobile). Master data penempatan lengkap (Siswa, Jurusan, Kelas, Industri, Guru, Pembimbing). Pola monitoring role-scoped + verifikasi kini dipakai 2 modul (Kegiatan, Absensi) dan siap dipakai ulang.
+UX dasar lengkap: **landing publik** di `/`, **pengaturan akun** (profil + ganti sandi) untuk semua role. Modul fungsional sejauh ini: master data penempatan (Siswa, Jurusan, Kelas, Industri, Guru, Pembimbing) + modul harian (Kegiatan/jurnal, Absensi monitoring). Pola tersedia: page-based & modal CRUD, monitoring role-scoped + verifikasi, rich-text (Tiptap+DOMPurify), auth/profile.
 
-Sisa "Soon": Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan.
+Sisa "Soon": Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan (app-level).
 
 ---
 
 ## ⏭️ Next step — opsi terbaik
 
-1. **Halaman profil/ganti password + landing (Rekomendasi)** — Pengaturan akun (semua role) & ganti splash Laravel dengan landing SIMONIK. Cepat & melengkapi UX dasar.
-2. **Kunjungan (Visits) atau Bimbingan (GuidanceReport)** — Modul monitoring lapangan berikutnya; bisa reuse pola monitoring role-scoped.
+1. **Kunjungan (Visits) (Rekomendasi)** — Monitoring kunjungan industri oleh guru/pembimbing; reuse pola monitoring role-scoped + verifikasi.
+2. **Bimbingan (GuidanceReport)** — Laporan bimbingan siswa; bisa pakai pola rich-text + monitoring.
 3. **Master data sisa** — Periode PKL & Orang tua/Wali (saat ini hanya terisi via seeder; belum ada UI CRUD).
