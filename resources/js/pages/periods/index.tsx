@@ -1,11 +1,11 @@
 import { router, useForm } from '@inertiajs/react';
 import {
+    CalendarRange,
     LoaderCircle,
     Pencil,
     Plus,
     Search,
     Trash2,
-    Users,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
@@ -14,28 +14,22 @@ import {
     index,
     store,
     update,
-} from '@/actions/App/Http/Controllers/TeacherController';
+} from '@/actions/App/Http/Controllers/PeriodController';
 import { Modal } from '@/components/ui/modal';
 import { Pagination } from '@/components/ui/pagination';
 import { AppLayout } from '@/layouts/app-layout';
 import type { Paginated } from '@/types';
 
-type Teacher = {
+type PeriodRow = {
     id: number;
-    name: string;
-    no_hp: string;
-    email: string | null;
-    departemen: string | null;
-    departemen_id: number;
-    industries_count: number;
+    name_period: string;
+    start_period: string | null;
+    end_period: string | null;
     students_count: number;
 };
 
-type DepartemenOption = { id: number; name: string };
-
-type TeachersIndexProps = {
-    teachers: Paginated<Teacher>;
-    departemens: DepartemenOption[];
+type PeriodsIndexProps = {
+    periods: Paginated<PeriodRow>;
     filters: { search: string };
 };
 
@@ -43,22 +37,15 @@ const inputClass =
     'w-full rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none';
 
 const emptyForm = {
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
-    no_hp: '',
-    departemen_id: '',
+    name_period: '',
+    start_period: '',
+    end_period: '',
 };
 
-export default function TeachersIndex({
-    teachers,
-    departemens,
-    filters,
-}: TeachersIndexProps) {
+export default function PeriodsIndex({ periods, filters }: PeriodsIndexProps) {
     const [search, setSearch] = useState(filters.search);
     const [open, setOpen] = useState(false);
-    const [editing, setEditing] = useState<Teacher | null>(null);
+    const [editing, setEditing] = useState<PeriodRow | null>(null);
 
     const form = useForm({ ...emptyForm });
 
@@ -75,16 +62,14 @@ export default function TeachersIndex({
         setOpen(true);
     }
 
-    function openEdit(teacher: Teacher) {
+    function openEdit(period: PeriodRow) {
         form.setData({
-            ...emptyForm,
-            name: teacher.name,
-            email: teacher.email ?? '',
-            no_hp: teacher.no_hp,
-            departemen_id: String(teacher.departemen_id),
+            name_period: period.name_period,
+            start_period: period.start_period ?? '',
+            end_period: period.end_period ?? '',
         });
         form.clearErrors();
-        setEditing(teacher);
+        setEditing(period);
         setOpen(true);
     }
 
@@ -99,26 +84,22 @@ export default function TeachersIndex({
         }
     }
 
-    function remove(teacher: Teacher) {
-        if (
-            confirm(
-                `Hapus guru ${teacher.name}? Akun login beserta datanya akan ikut terhapus.`,
-            )
-        ) {
-            router.delete(destroy.url(teacher.id), { preserveScroll: true });
+    function remove(period: PeriodRow) {
+        if (confirm(`Hapus periode ${period.name_period}?`)) {
+            router.delete(destroy.url(period.id), { preserveScroll: true });
         }
     }
 
     return (
-        <AppLayout title="Guru">
+        <AppLayout title="Periode PKL">
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h2 className="text-base font-bold text-ink">
-                            Daftar guru
+                            Gelombang / periode PKL
                         </h2>
                         <p className="text-sm text-muted">
-                            {teachers.total} guru terdaftar
+                            {periods.total} periode terdaftar
                         </p>
                     </div>
                     <button
@@ -127,7 +108,7 @@ export default function TeachersIndex({
                         className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
                     >
                         <Plus className="size-4" />
-                        Tambah guru
+                        Tambah periode
                     </button>
                 </div>
 
@@ -152,17 +133,17 @@ export default function TeachersIndex({
                             type="search"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Cari guru…"
+                            placeholder="Cari periode…"
                             className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
                         />
                     </label>
                 </form>
 
-                {teachers.data.length === 0 ? (
+                {periods.data.length === 0 ? (
                     <div className="mt-6 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line py-14 text-center">
-                        <Users className="size-8 text-muted" />
+                        <CalendarRange className="size-8 text-muted" />
                         <p className="text-sm font-medium text-ink">
-                            Belum ada guru
+                            Belum ada periode
                         </p>
                     </div>
                 ) : (
@@ -170,11 +151,15 @@ export default function TeachersIndex({
                         <table className="w-full min-w-lg border-collapse text-left text-sm">
                             <thead>
                                 <tr className="text-xs font-semibold tracking-wide text-muted uppercase">
-                                    <th className="pb-3 font-semibold">Guru</th>
                                     <th className="pb-3 font-semibold">
-                                        Jurusan
+                                        Periode
                                     </th>
-                                    <th className="pb-3 font-semibold">PT</th>
+                                    <th className="pb-3 font-semibold">
+                                        Mulai
+                                    </th>
+                                    <th className="pb-3 font-semibold">
+                                        Selesai
+                                    </th>
                                     <th className="pb-3 font-semibold">
                                         Siswa
                                     </th>
@@ -184,47 +169,39 @@ export default function TeachersIndex({
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-line">
-                                {teachers.data.map((teacher) => (
-                                    <tr key={teacher.id}>
-                                        <td className="py-3">
-                                            <p className="font-semibold text-ink">
-                                                {teacher.name}
-                                            </p>
-                                            <p className="text-xs text-muted">
-                                                {teacher.no_hp}
-                                                {teacher.email
-                                                    ? ` · ${teacher.email}`
-                                                    : ''}
-                                            </p>
+                                {periods.data.map((period) => (
+                                    <tr key={period.id}>
+                                        <td className="py-3 font-semibold text-ink">
+                                            {period.name_period}
                                         </td>
                                         <td className="py-3 text-ink/80">
-                                            {teacher.departemen ?? '—'}
+                                            {period.start_period ?? '—'}
                                         </td>
                                         <td className="py-3 text-ink/80">
-                                            {teacher.industries_count}
+                                            {period.end_period ?? '—'}
                                         </td>
                                         <td className="py-3 text-ink/80">
-                                            {teacher.students_count}
+                                            {period.students_count}
                                         </td>
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        openEdit(teacher)
+                                                        openEdit(period)
                                                     }
                                                     className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
-                                                    aria-label={`Edit ${teacher.name}`}
+                                                    aria-label={`Edit ${period.name_period}`}
                                                 >
                                                     <Pencil className="size-4" />
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        remove(teacher)
+                                                        remove(period)
                                                     }
                                                     className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
-                                                    aria-label={`Hapus ${teacher.name}`}
+                                                    aria-label={`Hapus ${period.name_period}`}
                                                 >
                                                     <Trash2 className="size-4" />
                                                 </button>
@@ -237,127 +214,69 @@ export default function TeachersIndex({
                     </div>
                 )}
 
-                <Pagination meta={teachers} />
+                <Pagination meta={periods} />
             </section>
 
             <Modal
                 open={open}
                 onClose={close}
-                title={editing ? 'Edit guru' : 'Tambah guru'}
+                title={editing ? 'Edit periode' : 'Tambah periode'}
             >
                 <form onSubmit={submit} className="space-y-4">
                     <Field
-                        label="Nama lengkap"
-                        htmlFor="name"
-                        error={form.errors.name}
+                        label="Nama periode"
+                        htmlFor="name_period"
+                        error={form.errors.name_period}
                     >
                         <input
-                            id="name"
-                            value={form.data.name}
+                            id="name_period"
+                            value={form.data.name_period}
                             onChange={(event) =>
-                                form.setData('name', event.target.value)
+                                form.setData('name_period', event.target.value)
                             }
+                            placeholder="mis. Gelombang 1 - 2026"
                             className={inputClass}
                             autoFocus
                         />
                     </Field>
-                    <Field
-                        label="Email"
-                        htmlFor="email"
-                        error={form.errors.email}
-                    >
-                        <input
-                            id="email"
-                            type="email"
-                            value={form.data.email}
-                            onChange={(event) =>
-                                form.setData('email', event.target.value)
-                            }
-                            className={inputClass}
-                        />
-                    </Field>
-                    {!editing && (
-                        <>
-                            <Field
-                                label="Kata sandi"
-                                htmlFor="password"
-                                error={form.errors.password}
-                            >
-                                <input
-                                    id="password"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    value={form.data.password}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'password',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className={inputClass}
-                                />
-                            </Field>
-                            <Field
-                                label="Konfirmasi kata sandi"
-                                htmlFor="password_confirmation"
-                            >
-                                <input
-                                    id="password_confirmation"
-                                    type="password"
-                                    autoComplete="new-password"
-                                    value={form.data.password_confirmation}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'password_confirmation',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className={inputClass}
-                                />
-                            </Field>
-                        </>
-                    )}
-                    <Field
-                        label="No. HP"
-                        htmlFor="no_hp"
-                        error={form.errors.no_hp}
-                    >
-                        <input
-                            id="no_hp"
-                            value={form.data.no_hp}
-                            onChange={(event) =>
-                                form.setData('no_hp', event.target.value)
-                            }
-                            placeholder="08xxxxxxxxxx"
-                            className={inputClass}
-                        />
-                    </Field>
-                    <Field
-                        label="Jurusan"
-                        htmlFor="departemen_id"
-                        error={form.errors.departemen_id}
-                    >
-                        <select
-                            id="departemen_id"
-                            value={form.data.departemen_id}
-                            onChange={(event) =>
-                                form.setData(
-                                    'departemen_id',
-                                    event.target.value,
-                                )
-                            }
-                            className={inputClass}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <Field
+                            label="Tanggal mulai"
+                            htmlFor="start_period"
+                            error={form.errors.start_period}
                         >
-                            <option value="" disabled>
-                                Pilih jurusan…
-                            </option>
-                            {departemens.map((dept) => (
-                                <option key={dept.id} value={dept.id}>
-                                    {dept.name}
-                                </option>
-                            ))}
-                        </select>
-                    </Field>
+                            <input
+                                id="start_period"
+                                type="date"
+                                value={form.data.start_period}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'start_period',
+                                        event.target.value,
+                                    )
+                                }
+                                className={inputClass}
+                            />
+                        </Field>
+                        <Field
+                            label="Tanggal selesai"
+                            htmlFor="end_period"
+                            error={form.errors.end_period}
+                        >
+                            <input
+                                id="end_period"
+                                type="date"
+                                value={form.data.end_period}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'end_period',
+                                        event.target.value,
+                                    )
+                                }
+                                className={inputClass}
+                            />
+                        </Field>
+                    </div>
 
                     <div className="flex items-center justify-end gap-2">
                         <button

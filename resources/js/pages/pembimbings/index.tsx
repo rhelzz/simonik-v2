@@ -26,7 +26,8 @@ type Pembimbing = {
     no_hp: string;
     gender: string | null;
     email: string | null;
-    industries_count: number;
+    industry: string | null;
+    students_count: number;
 };
 
 type PembimbingsIndexProps = {
@@ -176,7 +177,10 @@ export default function PembimbingsIndex({
                                         Gender
                                     </th>
                                     <th className="pb-3 font-semibold">
-                                        Industri
+                                        Industri (PT)
+                                    </th>
+                                    <th className="pb-3 font-semibold">
+                                        Siswa
                                     </th>
                                     <th className="pb-3 text-right font-semibold">
                                         Aksi
@@ -205,7 +209,10 @@ export default function PembimbingsIndex({
                                                 : '—'}
                                         </td>
                                         <td className="py-3 text-ink/80">
-                                            {pembimbing.industries_count}
+                                            {pembimbing.industry ?? '—'}
+                                        </td>
+                                        <td className="py-3 text-ink/80">
+                                            {pembimbing.students_count}
                                         </td>
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">

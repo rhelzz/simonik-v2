@@ -5,7 +5,7 @@ import {
     Plus,
     Search,
     Trash2,
-    Users,
+    UsersRound,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
@@ -14,28 +14,24 @@ import {
     index,
     store,
     update,
-} from '@/actions/App/Http/Controllers/TeacherController';
+} from '@/actions/App/Http/Controllers/ParentController';
 import { Modal } from '@/components/ui/modal';
 import { Pagination } from '@/components/ui/pagination';
 import { AppLayout } from '@/layouts/app-layout';
 import type { Paginated } from '@/types';
 
-type Teacher = {
+type ParentRow = {
     id: number;
-    name: string;
-    no_hp: string;
+    nama: string;
+    gender: string | null;
+    occupation: string;
+    phoneNumber: string;
     email: string | null;
-    departemen: string | null;
-    departemen_id: number;
-    industries_count: number;
     students_count: number;
 };
 
-type DepartemenOption = { id: number; name: string };
-
-type TeachersIndexProps = {
-    teachers: Paginated<Teacher>;
-    departemens: DepartemenOption[];
+type ParentsIndexProps = {
+    parents: Paginated<ParentRow>;
     filters: { search: string };
 };
 
@@ -43,22 +39,20 @@ const inputClass =
     'w-full rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none';
 
 const emptyForm = {
-    name: '',
+    nama: '',
     email: '',
     password: '',
     password_confirmation: '',
-    no_hp: '',
-    departemen_id: '',
+    gender: '',
+    alamat: '',
+    occupation: '',
+    phoneNumber: '',
 };
 
-export default function TeachersIndex({
-    teachers,
-    departemens,
-    filters,
-}: TeachersIndexProps) {
+export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
     const [search, setSearch] = useState(filters.search);
     const [open, setOpen] = useState(false);
-    const [editing, setEditing] = useState<Teacher | null>(null);
+    const [editing, setEditing] = useState<ParentRow | null>(null);
 
     const form = useForm({ ...emptyForm });
 
@@ -75,16 +69,17 @@ export default function TeachersIndex({
         setOpen(true);
     }
 
-    function openEdit(teacher: Teacher) {
+    function openEdit(parent: ParentRow) {
         form.setData({
             ...emptyForm,
-            name: teacher.name,
-            email: teacher.email ?? '',
-            no_hp: teacher.no_hp,
-            departemen_id: String(teacher.departemen_id),
+            nama: parent.nama,
+            email: parent.email ?? '',
+            gender: parent.gender ?? '',
+            occupation: parent.occupation,
+            phoneNumber: parent.phoneNumber,
         });
         form.clearErrors();
-        setEditing(teacher);
+        setEditing(parent);
         setOpen(true);
     }
 
@@ -99,26 +94,26 @@ export default function TeachersIndex({
         }
     }
 
-    function remove(teacher: Teacher) {
+    function remove(parent: ParentRow) {
         if (
             confirm(
-                `Hapus guru ${teacher.name}? Akun login beserta datanya akan ikut terhapus.`,
+                `Hapus orang tua ${parent.nama}? Akun login beserta datanya akan ikut terhapus.`,
             )
         ) {
-            router.delete(destroy.url(teacher.id), { preserveScroll: true });
+            router.delete(destroy.url(parent.id), { preserveScroll: true });
         }
     }
 
     return (
-        <AppLayout title="Guru">
+        <AppLayout title="Data Orang Tua">
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h2 className="text-base font-bold text-ink">
-                            Daftar guru
+                            Daftar orang tua / wali
                         </h2>
                         <p className="text-sm text-muted">
-                            {teachers.total} guru terdaftar
+                            {parents.total} orang tua terdaftar
                         </p>
                     </div>
                     <button
@@ -127,7 +122,7 @@ export default function TeachersIndex({
                         className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
                     >
                         <Plus className="size-4" />
-                        Tambah guru
+                        Tambah orang tua
                     </button>
                 </div>
 
@@ -152,17 +147,17 @@ export default function TeachersIndex({
                             type="search"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Cari guru…"
+                            placeholder="Cari orang tua…"
                             className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
                         />
                     </label>
                 </form>
 
-                {teachers.data.length === 0 ? (
+                {parents.data.length === 0 ? (
                     <div className="mt-6 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line py-14 text-center">
-                        <Users className="size-8 text-muted" />
+                        <UsersRound className="size-8 text-muted" />
                         <p className="text-sm font-medium text-ink">
-                            Belum ada guru
+                            Belum ada orang tua
                         </p>
                     </div>
                 ) : (
@@ -170,61 +165,57 @@ export default function TeachersIndex({
                         <table className="w-full min-w-lg border-collapse text-left text-sm">
                             <thead>
                                 <tr className="text-xs font-semibold tracking-wide text-muted uppercase">
-                                    <th className="pb-3 font-semibold">Guru</th>
                                     <th className="pb-3 font-semibold">
-                                        Jurusan
+                                        Orang tua
                                     </th>
-                                    <th className="pb-3 font-semibold">PT</th>
                                     <th className="pb-3 font-semibold">
-                                        Siswa
+                                        Pekerjaan
                                     </th>
+                                    <th className="pb-3 font-semibold">Anak</th>
                                     <th className="pb-3 text-right font-semibold">
                                         Aksi
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-line">
-                                {teachers.data.map((teacher) => (
-                                    <tr key={teacher.id}>
+                                {parents.data.map((parent) => (
+                                    <tr key={parent.id}>
                                         <td className="py-3">
                                             <p className="font-semibold text-ink">
-                                                {teacher.name}
+                                                {parent.nama}
                                             </p>
                                             <p className="text-xs text-muted">
-                                                {teacher.no_hp}
-                                                {teacher.email
-                                                    ? ` · ${teacher.email}`
+                                                {parent.phoneNumber}
+                                                {parent.email
+                                                    ? ` · ${parent.email}`
                                                     : ''}
                                             </p>
                                         </td>
                                         <td className="py-3 text-ink/80">
-                                            {teacher.departemen ?? '—'}
+                                            {parent.occupation}
                                         </td>
                                         <td className="py-3 text-ink/80">
-                                            {teacher.industries_count}
-                                        </td>
-                                        <td className="py-3 text-ink/80">
-                                            {teacher.students_count}
+                                            {parent.students_count}
                                         </td>
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        openEdit(teacher)
+                                                        openEdit(parent)
                                                     }
                                                     className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
-                                                    aria-label={`Edit ${teacher.name}`}
+                                                    aria-label={`Edit ${parent.nama}`}
                                                 >
                                                     <Pencil className="size-4" />
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        remove(teacher)
+                                                        remove(parent)
                                                     }
                                                     className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
-                                                    aria-label={`Hapus ${teacher.name}`}
+                                                    aria-label={`Hapus ${parent.nama}`}
                                                 >
                                                     <Trash2 className="size-4" />
                                                 </button>
@@ -237,25 +228,25 @@ export default function TeachersIndex({
                     </div>
                 )}
 
-                <Pagination meta={teachers} />
+                <Pagination meta={parents} />
             </section>
 
             <Modal
                 open={open}
                 onClose={close}
-                title={editing ? 'Edit guru' : 'Tambah guru'}
+                title={editing ? 'Edit orang tua' : 'Tambah orang tua'}
             >
                 <form onSubmit={submit} className="space-y-4">
                     <Field
                         label="Nama lengkap"
-                        htmlFor="name"
-                        error={form.errors.name}
+                        htmlFor="nama"
+                        error={form.errors.nama}
                     >
                         <input
-                            id="name"
-                            value={form.data.name}
+                            id="nama"
+                            value={form.data.nama}
                             onChange={(event) =>
-                                form.setData('name', event.target.value)
+                                form.setData('nama', event.target.value)
                             }
                             className={inputClass}
                             autoFocus
@@ -317,46 +308,74 @@ export default function TeachersIndex({
                             </Field>
                         </>
                     )}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <Field
+                            label="Jenis kelamin"
+                            htmlFor="gender"
+                            error={form.errors.gender}
+                        >
+                            <select
+                                id="gender"
+                                value={form.data.gender}
+                                onChange={(event) =>
+                                    form.setData('gender', event.target.value)
+                                }
+                                className={inputClass}
+                            >
+                                <option value="" disabled>
+                                    Pilih…
+                                </option>
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                        </Field>
+                        <Field
+                            label="Pekerjaan"
+                            htmlFor="occupation"
+                            error={form.errors.occupation}
+                        >
+                            <input
+                                id="occupation"
+                                value={form.data.occupation}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'occupation',
+                                        event.target.value,
+                                    )
+                                }
+                                className={inputClass}
+                            />
+                        </Field>
+                    </div>
                     <Field
                         label="No. HP"
-                        htmlFor="no_hp"
-                        error={form.errors.no_hp}
+                        htmlFor="phoneNumber"
+                        error={form.errors.phoneNumber}
                     >
                         <input
-                            id="no_hp"
-                            value={form.data.no_hp}
+                            id="phoneNumber"
+                            value={form.data.phoneNumber}
                             onChange={(event) =>
-                                form.setData('no_hp', event.target.value)
+                                form.setData('phoneNumber', event.target.value)
                             }
                             placeholder="08xxxxxxxxxx"
                             className={inputClass}
                         />
                     </Field>
                     <Field
-                        label="Jurusan"
-                        htmlFor="departemen_id"
-                        error={form.errors.departemen_id}
+                        label="Alamat"
+                        htmlFor="alamat"
+                        error={form.errors.alamat}
                     >
-                        <select
-                            id="departemen_id"
-                            value={form.data.departemen_id}
+                        <textarea
+                            id="alamat"
+                            rows={2}
+                            value={form.data.alamat}
                             onChange={(event) =>
-                                form.setData(
-                                    'departemen_id',
-                                    event.target.value,
-                                )
+                                form.setData('alamat', event.target.value)
                             }
                             className={inputClass}
-                        >
-                            <option value="" disabled>
-                                Pilih jurusan…
-                            </option>
-                            {departemens.map((dept) => (
-                                <option key={dept.id} value={dept.id}>
-                                    {dept.name}
-                                </option>
-                            ))}
-                        </select>
+                        />
                     </Field>
 
                     <div className="flex items-center justify-end gap-2">

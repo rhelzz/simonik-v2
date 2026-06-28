@@ -26,6 +26,7 @@ type IndustryRow = {
     bidang: string;
     alamat: string;
     email: string | null;
+    guru: string | null;
     pembimbing: string | null;
     students_count: number;
 };
@@ -122,6 +123,7 @@ export default function IndustriesIndex({
                                     <th className="pb-3 font-semibold">
                                         Bidang
                                     </th>
+                                    <th className="pb-3 font-semibold">Guru</th>
                                     <th className="pb-3 font-semibold">
                                         Pembimbing
                                     </th>
@@ -146,6 +148,9 @@ export default function IndustriesIndex({
                                         </td>
                                         <td className="py-3 text-ink/80">
                                             {industry.bidang}
+                                        </td>
+                                        <td className="py-3 text-ink/80">
+                                            {industry.guru ?? '—'}
                                         </td>
                                         <td className="py-3 text-ink/80">
                                             {industry.pembimbing ?? '—'}
