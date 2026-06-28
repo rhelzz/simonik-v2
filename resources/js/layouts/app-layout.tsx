@@ -1,10 +1,11 @@
-import { Head } from '@inertiajs/react';
-import { X } from 'lucide-react';
+import { Head, usePage } from '@inertiajs/react';
+import { CheckCircle2, X } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppTopbar } from '@/components/app-topbar';
 import { cn } from '@/lib/utils';
+import type { SharedData } from '@/types';
 
 export function AppLayout({
     title,
@@ -14,6 +15,7 @@ export function AppLayout({
     children: ReactNode;
 }) {
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { flash } = usePage<SharedData>().props;
 
     return (
         <div className="min-h-screen bg-canvas text-ink">
@@ -67,6 +69,12 @@ export function AppLayout({
                         title={title}
                         onOpenSidebar={() => setMobileOpen(true)}
                     />
+                    {flash.success && (
+                        <div className="flex items-center gap-2 rounded-2xl bg-positive/10 px-4 py-3 text-sm font-medium text-positive">
+                            <CheckCircle2 className="size-4 shrink-0" />
+                            {flash.success}
+                        </div>
+                    )}
                     <main>{children}</main>
                 </div>
             </div>

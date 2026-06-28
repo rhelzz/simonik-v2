@@ -172,7 +172,7 @@ export default function Dashboard({
                     </div>
                 ) : (
                     <div className="mt-4 overflow-x-auto">
-                        <table className="w-full min-w-[34rem] border-collapse text-left text-sm">
+                        <table className="w-full min-w-136 border-collapse text-left text-sm">
                             <thead>
                                 <tr className="text-xs font-semibold tracking-wide text-muted uppercase">
                                     <th className="pb-3 font-semibold">Nama</th>

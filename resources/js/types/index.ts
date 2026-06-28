@@ -9,7 +9,27 @@ export type * from './auth';
 export type SharedData = {
     name: string;
     auth: Auth;
+    flash: { success: string | null; error: string | null };
     [key: string]: unknown;
+};
+
+export type PaginationLink = {
+    url: string | null;
+    label: string;
+    active: boolean;
+};
+
+/**
+ * Shape of a Laravel length-aware paginator serialized to Inertia.
+ */
+export type Paginated<T> = {
+    data: T[];
+    links: PaginationLink[];
+    current_page: number;
+    last_page: number;
+    from: number | null;
+    to: number | null;
+    total: number;
 };
 
 /**
