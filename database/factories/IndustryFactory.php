@@ -25,10 +25,9 @@ class IndustryFactory extends Factory
             'alamat' => fake()->address(),
             'longitude' => (string) fake()->longitude(),
             'latitude' => (string) fake()->latitude(),
-            'industryMentorName' => fake()->name(),
-            'industryMentorNo' => fake()->numerify('08##########'),
             'duration' => fake()->randomElement(['3 Bulan', '6 Bulan']),
             'pembimbing_id' => null,
+            'teacher_id' => null,
         ];
     }
 }

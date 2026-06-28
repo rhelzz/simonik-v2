@@ -7,7 +7,6 @@ use App\Models\Departemen;
 use App\Models\Industry;
 use App\Models\Parents;
 use App\Models\Student;
-use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -37,7 +36,6 @@ class StudentFactory extends Factory
             'industri_id' => Industry::factory(),
             'departemen_id' => Departemen::factory(),
             'parent_id' => Parents::factory(),
-            'teacher_id' => Teacher::factory(),
             'archived' => false,
             'status_pkl' => fake()->randomElement(['belum', 'proses', 'selesai']),
             'sertifikat_url' => null,
