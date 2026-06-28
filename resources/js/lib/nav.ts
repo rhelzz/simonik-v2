@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
+import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { dashboard } from '@/routes';
 import type { NavSection } from '@/types';
@@ -56,6 +57,7 @@ export const navSections: NavSection[] = [
             {
                 label: 'Industri',
                 icon: Building2,
+                href: industriesIndex.url(),
                 roles: ['admin', 'kaprog', 'guru', 'pembimbing'],
             },
             {
