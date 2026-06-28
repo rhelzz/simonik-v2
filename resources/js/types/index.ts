@@ -42,6 +42,8 @@ export type NavItem = {
     icon: ComponentType<{ className?: string }>;
     href?: string;
     roles?: Role[];
+    /** Submenu entries; when present the item renders as a collapsible group. */
+    children?: NavItem[];
 };
 
 export type NavSection = {

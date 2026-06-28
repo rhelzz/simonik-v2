@@ -2,41 +2,48 @@ import {
     Award,
     BookOpen,
     Building2,
-    Camera,
     CalendarDays,
+    CalendarRange,
     ClipboardCheck,
-    ClipboardList,
     Fingerprint,
-    Gavel,
     GraduationCap,
+    HardHat,
     LayoutDashboard,
-    MapPin,
     MessagesSquare,
     Network,
     NotebookPen,
     School,
-    Settings,
     UserCheck,
     UserCog,
     Users,
+    UsersRound,
 } from 'lucide-react';
-import { index as activitiesIndex } from '@/actions/App/Http/Controllers/ActivityController';
-import { index as kegiatanIndex } from '@/actions/App/Http/Controllers/ActivityMonitorController';
-import { index as absensiIndex } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
+import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentController';
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
+import { index as periodsIndex } from '@/actions/App/Http/Controllers/PeriodController';
 import { edit as profileEdit } from '@/actions/App/Http/Controllers/ProfileController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
 import { dashboard } from '@/routes';
-import type { NavSection } from '@/types';
+import type { NavItem, NavSection } from '@/types';
 import type { Role } from '@/types/auth';
+
+const STAFF: Role[] = [
+    'admin',
+    'kaprog',
+    'guru',
+    'pembimbing',
+    'industri',
+    'mitra',
+];
 
 /**
  * Full sidebar map. Only built features carry an `href`; the rest render as
- * "coming soon" until their route exists. `roles` limits who sees an item.
+ * "coming soon" until their route exists. `roles` limits who sees an item;
+ * items with `children` render as a collapsible dropdown.
  */
 export const navSections: NavSection[] = [
     {
@@ -47,101 +54,76 @@ export const navSections: NavSection[] = [
                 icon: LayoutDashboard,
                 href: dashboard().url,
             },
-            { label: 'Panduan PKL', icon: BookOpen },
         ],
     },
     {
-        title: 'Manajemen',
+        title: 'Data Master',
         items: [
             {
-                label: 'Siswa',
-                icon: GraduationCap,
-                href: studentsIndex.url(),
-                roles: ['admin', 'kaprog', 'guru', 'pembimbing'],
-            },
-            {
-                label: 'Guru',
+                label: 'Data User',
                 icon: Users,
-                href: teachersIndex.url(),
                 roles: ['admin', 'kaprog'],
+                children: [
+                    {
+                        label: 'Data Siswa',
+                        icon: GraduationCap,
+                        href: studentsIndex.url(),
+                    },
+                    {
+                        label: 'Guru Pembimbing',
+                        icon: UserCheck,
+                        href: teachersIndex.url(),
+                    },
+                    {
+                        label: 'Data Industri',
+                        icon: Building2,
+                        href: industriesIndex.url(),
+                    },
+                    {
+                        label: 'Pembimbing Industri',
+                        icon: HardHat,
+                        href: pembimbingsIndex.url(),
+                    },
+                    {
+                        label: 'Orang Tua',
+                        icon: UsersRound,
+                        href: parentsIndex.url(),
+                    },
+                ],
             },
             {
-                label: 'Pembimbing',
-                icon: UserCheck,
-                href: pembimbingsIndex.url(),
-                roles: ['admin', 'kaprog'],
-            },
-            {
-                label: 'Industri',
-                icon: Building2,
-                href: industriesIndex.url(),
-                roles: ['admin', 'kaprog', 'guru', 'pembimbing'],
-            },
-            {
-                label: 'Jurusan',
+                label: 'Data Jurusan',
                 icon: Network,
                 href: departemensIndex.url(),
                 roles: ['admin', 'kaprog'],
             },
             {
-                label: 'Kelas',
+                label: 'Data Kelas',
                 icon: School,
                 href: classesIndex.url(),
+                roles: ['admin', 'kaprog'],
+            },
+            {
+                label: 'Periode PKL',
+                icon: CalendarRange,
+                href: periodsIndex.url(),
                 roles: ['admin', 'kaprog'],
             },
         ],
     },
     {
+        title: 'Dokumen & Forum',
+        items: [
+            { label: 'Panduan PKL', icon: BookOpen },
+            { label: 'Forum PKL', icon: MessagesSquare },
+        ],
+    },
+    {
         title: 'Monitoring',
         items: [
-            {
-                label: 'Absensi',
-                icon: Fingerprint,
-                href: absensiIndex.url(),
-                roles: [
-                    'admin',
-                    'kaprog',
-                    'guru',
-                    'pembimbing',
-                    'industri',
-                    'mitra',
-                ],
-            },
-            {
-                label: 'Absen Foto + Geo',
-                icon: Camera,
-                roles: ['siswa'],
-            },
-            {
-                label: 'Jurnal Saya',
-                icon: NotebookPen,
-                href: activitiesIndex.url(),
-                roles: ['siswa'],
-            },
-            {
-                label: 'Kegiatan',
-                icon: ClipboardList,
-                href: kegiatanIndex.url(),
-                roles: [
-                    'admin',
-                    'kaprog',
-                    'guru',
-                    'pembimbing',
-                    'industri',
-                    'mitra',
-                ],
-            },
-            {
-                label: 'Jadwal',
-                icon: CalendarDays,
-                roles: ['admin', 'kaprog', 'guru', 'pembimbing'],
-            },
-            {
-                label: 'Kunjungan',
-                icon: MapPin,
-                roles: ['admin', 'kaprog', 'guru', 'pembimbing'],
-            },
-            { label: 'Forum PKL', icon: MessagesSquare },
+            { label: 'Data Absen', icon: Fingerprint, roles: STAFF },
+            { label: 'Data Jurnal', icon: NotebookPen, roles: STAFF },
+            { label: 'Kalender', icon: CalendarDays, roles: STAFF },
         ],
     },
     {
@@ -150,20 +132,7 @@ export const navSections: NavSection[] = [
             {
                 label: 'Rekap Penilaian',
                 icon: ClipboardCheck,
-                roles: [
-                    'admin',
-                    'kaprog',
-                    'guru',
-                    'pembimbing',
-                    'industri',
-                    'mitra',
-                    'siswa',
-                ],
-            },
-            {
-                label: 'Sidang',
-                icon: Gavel,
-                roles: ['admin', 'kaprog', 'guru'],
+                roles: [...STAFF, 'siswa'],
             },
             {
                 label: 'Sertifikat',
@@ -174,31 +143,34 @@ export const navSections: NavSection[] = [
     },
     {
         title: 'Akun',
-        items: [
-            { label: 'Profil', icon: UserCog, href: profileEdit.url() },
-            { label: 'Pengaturan', icon: Settings, roles: ['admin'] },
-        ],
+        items: [{ label: 'Profil', icon: UserCog, href: profileEdit.url() }],
     },
 ];
 
 /**
- * Keep only the sections/items visible to the given roles. Items without a
- * `roles` list are visible to everyone. When no role is present (e.g. not yet
- * authenticated in dev) the full map is returned so the shell stays explorable.
+ * Keep only the sections/items (and child items) visible to the given roles.
+ * Items without a `roles` list are visible to everyone. When no role is present
+ * (e.g. not yet authenticated in dev) the full map is returned.
  */
 export function navForRoles(roles: Role[]): NavSection[] {
     if (roles.length === 0) {
         return navSections;
     }
 
+    const visible = (item: NavItem): boolean =>
+        !item.roles || item.roles.some((role) => roles.includes(role));
+
     return navSections
         .map((section) => ({
             ...section,
-            items: section.items.filter(
-                (item) =>
-                    !item.roles ||
-                    item.roles.some((role) => roles.includes(role)),
-            ),
+            items: section.items
+                .filter(visible)
+                .map((item) =>
+                    item.children
+                        ? { ...item, children: item.children.filter(visible) }
+                        : item,
+                )
+                .filter((item) => !item.children || item.children.length > 0),
         }))
         .filter((section) => section.items.length > 0);
 }
