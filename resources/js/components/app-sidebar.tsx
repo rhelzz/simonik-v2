@@ -1,10 +1,11 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { GraduationCap, LogOut } from 'lucide-react';
+import { ChevronDown, GraduationCap, LogOut } from 'lucide-react';
+import { useState } from 'react';
 import { destroy as logout } from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import { edit as profile } from '@/actions/App/Http/Controllers/ProfileController';
 import { navForRoles } from '@/lib/nav';
 import { cn } from '@/lib/utils';
-import type { SharedData } from '@/types';
+import type { NavItem, SharedData } from '@/types';
 
 function initials(name: string): string {
     return name
@@ -50,53 +51,23 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                         <p className="px-3 pb-1 text-[0.65rem] font-semibold tracking-[0.12em] text-muted uppercase">
                             {section.title}
                         </p>
-                        {section.items.map((item) => {
-                            const Icon = item.icon;
-                            const active = item.href
-                                ? current.startsWith(item.href)
-                                : false;
-
-                            if (!item.href) {
-                                return (
-                                    <span
-                                        key={item.label}
-                                        aria-disabled="true"
-                                        title="Segera hadir"
-                                        className="flex min-w-0 cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted/70"
-                                    >
-                                        <Icon className="size-[1.15rem] shrink-0" />
-                                        <span className="min-w-0 flex-1 truncate">
-                                            {item.label}
-                                        </span>
-                                        <span className="shrink-0 rounded-full bg-canvas px-1.5 py-0.5 text-[0.6rem] font-semibold text-muted">
-                                            Soon
-                                        </span>
-                                    </span>
-                                );
-                            }
-
-                            return (
-                                <Link
+                        {section.items.map((item) =>
+                            item.children ? (
+                                <NavGroup
                                     key={item.label}
-                                    href={item.href}
-                                    onClick={onNavigate}
-                                    className={cn(
-                                        'flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
-                                        active
-                                            ? 'bg-primary-soft text-primary'
-                                            : 'text-ink/80 hover:bg-canvas hover:text-ink',
-                                    )}
-                                >
-                                    <Icon className="size-[1.15rem] shrink-0" />
-                                    <span className="min-w-0 flex-1 truncate">
-                                        {item.label}
-                                    </span>
-                                    {active && (
-                                        <span className="size-1.5 shrink-0 rounded-full bg-primary" />
-                                    )}
-                                </Link>
-                            );
-                        })}
+                                    item={item}
+                                    current={current}
+                                    onNavigate={onNavigate}
+                                />
+                            ) : (
+                                <NavLink
+                                    key={item.label}
+                                    item={item}
+                                    current={current}
+                                    onNavigate={onNavigate}
+                                />
+                            ),
+                        )}
                     </div>
                 ))}
             </nav>
@@ -130,6 +101,120 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                     <LogOut className="size-4" />
                 </button>
             </div>
+        </div>
+    );
+}
+
+function isActive(href: string | undefined, current: string): boolean {
+    return href ? current.startsWith(href) : false;
+}
+
+function NavLink({
+    item,
+    current,
+    onNavigate,
+    nested = false,
+}: {
+    item: NavItem;
+    current: string;
+    onNavigate?: () => void;
+    nested?: boolean;
+}) {
+    const Icon = item.icon;
+    const active = isActive(item.href, current);
+
+    if (!item.href) {
+        return (
+            <span
+                aria-disabled="true"
+                title="Segera hadir"
+                className={cn(
+                    'flex min-w-0 cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted/70',
+                    nested && 'py-2',
+                )}
+            >
+                <Icon className="size-[1.15rem] shrink-0" />
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                <span className="shrink-0 rounded-full bg-canvas px-1.5 py-0.5 text-[0.6rem] font-semibold text-muted">
+                    Soon
+                </span>
+            </span>
+        );
+    }
+
+    return (
+        <Link
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+                'flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                nested && 'py-2',
+                active
+                    ? 'bg-primary-soft text-primary'
+                    : 'text-ink/80 hover:bg-canvas hover:text-ink',
+            )}
+        >
+            <Icon className="size-[1.15rem] shrink-0" />
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            {active && (
+                <span className="size-1.5 shrink-0 rounded-full bg-primary" />
+            )}
+        </Link>
+    );
+}
+
+function NavGroup({
+    item,
+    current,
+    onNavigate,
+}: {
+    item: NavItem;
+    current: string;
+    onNavigate?: () => void;
+}) {
+    const children = item.children ?? [];
+    const hasActiveChild = children.some((child) =>
+        isActive(child.href, current),
+    );
+    const [open, setOpen] = useState(hasActiveChild);
+    const Icon = item.icon;
+
+    return (
+        <div>
+            <button
+                type="button"
+                onClick={() => setOpen((value) => !value)}
+                className={cn(
+                    'flex w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                    hasActiveChild
+                        ? 'text-primary'
+                        : 'text-ink/80 hover:bg-canvas hover:text-ink',
+                )}
+            >
+                <Icon className="size-[1.15rem] shrink-0" />
+                <span className="min-w-0 flex-1 truncate text-left">
+                    {item.label}
+                </span>
+                <ChevronDown
+                    className={cn(
+                        'size-4 shrink-0 transition-transform',
+                        open && 'rotate-180',
+                    )}
+                />
+            </button>
+            {open && (
+                <div className="mt-1 ml-3 space-y-1 border-l border-line pl-2">
+                    {children.map((child) => (
+                        <NavLink
+                            key={child.label}
+                            item={child}
+                            current={current}
+                            onNavigate={onNavigate}
+                            nested
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

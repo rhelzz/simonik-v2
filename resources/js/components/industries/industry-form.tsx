@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/IndustryController';
 
 export type IndustryOptions = {
+    teachers: { id: number; name: string }[];
     pembimbings: { id: number; name: string }[];
 };
 
@@ -14,9 +15,8 @@ export type IndustryDefaults = {
     alamat?: string;
     longitude?: string;
     latitude?: string;
-    industryMentorName?: string;
-    industryMentorNo?: string;
     duration?: string | null;
+    teacher_id?: number | null;
     pembimbing_id?: number | null;
 };
 
@@ -218,38 +218,31 @@ export function IndustryForm({
 
                     <section className="rounded-3xl bg-surface p-5 sm:p-6">
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <SectionTitle>
-                                Pembimbing industri &amp; sekolah
-                            </SectionTitle>
+                            <SectionTitle>Penempatan pembimbing</SectionTitle>
                             <Field
-                                label="Nama pembimbing industri"
-                                htmlFor="industryMentorName"
-                                error={errors.industryMentorName}
+                                label="Guru pembimbing (opsional)"
+                                htmlFor="teacher_id"
+                                error={errors.teacher_id}
                             >
-                                <input
-                                    id="industryMentorName"
-                                    name="industryMentorName"
-                                    defaultValue={industry?.industryMentorName}
+                                <select
+                                    id="teacher_id"
+                                    name="teacher_id"
+                                    defaultValue={industry?.teacher_id ?? ''}
                                     className={inputClass}
-                                    required
-                                />
+                                >
+                                    <option value="">—</option>
+                                    {options.teachers.map((teacher) => (
+                                        <option
+                                            key={teacher.id}
+                                            value={teacher.id}
+                                        >
+                                            {teacher.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </Field>
                             <Field
-                                label="No. HP pembimbing industri"
-                                htmlFor="industryMentorNo"
-                                error={errors.industryMentorNo}
-                            >
-                                <input
-                                    id="industryMentorNo"
-                                    name="industryMentorNo"
-                                    defaultValue={industry?.industryMentorNo}
-                                    placeholder="08xxxxxxxxxx"
-                                    className={inputClass}
-                                    required
-                                />
-                            </Field>
-                            <Field
-                                label="Pembimbing sekolah (opsional)"
+                                label="Pembimbing industri (opsional)"
                                 htmlFor="pembimbing_id"
                                 error={errors.pembimbing_id}
                             >
@@ -270,6 +263,11 @@ export function IndustryForm({
                                     ))}
                                 </select>
                             </Field>
+                            <p className="text-xs text-muted sm:col-span-2">
+                                Guru pembimbing & pembimbing industri yang
+                                dipilih di sini otomatis menjadi pembimbing
+                                semua siswa yang PKL di industri ini.
+                            </p>
                         </div>
                     </section>
 

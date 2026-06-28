@@ -8,7 +8,6 @@ export type StudentOptions = {
     departemens: { id: number; name: string }[];
     industries: { id: number; name: string }[];
     parents: { id: number; nama: string }[];
-    teachers: { id: number; name: string }[];
     periods: { id: number; name_period: string }[];
 };
 
@@ -29,7 +28,6 @@ export type StudentDefaults = {
     industri_id?: number;
     departemen_id?: number;
     parent_id?: number;
-    teacher_id?: number;
     p_k_l_period_id?: number | null;
 };
 
@@ -401,31 +399,6 @@ export function StudentForm({
                                             value={industry.id}
                                         >
                                             {industry.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </Field>
-                            <Field
-                                label="Guru pembimbing"
-                                htmlFor="teacher_id"
-                                error={errors.teacher_id}
-                            >
-                                <select
-                                    id="teacher_id"
-                                    name="teacher_id"
-                                    defaultValue={student?.teacher_id ?? ''}
-                                    className={inputClass}
-                                    required
-                                >
-                                    <option value="" disabled>
-                                        Pilih guru…
-                                    </option>
-                                    {options.teachers.map((teacher) => (
-                                        <option
-                                            key={teacher.id}
-                                            value={teacher.id}
-                                        >
-                                            {teacher.name}
                                         </option>
                                     ))}
                                 </select>
