@@ -93,4 +93,6 @@ These are distilled from the Laravel Boost guidelines bundled with this project 
 - **One changed folder = one commit.** When committing/pushing, group the changed files by their folder and create a separate commit per folder (e.g. `database/migrations/`, `app/Models/`, `database/factories/`). Stage and commit each folder on its own; don't mix folders in a single commit. Files that don't belong to a clear feature folder (e.g. root files) get their own commit.
 - **Do not add a `Co-Authored-By` trailer** to commit messages.
 - Push to `main`.
-- **After every commit/push, update [`docs/PROGRESS.md`](docs/PROGRESS.md)** so it reflects the latest state: what was just done (current step) and the next step(s) as a few best options. Keep it the single living source of "where we are" in the migration from the legacy `backend/` + `frontend/` apps to this Inertia monolith.
+- **Keep two docs in sync** (both live in `docs/`):
+  - **[`docs/PROGRESS.md`](docs/PROGRESS.md)** — living log of what's DONE. **Update after every commit/push**: append/adjust the current step and the next step(s) as a few best options. Single source of "where we are" in the migration from the legacy `backend/` + `frontend/` apps to this Inertia monolith.
+  - **[`docs/ROADMAP.md`](docs/ROADMAP.md)** — project CONTEXT + future plan (key decisions, sidebar map, per-feature specs for "Soon" items). **Update when scope/plan/decisions change** (not every commit). When you finish a roadmap feature, move its detail from ROADMAP into PROGRESS.
