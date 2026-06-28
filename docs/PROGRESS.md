@@ -59,18 +59,24 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **UI**: `pages/{departemens,classes}/index.tsx` pakai pola **modal** (tambah/edit di satu halaman) + komponen reusable `components/ui/modal.tsx` & `components/ui/pagination.tsx`. Flash **error** kini juga tampil di `app-layout`. Menu **Jurusan** & **Kelas** aktif.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 29 test passed** (+15 Jurusan/Kelas). ESLint + tsc + Prettier + `vite build` lolos.
 
+### 9. Modul Industri — CRUD Industri (tempat PKL)
+- **Backend**: `IndustryController` resourceful (`index/create/store/edit/update/destroy`, tanpa `show`) + `StoreIndustryRequest`/`UpdateIndustryRequest`. `store` membuat **akun User (role `mitra`) + profil industri** dalam satu transaksi; `update` sinkron akun (name/email) + profil; `destroy` hapus user (cascade ke industri). **Guard hapus**: industri yang masih jadi tempat PKL siswa tidak bisa dihapus (flash error) — karena `students.industri_id` cascade, hapus tanpa guard ikut menghapus siswa. Index: search nama + `withCount('students')` + pagination 10.
+- **Keputusan**: role akun industri = **`mitra`** (sesuai deskripsi "punya akun mitra"). `pembimbing_id` **opsional** (dropdown pembimbing yang ada; nullable) krn modul Pembimbing belum dibangun — disiapkan untuk diisi setelahnya.
+- **Routes**: `Route::resource('industries')->except('show')` di-gate `role:admin|kaprog|guru|pembimbing`.
+- **UI**: `pages/industries/{index,create,edit}.tsx` + komponen `IndustryForm` (3 seksi: akun mitra, profil industri + lat/long, pembimbing industri/sekolah). Pola **page-based** persis Siswa. Menu **Industri** aktif di sidebar.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 37 test passed** (+8 Industri). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
-Master data inti lengkap: **Siswa**, **Jurusan**, **Kelas** semua CRUD penuh, role-gated, tervalidasi, dengan guard relasi. Pola kini ada dua: **page-based** (entitas besar spt Siswa) & **modal-based** (entitas kecil spt Jurusan/Kelas) + komponen UI reusable (modal, pagination).
+Master data penempatan PKL lengkap: **Siswa**, **Jurusan**, **Kelas**, **Industri** semua CRUD penuh, role-gated, tervalidasi, dengan guard relasi. Pola: **page-based** (Siswa, Industri) & **modal-based** (Jurusan/Kelas) + komponen UI reusable (modal, pagination). Pola "buat akun User + profil dalam 1 transaksi" kini dipakai Siswa (role siswa) & Industri (role mitra).
 
-Sisa "Soon": Guru, Pembimbing, Industri, Absensi, Kegiatan, Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan.
+Sisa "Soon": Guru, Pembimbing, Absensi, Kegiatan, Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik
 
-1. **Modul Industri (Rekomendasi)** — Entitas master penempatan PKL (punya akun mitra + pembimbing). Melengkapi rantai data penempatan siswa; pola page-based mirip Siswa.
-2. **Guru & Pembimbing** — CRUD entitas pembimbing (modal/page-based), cepat krn meniru pola yang ada.
-3. **Absensi & Kegiatan (jurnal)** — Modul transaksional harian siswa, inti monitoring PKL (lebih kompleks: foto, geolokasi, verifikasi).
-4. **Halaman profil/ganti password + landing** — Pengaturan akun & ganti splash Laravel dengan landing SIMONIK.
+1. **Guru & Pembimbing (Rekomendasi)** — CRUD dua entitas pembimbing (akun User role `guru`/`pembimbing` + profil). Melengkapi dropdown yang sudah dipakai Siswa (`teacher_id`) & Industri (`pembimbing_id`, kini masih kosong). Cepat krn meniru pola page-based.
+2. **Absensi & Kegiatan (jurnal)** — Modul transaksional harian siswa, inti monitoring PKL (lebih kompleks: foto, geolokasi, verifikasi).
+3. **Halaman profil/ganti password + landing** — Pengaturan akun & ganti splash Laravel dengan landing SIMONIK.
