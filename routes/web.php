@@ -5,7 +5,9 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\IndustryController;
+use App\Http\Controllers\PembimbingController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -26,6 +28,14 @@ Route::middleware('auth')->group(function () {
     Route::resource('industries', IndustryController::class)
         ->except('show')
         ->middleware('role:admin|kaprog|guru|pembimbing');
+
+    Route::resource('teachers', TeacherController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('role:admin|kaprog');
+
+    Route::resource('pembimbings', PembimbingController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('role:admin|kaprog');
 
     Route::resource('departemens', DepartemenController::class)
         ->only(['index', 'store', 'update', 'destroy'])
