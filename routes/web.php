@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\ActivityMonitorController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
@@ -44,4 +46,18 @@ Route::middleware('auth')->group(function () {
     Route::resource('classes', ClassController::class)
         ->only(['index', 'store', 'update', 'destroy'])
         ->middleware('role:admin|kaprog');
+
+    // Jurnal kegiatan harian milik siswa sendiri.
+    Route::resource('activities', ActivityController::class)
+        ->except('show')
+        ->middleware('role:siswa');
+
+    // Pemantauan jurnal kegiatan siswa oleh staf (role-scoped) + verifikasi.
+    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|mitra')->group(function () {
+        Route::get('kegiatan', [ActivityMonitorController::class, 'index'])->name('kegiatan.index');
+        Route::get('kegiatan/{activity}', [ActivityMonitorController::class, 'show'])->name('kegiatan.show');
+    });
+    Route::patch('kegiatan/{activity}/verify', [ActivityMonitorController::class, 'verify'])
+        ->name('kegiatan.verify')
+        ->middleware('role:pembimbing|industri|mitra');
 });
