@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,4 +21,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('students', StudentController::class)
         ->except('show')
         ->middleware('role:admin|kaprog|guru|pembimbing');
+
+    Route::resource('departemens', DepartemenController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('role:admin|kaprog');
+
+    Route::resource('classes', ClassController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->middleware('role:admin|kaprog');
 });
