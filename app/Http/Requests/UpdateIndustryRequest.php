@@ -31,11 +31,10 @@ class UpdateIndustryRequest extends FormRequest
             'alamat' => ['required', 'string'],
             'longitude' => ['required', 'string', 'max:255'],
             'latitude' => ['required', 'string', 'max:255'],
-            'industryMentorName' => ['required', 'string', 'max:255'],
-            'industryMentorNo' => ['required', 'string', 'max:50'],
             'duration' => ['nullable', 'string', 'max:255'],
 
-            // Relasi
+            // Relasi (guru pembimbing & pembimbing industri, keduanya opsional)
+            'teacher_id' => ['nullable', Rule::exists('teachers', 'id')],
             'pembimbing_id' => ['nullable', Rule::exists('pembimbings', 'id')],
         ];
     }

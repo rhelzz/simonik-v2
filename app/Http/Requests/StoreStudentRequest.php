@@ -41,7 +41,6 @@ class StoreStudentRequest extends FormRequest
             'industri_id' => ['required', Rule::exists('industries', 'id')],
             'departemen_id' => ['required', Rule::exists('departemens', 'id')],
             'parent_id' => ['required', Rule::exists('parents', 'id')],
-            'teacher_id' => ['required', Rule::exists('teachers', 'id')],
             'p_k_l_period_id' => ['nullable', Rule::exists('p_k_l_periods', 'id')],
         ];
     }
