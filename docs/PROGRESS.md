@@ -53,18 +53,24 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **Fix penting**: relasi `belongsTo` bernama jamak (`users()`) butuh FK eksplisit `user_id` (Laravel menebak `users_id`); diperbaiki di semua model + `SidangScore::aspect()` (`sidang_aspect_id`). Migration baru: `students.image` jadi nullable.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 14 test passed** (6 CRUD siswa). ESLint + tsc + Prettier + `vite build` lolos.
 
+### 8. Master data — CRUD Jurusan & Kelas
+- **Backend**: `DepartemenController` & `ClassController` (`index/store/update/destroy`) + `DepartemenRequest`/`ClassRequest`. Slug otomatis & unik (`uniqueSlug`); nama jurusan unik. **Guard hapus**: jurusan dgn kelas/siswa, atau kelas dgn siswa, tidak bisa dihapus (flash error) — karena FK kita cascade/not-null (beda legacy yang null-kan).
+- **Routes**: `Route::resource(...)->only([index,store,update,destroy])` di-gate `role:admin|kaprog`.
+- **UI**: `pages/{departemens,classes}/index.tsx` pakai pola **modal** (tambah/edit di satu halaman) + komponen reusable `components/ui/modal.tsx` & `components/ui/pagination.tsx`. Flash **error** kini juga tampil di `app-layout`. Menu **Jurusan** & **Kelas** aktif.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 29 test passed** (+15 Jurusan/Kelas). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
-Modul **Siswa** end-to-end jalan: list/cari/filter, tambah (sekaligus buat akun login siswa), edit, hapus — semuanya role-gated & tervalidasi. Data demo tersedia (12 siswa). Ini jadi **pola/template** untuk modul berikutnya.
+Master data inti lengkap: **Siswa**, **Jurusan**, **Kelas** semua CRUD penuh, role-gated, tervalidasi, dengan guard relasi. Pola kini ada dua: **page-based** (entitas besar spt Siswa) & **modal-based** (entitas kecil spt Jurusan/Kelas) + komponen UI reusable (modal, pagination).
 
-Modul lain masih "Soon" (Guru, Pembimbing, Industri, Jurusan, Kelas, Absensi, dst.).
+Sisa "Soon": Guru, Pembimbing, Industri, Absensi, Kegiatan, Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik
 
-1. **Master data: Jurusan & Kelas (Rekomendasi)** — CRUD `departemens` & `classes` (entitas paling fundamental yang dipakai Siswa). Cepat karena meniru pola slice Siswa; melengkapi rantai data.
-2. **Modul Industri & Guru/Pembimbing** — Lanjutkan CRUD entitas master lain yang dipakai penempatan siswa.
-3. **Absensi & Kegiatan (jurnal)** — Modul harian siswa (data transaksional), lebih kompleks tapi inti monitoring PKL.
+1. **Modul Industri (Rekomendasi)** — Entitas master penempatan PKL (punya akun mitra + pembimbing). Melengkapi rantai data penempatan siswa; pola page-based mirip Siswa.
+2. **Guru & Pembimbing** — CRUD entitas pembimbing (modal/page-based), cepat krn meniru pola yang ada.
+3. **Absensi & Kegiatan (jurnal)** — Modul transaksional harian siswa, inti monitoring PKL (lebih kompleks: foto, geolokasi, verifikasi).
 4. **Halaman profil/ganti password + landing** — Pengaturan akun & ganti splash Laravel dengan landing SIMONIK.
