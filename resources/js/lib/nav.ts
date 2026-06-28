@@ -11,11 +11,14 @@ import {
     MapPin,
     MessageSquareText,
     Network,
+    NotebookPen,
     School,
     Settings,
     UserCheck,
     Users,
 } from 'lucide-react';
+import { index as activitiesIndex } from '@/actions/App/Http/Controllers/ActivityController';
+import { index as kegiatanIndex } from '@/actions/App/Http/Controllers/ActivityMonitorController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
@@ -87,9 +90,23 @@ export const navSections: NavSection[] = [
         items: [
             { label: 'Absensi', icon: Fingerprint },
             {
+                label: 'Jurnal Saya',
+                icon: NotebookPen,
+                href: activitiesIndex.url(),
+                roles: ['siswa'],
+            },
+            {
                 label: 'Kegiatan',
                 icon: ClipboardList,
-                roles: ['admin', 'kaprog', 'guru', 'pembimbing', 'siswa'],
+                href: kegiatanIndex.url(),
+                roles: [
+                    'admin',
+                    'kaprog',
+                    'guru',
+                    'pembimbing',
+                    'industri',
+                    'mitra',
+                ],
             },
             {
                 label: 'Jadwal',
