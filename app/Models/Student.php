@@ -119,12 +119,6 @@ class Student extends Model
         return $this->hasMany(Evaluation::class);
     }
 
-    /** @return HasMany<AspekProduktif, $this> */
-    public function produktif(): HasMany
-    {
-        return $this->hasMany(AspekProduktif::class);
-    }
-
     /** @return HasMany<GuidanceReport, $this> */
     public function guidance_report(): HasMany
     {

@@ -70,18 +70,6 @@ class Industry extends Model
         return $this->hasMany(Schedule::class, 'industri_id');
     }
 
-    /** @return HasMany<Evaluation, $this> */
-    public function evaluations(): HasMany
-    {
-        return $this->hasMany(Evaluation::class, 'industri_id');
-    }
-
-    /** @return HasMany<AspekProduktif, $this> */
-    public function produktif(): HasMany
-    {
-        return $this->hasMany(AspekProduktif::class, 'industri_id');
-    }
-
     /** @return HasMany<SignatureSetting, $this> */
     public function signature(): HasMany
     {

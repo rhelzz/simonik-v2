@@ -118,17 +118,32 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **UI** `pages/dashboard.tsx`: kartu `RateCard` dengan **segmented filter** (toggle rentang, client-side) + progress bar. 5 stat card lama dipertahankan.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 77 test passed** (+3 Dashboard). ESLint + tsc + Prettier + `vite build` lolos.
 
+### 18. Rekap Penilaian — master aspek (admin) + input nilai (guru/pembimbing) + lihat (semua cakupan)
+- **Skema dirombak** (migration baru `2025_01_03_000001_rework_assessment_tables`, forward-only — drop+recreate kedua tabel legacy yang belum pernah dipakai di v2): `aspek_produktifs` kini **MASTER aspek** (`category` teknis/non_teknis, `no` urut, `kemampuan`) — bukan lagi baris skor per siswa; `evaluations` kini **SKOR per siswa per aspek** (`student_id`, `aspek_produktif_id`, `score` 0-100, **unique(student_id, aspek_produktif_id)**, FK cascade). Grade A/B/C/D **dihitung** dari skor (tidak disimpan).
+- **Model**: `AspekProduktif` (fillable category/no/kemampuan, konstanta `CATEGORY_TEKNIS`/`CATEGORY_NON_TEKNIS`/`CATEGORIES`, relasi `evaluations()`); `Evaluation` (fillable student_id/aspek_produktif_id/score, relasi `students()`/`aspek()`, static **`gradeFor()`** A≥80/B≥70/C≥60/D + **`qualificationFor()`** Sangat baik/Baik/Cukup/Kurang). Relasi mati dibuang: `Student::produktif()`, `Industry::produktif()` & `Industry::evaluations()`. Factory & `EvaluationFactory`/`AspekProduktifFactory` (state `teknis()`/`nonTeknis()`) disesuaikan.
+- **Master aspek (admin/kaprog)**: `AspectController` (`index/store/update/destroy`) + `AspectRequest` (category in CATEGORIES, no integer ≥1, kemampuan). UI modal `pages/aspects/index.tsx` (badge kategori, `withCount('evaluations')`). Gate `role:admin|kaprog`. Menu sidebar **Aspek Penilaian** (admin).
+- **Rekap Penilaian (`AssessmentController`)**: `index` daftar siswa **role-scoped** (`scopedStudents`: admin/kaprog=semua; guru=siswa di PT yg diampu `industries.teacher_id`; pembimbing=`industries.pembimbing_id`; mitra/industri=`industries.user_id`; orangtua=`students.parent_id`; siswa=miliknya → **redirect** ke rekap sendiri) + `withAvg`/`withCount` ringkasan grade; `show(Student)` rekap aspek teknis+non-teknis dgn skor+grade+keterangan (abort 403 di luar scope); `update(Student)` upsert skor — **guru→non-teknis, pembimbing→teknis** (route `role:guru|pembimbing`, skor di luar kategori role diabaikan, nilai kosong menghapus). UI `pages/assessments/{index,show}.tsx` + helper `lib/grade.ts` (selaras backend; preview grade live saat input). Menu **Rekap Penilaian** kini aktif (STAFF + siswa + orangtua).
+- **Seeder**: `DemoDataSeeder` menambah 10 aspek master (5 non-teknis + 5 teknis) + nilai contoh untuk 6 siswa pertama.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 97 test passed** (+20: AspectTest 8, AssessmentTest 12). ESLint + tsc + Prettier + `vite build` lolos. `migrate:fresh --seed` sukses.
+
+### 19. Absen Foto + Geolokasi (siswa) — input kehadiran via web
+- **Input absen web (role `siswa`)**: aplikasi web-only → siswa absen lewat browser. `AttendanceController` (gate `role:siswa`, semua dibatasi `user_id=auth`): `index` (status hari ini + riwayat paginate), `checkIn` (foto **wajib** + geolokasi lat/long, sekali/hari, status `hadir`, set `arrivalTime`), `checkOut` (lengkapi `departureTime` pada record hari ini; guard sudah masuk & belum pulang), `absence` (izin/sakit + `absenceReason`, lampiran opsional). Pakai kolom `attendances` lama (`arrivalTime`/`departureTime`/`image`/`latitude`/`longitude`/`status`/`absenceReason`/`verified`); `verified` tetap null (verifikasi = langkah Data Absen drill-down berikutnya).
+- **FormRequest**: `CheckInRequest` (image required image/mimes/max 4096, latitude `between:-90,90`, longitude `between:-180,180`), `AbsenceRequest` (status in izin/sakit, absenceReason required). Foto disimpan ke disk `public` (`attendances/…`), accessor `Attendance::image` → URL.
+- **Frontend**: `pages/attendance/index.tsx` (kartu status hari ini: belum absen → panel absen / sudah masuk → tombol pulang / izin-sakit → info; + riwayat). Komponen **`components/photo-capture.tsx`** (kamera langsung `getUserMedia`+canvas, fallback unggah berkas `capture="environment"`) & helper **`lib/attendance.ts`** (badge/label status, dibuat ulang). Geolokasi via `navigator.geolocation.getCurrentPosition`. Form pakai `useForm`+`forceFormData`. Menu **Absen Foto + Geo** (seksi "PKL Saya", roles `siswa`).
+- **Seeder**: `DemoDataSeeder` menambah absen `hadir` 5 hari kerja terakhir untuk siswa status `proses` (today belum pulang/unverified) → rate dashboard & riwayat langsung terisi.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 107 test passed** (+10 AttendanceTest). ESLint + tsc + Prettier + `vite build` lolos. `migrate:fresh --seed` sukses; `storage:link` aktif.
+
 ---
 
 ## 📍 Current step
-**Dashboard analytical jalan** di atas fondasi master data. Admin melihat 5 ringkasan + rate absensi/jurnal (filter waktu). Master data penuh (Siswa, Guru Pembimbing, Industri, Pembimbing Industri, Orang Tua, Jurusan, Kelas, Periode PKL) + dashboard analitik. **Catatan**: rate absensi/jurnal memakai tabel `attendances`/`activities` yang masih ada datanya, tapi **input siswa & monitoring drill-down belum dibangun ulang** (data riil akan mengalir setelah modul Absen/Jurnal siswa jadi).
+**Absen siswa (foto + geolokasi) jalan**. Siswa melakukan absen masuk (selfie + titik lokasi), absen pulang, atau mengajukan izin/sakit lewat web; riwayat & status hari ini tampil. Data absen kini mengalir riil → **rate absensi dashboard terisi**. Di atas: master data penuh, dashboard analitik, Rekap Penilaian.
 
-Sisa "Soon": Rekap Penilaian, Absen Foto+Geo (siswa), Data Absen (drill-down), Data Jurnal (drill-down), Panduan PKL, Sertifikat, Forum PKL, Kalender.
+Sisa "Soon": **Jurnal harian (input siswa)** + Data Absen/Data Jurnal (drill-down + verifikasi staf), Panduan PKL, Sertifikat, Forum PKL, Kalender.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Rekap Penilaian (Rekomendasi)** — master aspek teknis/non-teknis (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu); auto-konversi grade A/B/C/D.
-2. **Absen Foto + Geolokasi (siswa)** — input absen web (foto + `navigator.geolocation`); mengisi data untuk rate absensi & Data Absen.
-3. **Data Absen / Data Jurnal drill-down** (Jurusan→Kelas→Murid→detail) + verifikasi.
+1. **Data Absen drill-down + verifikasi (Rekomendasi)** — monitoring staf 4 layer (Jurusan→Kelas→Murid→detail) atas data absen yang kini mengalir; pembimbing/industri verifikasi (`verified`).
+2. **Jurnal harian (input siswa)** — rich-text Tiptap (modul lama dihapus, bangun ulang) → mengisi rate jurnal & Data Jurnal.
+3. **Panduan PKL** (upload PDF/dokumen → tampil ke siswa), lalu **Sertifikat**.

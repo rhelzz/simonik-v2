@@ -81,13 +81,15 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 | **Periode PKL** | ✅ | CRUD gelombang + rentang tanggal. |
 | **Forum PKL** | ⏳ | Prioritas rendah. |
 | **Panduan PKL** | ⏳ | CRUD upload PDF/dokumen → tampil ke siswa. |
-| **Data Absen** | ⏳ | Monitoring **drill-down 4 layer** (§6). Akan dibangun ulang (monitor flat lama sudah dihapus). |
+| **Absen Foto + Geo** (siswa) | ✅ | Input absen web (foto `getUserMedia`/upload + `navigator.geolocation`): masuk/pulang/izin/sakit, sekali per hari. |
+| **Data Absen** | ⏳ | Monitoring **drill-down 4 layer** (§6) + verifikasi. Data sudah mengalir dari absen siswa; monitor flat lama dihapus. |
 | **Data Jurnal** | ⏳ | Monitoring **drill-down 4 layer** (§6). Akan dibangun ulang (monitor flat lama sudah dihapus). |
 | **Kalender** | ⏳ | Prioritas rendah (menggantikan rencana "Jadwal"). |
-| **Rekap Penilaian** | ⏳ | CRUD aspek penilaian + alur skor (§7). |
+| **Aspek Penilaian** | ✅ | Master aspek teknis/non-teknis (CRUD admin) — sumber untuk Rekap Penilaian (§7). |
+| **Rekap Penilaian** | ✅ | Input nilai (guru non-teknis, pembimbing teknis) + lihat role-scoped + grade A/B/C/D otomatis (§7). |
 | **Sertifikat** | ⏳ | CRUD template + anchor teks (§8). |
 
-**Menu sisi siswa** (tetap, di luar sudut pandang admin): **Absen Foto + Geo** (input) ⏳, **Jurnal harian** (input) ⏳, Panduan PKL (baca), Rekap Penilaian (lihat nilai sendiri), Sertifikat (unduh), Profil ✅.
+**Menu sisi siswa** (tetap, di luar sudut pandang admin): **Absen Foto + Geo** (input) ✅, **Jurnal harian** (input) ⏳, Panduan PKL (baca), Rekap Penilaian (lihat nilai sendiri) ✅, Sertifikat (unduh), Profil ✅.
 
 > Item lama yang **di-drop dari rencana** desain ini: Kunjungan, Sidang, "Jadwal" (→ jadi Kalender), Pengaturan app-level (bisa dipertimbangkan lagi nanti).
 
@@ -106,21 +108,20 @@ Scope per role tetap berlaku (guru = PT yang dipegang, pembimbing = PT-nya, oran
 
 ---
 
-## 7. Rekap Penilaian
+## 7. Rekap Penilaian ✅ (implementasi di [`PROGRESS.md`](PROGRESS.md) §18)
 
-- **Master aspek penilaian** (di-CRUD admin): kategori **Teknis** & **Non-Teknis**.
-  - Field master: **No**, **Kemampuan** (← yang di-CRUD admin di sini).
+- **Master aspek penilaian** (di-CRUD admin, menu **Aspek Penilaian**): kategori **Teknis** & **Non-Teknis**.
+  - Field master: **No**, **Kemampuan**. Model `AspekProduktif` (`category`, `no`, `kemampuan`).
   - Tampilan penilaian: No, Kemampuan, **Nilai**, **Grade**, **Kualifikasi/Keterangan**.
-- **Pengisian nilai** (refer ke master aspek):
+- **Pengisian nilai** (`Evaluation`: `student_id` + `aspek_produktif_id` + `score` 0-100, unique):
   - **Non-teknis** → diisi **Guru Pembimbing** (`guru`).
   - **Teknis** → diisi **Pembimbing Industri** (`pembimbing`).
-- **Skala grade**:
+- **Skala grade** (dihitung dari skor, tidak disimpan — `Evaluation::gradeFor()`):
   - **A** 80–100 — Sangat baik
   - **B** 70–79 — Baik
   - **C** 60–69 — Cukup
   - **D** 0–59 — Kurang
-- **Lihat hasil**: siswa (nilai sendiri), orang tua (anaknya), admin/kaprog (semua).
-- Model kandidat: `AspekProduktif` (master aspek), `Evaluation` (skor per siswa). Perlu cek/flag teknis vs non-teknis.
+- **Lihat hasil** (role-scoped): siswa (nilai sendiri), orang tua (anaknya), admin/kaprog (semua), guru/pembimbing (PT-nya).
 
 ---
 
@@ -166,13 +167,12 @@ C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 
 ## 11. Status implementasi & urutan rekomendasi
 
-**Sudah jadi**: Auth/login, Profil+sandi, Landing, **Dashboard analytical** (5 ringkasan + rate absensi/jurnal filter waktu). **Master data admin penuh**: CRUD Siswa, Guru Pembimbing, Industri, Pembimbing Industri, **Orang Tua** (akun `orangtua`), Jurusan, Kelas, **Periode PKL** — semua gate `admin|kaprog`, relasi via industri terpasang (§3), sidebar dropdown Data User.
+**Sudah jadi**: Auth/login, Profil+sandi, Landing, **Dashboard analytical** (5 ringkasan + rate absensi/jurnal filter waktu). **Master data admin penuh**: CRUD Siswa, Guru Pembimbing, Industri, Pembimbing Industri, **Orang Tua** (akun `orangtua`), Jurusan, Kelas, **Periode PKL** — semua gate `admin|kaprog`, relasi via industri terpasang (§3), sidebar dropdown Data User. **Rekap Penilaian** (§7): master Aspek Penilaian (admin) + input nilai guru/pembimbing + lihat role-scoped + grade A/B/C/D otomatis. **Absen Foto + Geo (siswa)**: input kehadiran web (foto + geolokasi, masuk/pulang/izin/sakit).
 
-> Modul transaksional lama (Jurnal Saya siswa, monitoring Kegiatan & Absensi flat) **sudah dihapus**; akan dibangun ulang sebagai Data Absen/Data Jurnal drill-down + input siswa. Rate di dashboard akan terisi data riil setelah input absen/jurnal siswa jadi.
+> Modul jurnal lama (Jurnal Saya siswa + monitoring flat) **masih dihapus**; akan dibangun ulang sebagai input jurnal siswa + Data Jurnal drill-down. Rate **absensi** dashboard kini terisi riil dari absen siswa; rate **jurnal** menyusul setelah input jurnal siswa jadi.
 
 **Urutan rekomendasi berikutnya:**
-1. **Rekap Penilaian** — master aspek teknis/non-teknis (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu); auto-konversi grade A/B/C/D.
-2. **Absen Foto + Geolokasi (siswa)** — input absen web (foto + `navigator.geolocation`).
-3. **Data Absen & Data Jurnal drill-down** — monitoring 4 layer (Jurusan→Kelas→Murid→detail) + verifikasi.
-4. **Panduan PKL** (upload dokumen), lalu **Sertifikat**.
-5. **Forum PKL** & **Kalender** — prioritas rendah.
+1. **Data Absen drill-down + verifikasi** — monitoring staf 4 layer (Jurusan→Kelas→Murid→detail) atas data absen yang sudah mengalir.
+2. **Jurnal harian (input siswa)** — rich-text Tiptap (bangun ulang), lalu **Data Jurnal** drill-down.
+3. **Panduan PKL** (upload dokumen), lalu **Sertifikat**.
+4. **Forum PKL** & **Kalender** — prioritas rendah.

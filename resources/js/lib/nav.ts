@@ -4,11 +4,13 @@ import {
     Building2,
     CalendarDays,
     CalendarRange,
+    Camera,
     ClipboardCheck,
     Fingerprint,
     GraduationCap,
     HardHat,
     LayoutDashboard,
+    ListChecks,
     MessagesSquare,
     Network,
     NotebookPen,
@@ -18,6 +20,9 @@ import {
     Users,
     UsersRound,
 } from 'lucide-react';
+import { index as aspectsIndex } from '@/actions/App/Http/Controllers/AspectController';
+import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
+import { index as attendanceIndex } from '@/actions/App/Http/Controllers/AttendanceController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
@@ -53,6 +58,17 @@ export const navSections: NavSection[] = [
                 label: 'Dashboard',
                 icon: LayoutDashboard,
                 href: dashboard().url,
+            },
+        ],
+    },
+    {
+        title: 'PKL Saya',
+        items: [
+            {
+                label: 'Absen Foto + Geo',
+                icon: Camera,
+                href: attendanceIndex.url(),
+                roles: ['siswa'],
             },
         ],
     },
@@ -132,7 +148,14 @@ export const navSections: NavSection[] = [
             {
                 label: 'Rekap Penilaian',
                 icon: ClipboardCheck,
-                roles: [...STAFF, 'siswa'],
+                href: assessmentsIndex.url(),
+                roles: [...STAFF, 'siswa', 'orangtua'],
+            },
+            {
+                label: 'Aspek Penilaian',
+                icon: ListChecks,
+                href: aspectsIndex.url(),
+                roles: ['admin', 'kaprog'],
             },
             {
                 label: 'Sertifikat',

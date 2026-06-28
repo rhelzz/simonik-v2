@@ -2,8 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\AspekProduktif;
+use App\Models\Attendance;
 use App\Models\Classes;
 use App\Models\Departemen;
+use App\Models\Evaluation;
 use App\Models\Industry;
 use App\Models\Parents;
 use App\Models\Pembimbing;
@@ -12,6 +15,8 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class DemoDataSeeder extends Seeder
@@ -56,14 +61,17 @@ class DemoDataSeeder extends Seeder
             'pembimbing_id' => Pembimbing::factory()->create()->id,
         ]));
 
-        foreach (range(1, 12) as $ignored) {
+        $aspects = $this->seedAspects();
+
+        /** @var Collection<int, Student> $students */
+        $students = collect(range(1, 12))->map(function () use ($departemens, $classes, $industries, $period): Student {
             $dept = $departemens->random();
             $class = $classes->firstWhere('departemen_id', $dept->id);
 
             $user = User::factory()->create();
             $user->assignRole('siswa');
 
-            Student::factory()->create([
+            return Student::factory()->create([
                 'user_id' => $user->id,
                 'departemen_id' => $dept->id,
                 'class_id' => $class->id,
@@ -72,6 +80,91 @@ class DemoDataSeeder extends Seeder
                 'p_k_l_period_id' => $period->id,
                 'image' => null,
             ]);
+        });
+
+        // Nilai contoh untuk sebagian siswa agar rekap penilaian langsung terisi.
+        foreach ($students->take(6) as $student) {
+            foreach ($aspects as $aspek) {
+                Evaluation::factory()->create([
+                    'student_id' => $student->id,
+                    'aspek_produktif_id' => $aspek->id,
+                    'score' => fake()->numberBetween(68, 96),
+                ]);
+            }
         }
+
+        $this->seedAttendances($students->where('status_pkl', 'proses'));
+    }
+
+    /**
+     * Absen kehadiran 5 hari kerja terakhir untuk siswa yang sedang PKL,
+     * agar rate dashboard & riwayat absen langsung berisi.
+     *
+     * @param  Collection<int, Student>  $students
+     */
+    private function seedAttendances(Collection $students): void
+    {
+        $today = Carbon::today();
+
+        foreach ($students as $student) {
+            foreach (range(0, 6) as $back) {
+                $date = $today->copy()->subDays($back);
+                if ($date->isWeekend()) {
+                    continue;
+                }
+
+                Attendance::factory()->create([
+                    'user_id' => $student->user_id,
+                    'date' => $date->toDateString(),
+                    'status' => 'hadir',
+                    'arrivalTime' => '07:'.str_pad((string) fake()->numberBetween(10, 50), 2, '0', STR_PAD_LEFT).':00',
+                    'departureTime' => $back === 0 ? null : '16:00:00',
+                    'absenceReason' => null,
+                    'verified' => $back === 0 ? null : '1',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Master aspek penilaian standar (non-teknis untuk guru, teknis untuk pembimbing).
+     *
+     * @return Collection<int, AspekProduktif>
+     */
+    private function seedAspects(): Collection
+    {
+        $nonTeknis = [
+            'Disiplin & kehadiran',
+            'Kerja sama tim',
+            'Tanggung jawab',
+            'Inisiatif & kemandirian',
+            'Sopan santun & etika',
+        ];
+
+        $teknis = [
+            'Penguasaan alat & perangkat',
+            'Kualitas hasil kerja',
+            'Kecepatan & ketepatan',
+            'Pemecahan masalah teknis',
+            'Kepatuhan SOP & K3',
+        ];
+
+        $aspects = collect();
+
+        foreach ($nonTeknis as $i => $kemampuan) {
+            $aspects->push(AspekProduktif::factory()->nonTeknis()->create([
+                'no' => $i + 1,
+                'kemampuan' => $kemampuan,
+            ]));
+        }
+
+        foreach ($teknis as $i => $kemampuan) {
+            $aspects->push(AspekProduktif::factory()->teknis()->create([
+                'no' => $i + 1,
+                'kemampuan' => $kemampuan,
+            ]));
+        }
+
+        return $aspects;
     }
 }

@@ -6,33 +6,48 @@ use Database\Factories\AspekProduktifFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
+ * Master aspek penilaian PKL (di-CRUD admin). Tiap aspek punya kategori
+ * teknis / non-teknis, nomor urut tampilan, dan deskripsi kemampuan.
+ *
  * @property int $id
- * @property int $student_id
- * @property int $industri_id
- * @property string $name
- * @property string $score
+ * @property string $category
+ * @property int $no
+ * @property string $kemampuan
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['student_id', 'industri_id', 'name', 'score'])]
+#[Fillable(['category', 'no', 'kemampuan'])]
 class AspekProduktif extends Model
 {
     /** @use HasFactory<AspekProduktifFactory> */
     use HasFactory;
 
-    /** @return BelongsTo<Student, $this> */
-    public function students(): BelongsTo
+    public const CATEGORY_TEKNIS = 'teknis';
+
+    public const CATEGORY_NON_TEKNIS = 'non_teknis';
+
+    /** @var list<string> */
+    public const CATEGORIES = [self::CATEGORY_TEKNIS, self::CATEGORY_NON_TEKNIS];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return $this->belongsTo(Student::class, 'student_id');
+        return [
+            'no' => 'integer',
+        ];
     }
 
-    /** @return BelongsTo<Industry, $this> */
-    public function industries(): BelongsTo
+    /** @return HasMany<Evaluation, $this> */
+    public function evaluations(): HasMany
     {
-        return $this->belongsTo(Industry::class, 'industri_id');
+        return $this->hasMany(Evaluation::class);
     }
 }

@@ -3,8 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\AspekProduktif;
-use App\Models\Industry;
-use App\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,10 +18,25 @@ class AspekProduktifFactory extends Factory
     public function definition(): array
     {
         return [
-            'student_id' => Student::factory(),
-            'industri_id' => Industry::factory(),
-            'name' => fake()->words(3, true),
-            'score' => (string) fake()->numberBetween(70, 100),
+            'category' => fake()->randomElement(AspekProduktif::CATEGORIES),
+            'no' => fake()->numberBetween(1, 20),
+            'kemampuan' => fake()->unique()->sentence(3),
         ];
+    }
+
+    /**
+     * Aspek kategori teknis (diisi pembimbing industri).
+     */
+    public function teknis(): static
+    {
+        return $this->state(['category' => AspekProduktif::CATEGORY_TEKNIS]);
+    }
+
+    /**
+     * Aspek kategori non-teknis (diisi guru pembimbing).
+     */
+    public function nonTeknis(): static
+    {
+        return $this->state(['category' => AspekProduktif::CATEGORY_NON_TEKNIS]);
     }
 }
