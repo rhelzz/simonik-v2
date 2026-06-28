@@ -97,17 +97,21 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **Dokumentasi jadi 2**: [`PROGRESS.md`](PROGRESS.md) (log selesai) + [`ROADMAP.md`](ROADMAP.md) (konteks + rencana/spec fitur). Spec fitur "Soon" lengkap ada di ROADMAP.
 - ✅ ESLint + tsc + `vite build` lolos (perubahan nav only).
 
+### 15. Revisi desain besar (master data & acuan semua role) — dokumentasi
+- **Desain final dirombak & didokumentasikan di [`ROADMAP.md`](ROADMAP.md)** (kini jadi acuan utama): aktor/entitas + terminologi (Guru Pembimbing=`Teacher`/`guru`, Pembimbing Industri=`Pembimbing`/`pembimbing`, PT=`Industry`/`mitra`), **model data & relasi target** + delta vs skema (relasi **Industri↔Guru Pembimbing** belum ada; siswa↔pembimbing diturunkan via industri), **Dashboard analytical** (7 metrik + filter waktu), **menu admin** (Data User dropdown, Data Jurusan/Kelas, Panduan PKL, Data Absen/Jurnal **drill-down 4 layer** Jurusan→Kelas→Murid→detail, Rekap Penilaian, Sertifikat, Periode PKL; Forum & Kalender = Soon), **Rekap Penilaian** (master aspek teknis/non-teknis: field No+Kemampuan; nilai non-teknis oleh guru, teknis oleh pembimbing; grade A 80-100 / B 70-79 / C 60-69 / D 0-59), **Sertifikat** (template + anchor x/y), **Periode PKL**, dan **matriks hak akses semua role**.
+- **Belum ada kode** untuk item baru — ini murni perencanaan. Implementasi mengikuti urutan rekomendasi di ROADMAP §11.
+
 ---
 
 ## 📍 Current step
-UX dasar lengkap (landing, profil+sandi). Sidebar sudah memetakan seluruh rencana fitur. Modul fungsional: master data penempatan (Siswa, Jurusan, Kelas, Industri, Guru, Pembimbing) + modul harian (Kegiatan, Absensi monitoring). **Rencana & spec fitur berikutnya ada di [`ROADMAP.md`](ROADMAP.md).**
+**Perencanaan desain final selesai** — lihat [`ROADMAP.md`](ROADMAP.md) sebagai acuan master data, relasi, menu, dan hak akses semua role. Modul yang sudah jalan: Auth/Profil/Landing, Dashboard ringkas, CRUD Siswa/Industri/Guru/Pembimbing/Jurusan/Kelas, Jurnal Saya (siswa), monitoring Kegiatan & Absensi (flat + verifikasi).
 
-Sisa "Soon": Panduan PKL, Absen Foto + Geolokasi (siswa), Forum PKL, Rekap Penilaian, Jadwal, Kunjungan, Sidang, Sertifikat, Pengaturan.
+Yang akan dibangun/di-rework (ringkas; detail di ROADMAP): Absen Foto+Geo (siswa), Periode PKL, Rekap Penilaian, Data Absen/Jurnal **drill-down**, Dashboard analytical, Panduan PKL, Orang Tua, Sertifikat, lalu Forum & Kalender (Soon). Penguatan relasi Industri↔Guru Pembimbing menyusul.
 
 ---
 
-## ⏭️ Next step — opsi terbaik (detail di ROADMAP)
+## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Absen Foto + Geolokasi (siswa) (Rekomendasi)** — krusial krn web-only: siswa absen via web (foto + `navigator.geolocation`), tampil di monitoring Absensi yang sudah ada.
-2. **Rekap Penilaian (+ input nilai)** — pembimbing (non-teknikal) & mitra/industri (teknikal); siswa lihat nilai sendiri.
-3. **Forum PKL** — tanya-jawab pengganti bimbingan (model `Post`/`Comment`).
+1. **Absen Foto + Geolokasi (siswa) (Rekomendasi)** — krusial krn web-only; hasil masuk ke monitoring Absen.
+2. **Periode PKL (CRUD)** — pondasi gelombang (date range) untuk siswa & laporan.
+3. **Rekap Penilaian** — master aspek (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu).
