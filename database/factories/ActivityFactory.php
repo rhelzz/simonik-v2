@@ -24,7 +24,7 @@ class ActivityFactory extends Factory
             'date' => fake()->date(),
             'start_time' => '08:00:00',
             'end_time' => '12:00:00',
-            'description' => fake()->paragraph(),
+            'description' => '<p>'.fake()->sentence().'</p><p><strong>'.fake()->sentence(2).'</strong> '.fake()->sentence().'</p>',
             'tools' => fake()->randomElement(['Laptop', 'PC', 'Komputer Server']),
             'image' => null,
             'verified' => fake()->randomElement(['0', '1']),
