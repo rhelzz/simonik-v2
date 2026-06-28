@@ -6,6 +6,7 @@ use App\Http\Requests\StoreIndustryRequest;
 use App\Http\Requests\UpdateIndustryRequest;
 use App\Models\Industry;
 use App\Models\Pembimbing;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,14 +18,18 @@ use Inertia\Response;
 class IndustryController extends Controller
 {
     /**
-     * Daftar industri dengan pencarian nama.
+     * Daftar industri (PT) + relasi guru pembimbing, pembimbing industri, jumlah siswa.
      */
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
 
         $industries = Industry::query()
-            ->with(['users:id,email', 'pembimbingNormatif:id,name'])
+            ->with([
+                'users:id,email',
+                'pembimbingNormatif:id,name',
+                'teachers:id,name',
+            ])
             ->withCount('students')
             ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
             ->latest()
@@ -37,6 +42,7 @@ class IndustryController extends Controller
                 'alamat' => $industry->alamat,
                 'email' => $industry->users?->email,
                 'pembimbing' => $industry->pembimbingNormatif?->name,
+                'guru' => $industry->teachers?->name,
                 'students_count' => $industry->students_count,
             ]);
 
@@ -99,10 +105,9 @@ class IndustryController extends Controller
                 'alamat' => $industry->alamat,
                 'longitude' => $industry->longitude,
                 'latitude' => $industry->latitude,
-                'industryMentorName' => $industry->industryMentorName,
-                'industryMentorNo' => $industry->industryMentorNo,
                 'duration' => $industry->duration,
                 'pembimbing_id' => $industry->pembimbing_id,
+                'teacher_id' => $industry->teacher_id,
             ],
             'options' => $this->options(),
         ]);
@@ -161,21 +166,21 @@ class IndustryController extends Controller
             'alamat' => $data['alamat'],
             'longitude' => $data['longitude'],
             'latitude' => $data['latitude'],
-            'industryMentorName' => $data['industryMentorName'],
-            'industryMentorNo' => $data['industryMentorNo'],
             'duration' => $data['duration'] ?? null,
             'pembimbing_id' => $data['pembimbing_id'] ?? null,
+            'teacher_id' => $data['teacher_id'] ?? null,
         ];
     }
 
     /**
-     * Opsi relasi untuk dropdown form.
+     * Opsi relasi untuk dropdown form (guru pembimbing & pembimbing industri).
      *
      * @return array<string, mixed>
      */
     private function options(): array
     {
         return [
+            'teachers' => Teacher::orderBy('name')->get(['id', 'name']),
             'pembimbings' => Pembimbing::orderBy('name')->get(['id', 'name']),
         ];
     }

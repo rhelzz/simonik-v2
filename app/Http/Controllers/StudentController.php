@@ -10,7 +10,6 @@ use App\Models\Industry;
 use App\Models\Parents;
 use App\Models\PKLPeriod;
 use App\Models\Student;
-use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -128,7 +127,6 @@ class StudentController extends Controller
                 'industri_id' => $student->industri_id,
                 'departemen_id' => $student->departemen_id,
                 'parent_id' => $student->parent_id,
-                'teacher_id' => $student->teacher_id,
                 'p_k_l_period_id' => $student->p_k_l_period_id,
             ],
             'options' => $this->options(),
@@ -202,7 +200,6 @@ class StudentController extends Controller
             'industri_id' => $data['industri_id'],
             'departemen_id' => $data['departemen_id'],
             'parent_id' => $data['parent_id'],
-            'teacher_id' => $data['teacher_id'],
             'p_k_l_period_id' => $data['p_k_l_period_id'] ?? null,
         ];
     }
@@ -228,7 +225,6 @@ class StudentController extends Controller
             'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
             'industries' => Industry::orderBy('name')->get(['id', 'name']),
             'parents' => Parents::orderBy('nama')->get(['id', 'nama']),
-            'teachers' => Teacher::orderBy('name')->get(['id', 'name']),
             'periods' => PKLPeriod::orderBy('name_period')->get(['id', 'name_period']),
         ];
     }

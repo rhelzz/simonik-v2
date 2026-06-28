@@ -25,7 +25,7 @@ class TeacherController extends Controller
 
         $teachers = Teacher::query()
             ->with(['users:id,email', 'departements:id,name'])
-            ->withCount('students')
+            ->withCount(['industries', 'students'])
             ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
             ->latest()
             ->paginate(10)
@@ -37,6 +37,7 @@ class TeacherController extends Controller
                 'email' => $teacher->users?->email,
                 'departemen' => $teacher->departements?->name,
                 'departemen_id' => $teacher->departemen_id,
+                'industries_count' => $teacher->industries_count,
                 'students_count' => $teacher->students_count,
             ]);
 

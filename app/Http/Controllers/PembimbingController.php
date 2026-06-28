@@ -22,11 +22,11 @@ class PembimbingController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
 
-        // Catatan: students tidak punya kolom pembimbing_id, jadi relasi sah pembimbing
-        // hanya ke industri (industries.pembimbing_id).
+        // Pembimbing industri terikat ke satu PT (industries.pembimbing_id);
+        // siswa diturunkan lewat PT itu (hasManyThrough).
         $pembimbings = Pembimbing::query()
-            ->with('user:id,email')
-            ->withCount('industry')
+            ->with(['user:id,email', 'industry:id,name,pembimbing_id'])
+            ->withCount('students')
             ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
             ->latest()
             ->paginate(10)
@@ -37,7 +37,8 @@ class PembimbingController extends Controller
                 'no_hp' => $pembimbing->no_hp,
                 'gender' => $pembimbing->gender,
                 'email' => $pembimbing->user?->email,
-                'industries_count' => $pembimbing->industry_count,
+                'industry' => $pembimbing->industry?->name,
+                'students_count' => $pembimbing->students_count,
             ]);
 
         return Inertia::render('pembimbings/index', [
