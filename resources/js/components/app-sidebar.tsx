@@ -22,28 +22,28 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     const primaryRole = auth.roles[0];
 
     return (
-        <div className="flex h-full flex-col gap-6 bg-surface p-5">
+        <div className="flex h-full min-h-0 flex-col bg-surface">
             {/* Brand */}
             <Link
                 href="/dashboard"
                 onClick={onNavigate}
-                className="flex items-center gap-3 px-1"
+                className="flex shrink-0 items-center gap-3 px-5 pt-5 pb-1"
             >
-                <span className="grid size-10 place-items-center rounded-xl bg-primary text-white shadow-sm shadow-primary/30">
+                <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-white shadow-sm shadow-primary/30">
                     <GraduationCap className="size-5" />
                 </span>
-                <span className="leading-tight">
-                    <span className="block text-base font-extrabold tracking-tight text-ink">
+                <span className="min-w-0 leading-tight">
+                    <span className="block truncate text-base font-extrabold tracking-tight text-ink">
                         SIMONIK
                     </span>
-                    <span className="block text-xs font-medium text-muted">
+                    <span className="block truncate text-xs font-medium text-muted">
                         Monitoring PKL
                     </span>
                 </span>
             </Link>
 
             {/* Navigation */}
-            <nav className="flex-1 space-y-6 overflow-y-auto">
+            <nav className="mt-4 scrollbar-slim min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-3 pb-2">
                 {sections.map((section) => (
                     <div key={section.title} className="space-y-1">
                         <p className="px-3 pb-1 text-[0.65rem] font-semibold tracking-[0.12em] text-muted uppercase">
@@ -61,13 +61,13 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                                         key={item.label}
                                         aria-disabled="true"
                                         title="Segera hadir"
-                                        className="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted/70"
+                                        className="flex min-w-0 cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted/70"
                                     >
                                         <Icon className="size-[1.15rem] shrink-0" />
-                                        <span className="flex-1">
+                                        <span className="min-w-0 flex-1 truncate">
                                             {item.label}
                                         </span>
-                                        <span className="rounded-full bg-canvas px-1.5 py-0.5 text-[0.6rem] font-semibold text-muted">
+                                        <span className="shrink-0 rounded-full bg-canvas px-1.5 py-0.5 text-[0.6rem] font-semibold text-muted">
                                             Soon
                                         </span>
                                     </span>
@@ -80,16 +80,18 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                                     href={item.href}
                                     onClick={onNavigate}
                                     className={cn(
-                                        'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+                                        'flex min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
                                         active
                                             ? 'bg-primary-soft text-primary'
                                             : 'text-ink/80 hover:bg-canvas hover:text-ink',
                                     )}
                                 >
                                     <Icon className="size-[1.15rem] shrink-0" />
-                                    <span className="flex-1">{item.label}</span>
+                                    <span className="min-w-0 flex-1 truncate">
+                                        {item.label}
+                                    </span>
                                     {active && (
-                                        <span className="size-1.5 rounded-full bg-primary" />
+                                        <span className="size-1.5 shrink-0 rounded-full bg-primary" />
                                     )}
                                 </Link>
                             );
@@ -99,8 +101,8 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
             </nav>
 
             {/* User */}
-            <div className="flex items-center gap-3 rounded-2xl bg-canvas p-3">
-                <span className="grid size-9 place-items-center rounded-full bg-primary text-sm font-semibold text-white">
+            <div className="m-3 flex shrink-0 items-center gap-3 rounded-2xl bg-canvas p-3">
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-white">
                     {auth.user ? initials(auth.user.name) : 'PK'}
                 </span>
                 <span className="min-w-0 flex-1 leading-tight">
@@ -115,7 +117,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                     type="button"
                     onClick={() => router.post(logout.url())}
                     title="Keluar"
-                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
+                    className="grid size-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
                 >
                     <LogOut className="size-4" />
                 </button>
