@@ -16,6 +16,8 @@ import {
     UserCheck,
     Users,
 } from 'lucide-react';
+import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
+import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { dashboard } from '@/routes';
 import type { NavSection } from '@/types';
@@ -56,8 +58,18 @@ export const navSections: NavSection[] = [
                 icon: Building2,
                 roles: ['admin', 'kaprog', 'guru', 'pembimbing'],
             },
-            { label: 'Jurusan', icon: Network, roles: ['admin', 'kaprog'] },
-            { label: 'Kelas', icon: School, roles: ['admin', 'kaprog'] },
+            {
+                label: 'Jurusan',
+                icon: Network,
+                href: departemensIndex.url(),
+                roles: ['admin', 'kaprog'],
+            },
+            {
+                label: 'Kelas',
+                icon: School,
+                href: classesIndex.url(),
+                roles: ['admin', 'kaprog'],
+            },
         ],
     },
     {

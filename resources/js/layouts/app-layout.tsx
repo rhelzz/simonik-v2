@@ -1,5 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
-import { CheckCircle2, X } from 'lucide-react';
+import { CheckCircle2, TriangleAlert, X } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppSidebar } from '@/components/app-sidebar';
@@ -73,6 +73,12 @@ export function AppLayout({
                         <div className="flex items-center gap-2 rounded-2xl bg-positive/10 px-4 py-3 text-sm font-medium text-positive">
                             <CheckCircle2 className="size-4 shrink-0" />
                             {flash.success}
+                        </div>
+                    )}
+                    {flash.error && (
+                        <div className="flex items-center gap-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
+                            <TriangleAlert className="size-4 shrink-0" />
+                            {flash.error}
                         </div>
                     )}
                     <main>{children}</main>
