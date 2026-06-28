@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -19,10 +18,9 @@ use Illuminate\Support\Carbon;
  * @property string $alamat
  * @property string $longitude
  * @property string $latitude
- * @property string $industryMentorName
- * @property string $industryMentorNo
  * @property string|null $duration
  * @property int|null $pembimbing_id
+ * @property int|null $teacher_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -33,10 +31,9 @@ use Illuminate\Support\Carbon;
     'alamat',
     'longitude',
     'latitude',
-    'industryMentorName',
-    'industryMentorNo',
     'duration',
     'pembimbing_id',
+    'teacher_id',
 ])]
 class Industry extends Model
 {
@@ -49,10 +46,16 @@ class Industry extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    /** @return HasOne<Student, $this> */
-    public function students(): HasOne
+    /** @return HasMany<Student, $this> */
+    public function students(): HasMany
     {
-        return $this->hasOne(Student::class, 'industri_id');
+        return $this->hasMany(Student::class, 'industri_id');
+    }
+
+    /** @return BelongsTo<Teacher, $this> */
+    public function teachers(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'teacher_id');
     }
 
     /** @return HasMany<Visits, $this> */

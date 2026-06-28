@@ -27,7 +27,6 @@ use Illuminate\Support\Carbon;
  * @property int $industri_id
  * @property int $departemen_id
  * @property int $parent_id
- * @property int $teacher_id
  * @property bool $archived
  * @property string $status_pkl
  * @property string|null $sertifikat_url
@@ -51,7 +50,6 @@ use Illuminate\Support\Carbon;
     'industri_id',
     'departemen_id',
     'parent_id',
-    'teacher_id',
     'archived',
     'status_pkl',
     'sertifikat_url',
@@ -95,12 +93,6 @@ class Student extends Model
     public function departements(): BelongsTo
     {
         return $this->belongsTo(Departemen::class, 'departemen_id');
-    }
-
-    /** @return BelongsTo<Teacher, $this> */
-    public function teachers(): BelongsTo
-    {
-        return $this->belongsTo(Teacher::class, 'teacher_id');
     }
 
     /** @return BelongsTo<Industry, $this> */

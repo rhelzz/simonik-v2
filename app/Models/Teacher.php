@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Carbon;
 
 /**
@@ -37,9 +38,30 @@ class Teacher extends Model
         return $this->belongsTo(Departemen::class, 'departemen_id');
     }
 
-    /** @return HasOne<Student, $this> */
-    public function students(): HasOne
+    /**
+     * Industri/PT yang diampu guru ini (1 guru → banyak PT).
+     *
+     * @return HasMany<Industry, $this>
+     */
+    public function industries(): HasMany
     {
-        return $this->hasOne(Student::class);
+        return $this->hasMany(Industry::class, 'teacher_id');
+    }
+
+    /**
+     * Siswa yang dibimbing guru ini, diturunkan lewat industri yang diampu.
+     *
+     * @return HasManyThrough<Student, Industry, $this>
+     */
+    public function students(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Student::class,
+            Industry::class,
+            'teacher_id',  // FK pada industries → teachers.id
+            'industri_id', // FK pada students → industries.id
+            'id',          // local key pada teachers
+            'id',          // local key pada industries
+        );
     }
 }
