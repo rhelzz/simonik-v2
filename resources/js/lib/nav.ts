@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { index as activitiesIndex } from '@/actions/App/Http/Controllers/ActivityController';
 import { index as kegiatanIndex } from '@/actions/App/Http/Controllers/ActivityMonitorController';
+import { index as absensiIndex } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
@@ -88,7 +89,19 @@ export const navSections: NavSection[] = [
     {
         title: 'Monitoring',
         items: [
-            { label: 'Absensi', icon: Fingerprint },
+            {
+                label: 'Absensi',
+                icon: Fingerprint,
+                href: absensiIndex.url(),
+                roles: [
+                    'admin',
+                    'kaprog',
+                    'guru',
+                    'pembimbing',
+                    'industri',
+                    'mitra',
+                ],
+            },
             {
                 label: 'Jurnal Saya',
                 icon: NotebookPen,
