@@ -101,17 +101,26 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **Desain final dirombak & didokumentasikan di [`ROADMAP.md`](ROADMAP.md)** (kini jadi acuan utama): aktor/entitas + terminologi (Guru Pembimbing=`Teacher`/`guru`, Pembimbing Industri=`Pembimbing`/`pembimbing`, PT=`Industry`/`mitra`), **model data & relasi target** + delta vs skema (relasi **Industri↔Guru Pembimbing** belum ada; siswa↔pembimbing diturunkan via industri), **Dashboard analytical** (7 metrik + filter waktu), **menu admin** (Data User dropdown, Data Jurusan/Kelas, Panduan PKL, Data Absen/Jurnal **drill-down 4 layer** Jurusan→Kelas→Murid→detail, Rekap Penilaian, Sertifikat, Periode PKL; Forum & Kalender = Soon), **Rekap Penilaian** (master aspek teknis/non-teknis: field No+Kemampuan; nilai non-teknis oleh guru, teknis oleh pembimbing; grade A 80-100 / B 70-79 / C 60-69 / D 0-59), **Sertifikat** (template + anchor x/y), **Periode PKL**, dan **matriks hak akses semua role**.
 - **Belum ada kode** untuk item baru — ini murni perencanaan. Implementasi mengikuti urutan rekomendasi di ROADMAP §11.
 
+### 16. Rombak fondasi master data + penyempitan scope (admin) ✅
+Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
+- **Skema (migration baru, forward-only)**: `industries` + `teacher_id` (guru pembimbing per-PT, nullOnDelete) & **buang** `industryMentorName/industryMentorNo`; `students` **buang** `teacher_id`. Guru & pembimbing siswa kini **diturunkan dari industrinya**.
+- **Relasi model**: `Industry` → `teachers()` (belongsTo) + `pembimbingNormatif()` + `students()` (hasMany); `Teacher` → `industries()` (hasMany) + `students()` (hasManyThrough industri); `Pembimbing` → `industry()` (hasOne) + `students()` (hasManyThrough industri, sebelumnya mati); `Student` tak lagi punya `teachers()`.
+- **Backend master data**: `IndustryController` (form pilih guru + pembimbing, index tampil guru/pembimbing/jumlah siswa), `StudentController` (form tak lagi pilih guru), `TeacherController` (jumlah PT + murid), `PembimbingController` (PT + murid), **baru** `ParentController` (CRUD + akun role `orangtua`, guard anak) & `PeriodController` (CRUD periode + validasi rentang tanggal). Semua master data di-gate **`role:admin|kaprog`**.
+- **Hapus modul transaksional** (akan dibangun ulang nanti): Jurnal Saya (`ActivityController`), monitoring `ActivityMonitorController` & `AttendanceMonitorController` + request/page/test/`lib/attendance.ts`. Komponen reusable (rich-text editor, modal, pagination) disimpan.
+- **Frontend**: sidebar baru sesuai desain admin — **dropdown "Data User"** (Siswa, Guru Pembimbing, Industri, Pembimbing Industri, Orang Tua), Data Jurusan/Kelas, Periode PKL, + grup Dokumen/Monitoring/Penilaian (Soon). `NavItem` dukung `children`; `app-sidebar` render dropdown. Halaman baru `pages/parents`, `pages/periods`.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 74 test passed**. ESLint + tsc + Prettier + `vite build` lolos. `migrate:fresh --seed` sukses.
+
 ---
 
 ## 📍 Current step
-**Perencanaan desain final selesai** — lihat [`ROADMAP.md`](ROADMAP.md) sebagai acuan master data, relasi, menu, dan hak akses semua role. Modul yang sudah jalan: Auth/Profil/Landing, Dashboard ringkas, CRUD Siswa/Industri/Guru/Pembimbing/Jurusan/Kelas, Jurnal Saya (siswa), monitoring Kegiatan & Absensi (flat + verifikasi).
+**Fondasi master data admin solid & ter-adaptasi** sesuai ROADMAP. Relasi inti via industri: PT punya guru pembimbing + pembimbing industri; siswa ditempatkan di PT → guru/pembimbingnya ikut PT. Master data lengkap di-CRUD admin/kaprog: **Siswa, Guru Pembimbing, Industri, Pembimbing Industri, Orang Tua, Jurusan, Kelas, Periode PKL**. Sidebar memakai dropdown Data User + grup terstruktur. Modul transaksional & analitik = Soon (akan dibangun ulang di atas fondasi ini).
 
-Yang akan dibangun/di-rework (ringkas; detail di ROADMAP): Absen Foto+Geo (siswa), Periode PKL, Rekap Penilaian, Data Absen/Jurnal **drill-down**, Dashboard analytical, Panduan PKL, Orang Tua, Sertifikat, lalu Forum & Kalender (Soon). Penguatan relasi Industri↔Guru Pembimbing menyusul.
+Sisa "Soon": Panduan PKL, Forum PKL, Data Absen (drill-down), Data Jurnal (drill-down), Kalender, Rekap Penilaian, Sertifikat, Dashboard analytical, Absen Foto+Geo (siswa).
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Absen Foto + Geolokasi (siswa) (Rekomendasi)** — krusial krn web-only; hasil masuk ke monitoring Absen.
-2. **Periode PKL (CRUD)** — pondasi gelombang (date range) untuk siswa & laporan.
-3. **Rekap Penilaian** — master aspek (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu).
+1. **Dashboard analytical (Rekomendasi)** — 5 ringkasan kuantitatif + rate absensi & jurnal (filter waktu); fondasi datanya siap.
+2. **Rekap Penilaian** — master aspek teknis/non-teknis (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu).
+3. **Absen Foto + Geolokasi (siswa)** + rework **Data Absen/Data Jurnal drill-down** (Jurusan→Kelas→Murid→detail).

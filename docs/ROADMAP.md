@@ -44,10 +44,11 @@ Orang Tua ─< Siswa                     (siswa.parent_id)
 
 **Relasi turunan** (lewat industri): guru pembimbing & pembimbing industri "punya" siswa **melalui PT** tempat siswa PKL. Mis. jumlah murid yang ditangani guru = Σ murid di semua PT yang dia pegang.
 
-### Delta vs skema sekarang (perlu disesuaikan saat implementasi)
-- ✅ Ada: `students.industri_id`, `students.teacher_id`, `students.parent_id`, `students.class_id`, `students.departemen_id`, `students.p_k_l_period_id`, `industries.pembimbing_id`.
-- ⚠️ **Belum ada relasi `Industri → Guru Pembimbing`** (saat ini guru↔siswa langsung via `students.teacher_id`). Desain baru ingin guru dipegang **per PT** (1 guru → banyak PT). Keputusan implementasi: tambah `industries.teacher_id` (atau pivot) lalu turunkan guru siswa dari industrinya — **atau** pertahankan `students.teacher_id` & tambahkan tampilan "count murid per PT". → diputuskan saat mulai modul.
-- ⚠️ `students` **tidak punya** `pembimbing_id` → relasi siswa↔pembimbing industri **diturunkan via industri** (`student → industri → pembimbing`).
+### Status skema (✅ sudah diimplementasikan)
+- ✅ `industries.teacher_id` ditambahkan (1 guru → banyak PT, nullOnDelete); field teks `industryMentorName/No` **dibuang** (pakai entity `Pembimbing` via `industries.pembimbing_id`).
+- ✅ `students.teacher_id` **dihapus** — guru pembimbing siswa **diturunkan dari industrinya** (`student → industri → teacher`).
+- ✅ Relasi siswa ↔ pembimbing industri juga **diturunkan via industri** (`student → industri → pembimbing`); `Teacher::students()` & `Pembimbing::students()` = `hasManyThrough` lewat `Industry`.
+- Kolom siswa lain tetap: `industri_id`, `parent_id`, `class_id`, `departemen_id`, `p_k_l_period_id`.
 
 ---
 
@@ -73,20 +74,20 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 
 | Menu | Status | Catatan |
 |---|---|---|
-| **Dashboard** | 🔄 | Perluas jadi analytical (§4). |
-| **Data User** (dropdown) | 🔄 | Submenu: Data Siswa ✅, Data Guru Pembimbing ✅, Data Industri ✅, Data Pembimbing Industri ✅, Orang Tua ⏳. Perlu nav **submenu/dropdown** + penguatan relasi (§3). |
+| **Dashboard** | 🔄 | Masih ringkas; perluas jadi analytical (§4). |
+| **Data User** (dropdown) | ✅ | Dropdown jalan. Submenu: Data Siswa ✅, Guru Pembimbing ✅, Data Industri ✅, Pembimbing Industri ✅, Orang Tua ✅. Relasi via industri sudah terpasang (§3). |
 | **Data Jurusan** | ✅ | Referensi relasi murid & industri. |
 | **Data Kelas** | ✅ | Referensi relasi murid. |
+| **Periode PKL** | ✅ | CRUD gelombang + rentang tanggal. |
 | **Forum PKL** | ⏳ | Prioritas rendah. |
 | **Panduan PKL** | ⏳ | CRUD upload PDF/dokumen → tampil ke siswa. |
-| **Data Absen** | 🔄 | Monitoring **drill-down 4 layer** (§6). Rework dari `AttendanceMonitorController` (sekarang flat). |
-| **Data Jurnal** | 🔄 | Monitoring **drill-down 4 layer** (§6). Rework dari `ActivityMonitorController` (sekarang flat). |
+| **Data Absen** | ⏳ | Monitoring **drill-down 4 layer** (§6). Akan dibangun ulang (monitor flat lama sudah dihapus). |
+| **Data Jurnal** | ⏳ | Monitoring **drill-down 4 layer** (§6). Akan dibangun ulang (monitor flat lama sudah dihapus). |
 | **Kalender** | ⏳ | Prioritas rendah (menggantikan rencana "Jadwal"). |
 | **Rekap Penilaian** | ⏳ | CRUD aspek penilaian + alur skor (§7). |
 | **Sertifikat** | ⏳ | CRUD template + anchor teks (§8). |
-| **Periode PKL** | ⏳ | CRUD gelombang + date range (§9). |
 
-**Menu sisi siswa** (tetap, di luar sudut pandang admin): **Absen Foto + Geo** (input) ⏳, **Jurnal Saya** (input) ✅, Panduan PKL (baca), Rekap Penilaian (lihat nilai sendiri), Sertifikat (unduh), Profil ✅.
+**Menu sisi siswa** (tetap, di luar sudut pandang admin): **Absen Foto + Geo** (input) ⏳, **Jurnal harian** (input) ⏳, Panduan PKL (baca), Rekap Penilaian (lihat nilai sendiri), Sertifikat (unduh), Profil ✅.
 
 > Item lama yang **di-drop dari rencana** desain ini: Kunjungan, Sidang, "Jadwal" (→ jadi Kalender), Pengaturan app-level (bisa dipertimbangkan lagi nanti).
 
@@ -165,16 +166,14 @@ C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 
 ## 11. Status implementasi & urutan rekomendasi
 
-**Sudah jadi**: Auth/login, Profil+sandi, Landing, Dashboard (ringkas), CRUD Siswa/Industri/Guru/Pembimbing/Jurusan/Kelas, Jurnal Saya (siswa input), monitoring Kegiatan & Absensi (flat + verifikasi).
+**Sudah jadi**: Auth/login, Profil+sandi, Landing, Dashboard (ringkas). **Master data admin penuh**: CRUD Siswa, Guru Pembimbing, Industri, Pembimbing Industri, **Orang Tua** (akun `orangtua`), Jurusan, Kelas, **Periode PKL** — semua gate `admin|kaprog`, relasi via industri terpasang (§3), sidebar dropdown Data User.
+
+> Modul transaksional lama (Jurnal Saya siswa, monitoring Kegiatan & Absensi flat) **sudah dihapus**; akan dibangun ulang sebagai Data Absen/Data Jurnal drill-down + input siswa.
 
 **Urutan rekomendasi berikutnya:**
-1. **Absen Foto + Geolokasi (siswa)** — krusial (web-only); hasil masuk ke monitoring Absen.
-2. **Periode PKL (CRUD)** — pondasi gelombang untuk siswa & laporan.
-3. **Rekap Penilaian** — master aspek (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu).
-4. **Data Absen & Data Jurnal drill-down** — rework monitoring jadi 4 layer (Jurusan→Kelas→Murid→detail).
-5. **Dashboard analytical** — metrik + filter (hari/minggu/bulan/keseluruhan).
-6. **Panduan PKL** — upload dokumen.
-7. **Orang Tua (CRUD + view anak)**, lalu **Sertifikat**.
-8. **Forum PKL** & **Kalender** — prioritas rendah.
-
-**Penguatan relasi** (kapan saja sebelum fitur terkait): putuskan relasi **Industri ↔ Guru Pembimbing** (1 guru → banyak PT) dan tampilan **count murid per PT** (§3).
+1. **Dashboard analytical** — 5 ringkasan kuantitatif + rate absensi & jurnal (filter hari/minggu/bulan/keseluruhan).
+2. **Rekap Penilaian** — master aspek teknis/non-teknis (admin) + input nilai (guru non-teknis, pembimbing teknis) + lihat (siswa/ortu).
+3. **Absen Foto + Geolokasi (siswa)** — input absen web (foto + `navigator.geolocation`).
+4. **Data Absen & Data Jurnal drill-down** — monitoring 4 layer (Jurusan→Kelas→Murid→detail) + verifikasi.
+5. **Panduan PKL** (upload dokumen), lalu **Sertifikat**.
+6. **Forum PKL** & **Kalender** — prioritas rendah.
