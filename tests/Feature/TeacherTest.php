@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Departemen;
+use App\Models\Industry;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -115,8 +116,10 @@ class TeacherTest extends TestCase
 
     public function test_teacher_with_students_cannot_be_deleted(): void
     {
+        // Siswa terhubung ke guru lewat industri yang diampu guru tsb.
         $teacher = Teacher::factory()->create();
-        Student::factory()->create(['teacher_id' => $teacher->id]);
+        $industry = Industry::factory()->create(['teacher_id' => $teacher->id]);
+        Student::factory()->create(['industri_id' => $industry->id]);
 
         $this->actingAs($this->admin())
             ->delete("/teachers/{$teacher->id}")

@@ -7,7 +7,6 @@ use App\Models\Departemen;
 use App\Models\Industry;
 use App\Models\Parents;
 use App\Models\Student;
-use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,7 +53,6 @@ class StudentTest extends TestCase
             'industri_id' => Industry::factory()->create()->id,
             'departemen_id' => $departemen->id,
             'parent_id' => Parents::factory()->create()->id,
-            'teacher_id' => Teacher::factory()->create(['departemen_id' => $departemen->id])->id,
         ];
     }
 
@@ -112,7 +110,6 @@ class StudentTest extends TestCase
             'industri_id' => $student->industri_id,
             'departemen_id' => $student->departemen_id,
             'parent_id' => $student->parent_id,
-            'teacher_id' => $student->teacher_id,
         ];
 
         $this->actingAs($this->admin())

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Industry;
 use App\Models\Pembimbing;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,9 +43,8 @@ class IndustryTest extends TestCase
             'alamat' => 'Jl. Merdeka No. 1',
             'longitude' => '107.609810',
             'latitude' => '-6.914744',
-            'industryMentorName' => 'Andi Wijaya',
-            'industryMentorNo' => '081234567890',
             'duration' => '6 Bulan',
+            'teacher_id' => null,
             'pembimbing_id' => null,
         ];
     }
@@ -100,6 +100,23 @@ class IndustryTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_assign_guru_pembimbing_to_industry(): void
+    {
+        $teacher = Teacher::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->post('/industries', [
+                ...$this->validPayload(),
+                'teacher_id' => $teacher->id,
+            ])
+            ->assertRedirect(route('industries.index'));
+
+        $this->assertDatabaseHas('industries', [
+            'name' => 'PT Maju Jaya',
+            'teacher_id' => $teacher->id,
+        ]);
+    }
+
     public function test_admin_can_update_an_industry(): void
     {
         $industry = Industry::factory()->create();
@@ -111,9 +128,8 @@ class IndustryTest extends TestCase
             'alamat' => $industry->alamat,
             'longitude' => $industry->longitude,
             'latitude' => $industry->latitude,
-            'industryMentorName' => $industry->industryMentorName,
-            'industryMentorNo' => $industry->industryMentorNo,
             'duration' => $industry->duration,
+            'teacher_id' => null,
             'pembimbing_id' => null,
         ];
 
