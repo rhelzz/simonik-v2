@@ -73,17 +73,24 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 - **UI**: `pages/teachers/index.tsx` & `pages/pembimbings/index.tsx` pola **modal-based** (entitas kecil) — modal mendukung pembuatan akun (field password hanya saat tambah; saat edit disembunyikan). Pakai komponen reusable `Modal` & `Pagination`. Menu **Guru** & **Pembimbing** aktif.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 51 test passed** (+14 Guru/Pembimbing). ESLint + tsc + Prettier + `vite build` lolos.
 
+### 11. Modul Kegiatan (jurnal harian) — CRUD siswa + monitoring staf + verifikasi
+- **Editor rich-text**: `description` jurnal pakai editor Word-like (**Tiptap** `@tiptap/react` + `starter-kit`): bold/italic/strike/heading/list/blockquote/undo. Konten disimpan sebagai **HTML**. Migration baru `2025_01_02_000001_change_activities_description_to_text` menaikkan kolom `activities.description` dari VARCHAR(255) → **TEXT**.
+- **Keamanan**: HTML jurnal **disanitasi saat render** dengan **DOMPurify** (komponen `components/ui/rich-text.tsx` → `RichText`), dipakai di semua surface yang menampilkan jurnal siswa lain (anti stored-XSS). Editor: `components/ui/rich-text-editor.tsx`.
+- **Siswa (CRUD jurnal sendiri)**: `ActivityController` (`index/create/store/edit/update/destroy`, tanpa show) gate `role:siswa`, **scoped `user_id = auth`** + `ensureOwner()` (403 kalau bukan miliknya) + Store/UpdateActivityRequest (judul, date, start/end_time `H:i`, description HTML, tools, image opsional). UI page-based (`pages/activities/*` + `ActivityForm` pakai `useForm`; PUT+file via `_method` spoof + `forceFormData`). Menu **Jurnal Saya** (siswa).
+- **Staf (monitoring + verifikasi)**: `ActivityMonitorController` (`index/show/verify`) gate `role:admin|kaprog|guru|pembimbing|industri|mitra`. **Role-scoped** (`scopedQuery`): admin/kaprog = semua; guru = siswa yg dia bimbing (`students.teacher_id`); pembimbing = siswa di industri yg dia bimbing (`industries.pembimbing_id`); industri/mitra = siswa di industrinya (`industries.user_id`). **Verifikasi** (set kolom `verified` '0'/'1') gate `role:pembimbing|industri|mitra` + cek scope. UI `pages/activity-monitor/{index,show}`. Menu **Kegiatan** (staf).
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 67 test passed** (+16 Kegiatan). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
-Seluruh master data penempatan PKL + pembimbing lengkap: **Siswa, Jurusan, Kelas, Industri, Guru, Pembimbing** semua CRUD penuh, role-gated, tervalidasi, dengan guard relasi. Dropdown `teacher_id` (Siswa) & `pembimbing_id` (Industri) kini bisa terisi dari entitas sungguhan. Dua pola: **page-based** (Siswa, Industri — entitas besar) & **modal-based** (Jurusan, Kelas, Guru, Pembimbing — entitas kecil; modal kini juga bisa buat akun User). Pola "buat akun User + profil dalam 1 transaksi" dipakai Siswa (siswa), Industri (mitra), Guru (guru), Pembimbing (pembimbing).
+Modul transaksional pertama jalan: **Kegiatan/jurnal** — siswa menulis jurnal harian (rich-text), staf memantau & memverifikasi (role-scoped). Master data penempatan lengkap (Siswa, Jurusan, Kelas, Industri, Guru, Pembimbing). Pola baru yang kini tersedia: **rich-text editor (Tiptap) + render aman (DOMPurify)**, **monitoring role-scoped**, **verifikasi**.
 
-Sisa "Soon": Absensi, Kegiatan, Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan.
+Sisa "Soon": Absensi, Jadwal, Kunjungan, Bimbingan, Penilaian, Sidang, Sertifikat, Pengaturan.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik
 
-1. **Absensi & Kegiatan (jurnal) (Rekomendasi)** — Modul transaksional harian siswa, inti monitoring PKL (lebih kompleks: foto, geolokasi, verifikasi). Semua master data pendukung kini sudah ada.
+1. **Absensi (monitoring) (Rekomendasi)** — Lengkapi modul harian: rekap kehadiran siswa untuk staf (foto, geolokasi, jam masuk/pulang, status Masuk/Pulang/Sakit/Izin, verifikasi). Pembuatan absensi tetap di mobile (kamera/GPS); web fokus monitoring + verifikasi. Pola `ActivityMonitorController` bisa dipakai ulang.
 2. **Halaman profil/ganti password + landing** — Pengaturan akun & ganti splash Laravel dengan landing SIMONIK.
 3. **Master data sisa** — Periode PKL & Orang tua/Wali (saat ini hanya terisi via seeder; belum ada UI CRUD).
