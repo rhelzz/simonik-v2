@@ -19,7 +19,9 @@ import {
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
+import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
+import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
 import { dashboard } from '@/routes';
 import type { NavSection } from '@/types';
 import type { Role } from '@/types/auth';
@@ -48,10 +50,16 @@ export const navSections: NavSection[] = [
                 href: studentsIndex.url(),
                 roles: ['admin', 'kaprog', 'guru', 'pembimbing'],
             },
-            { label: 'Guru', icon: Users, roles: ['admin', 'kaprog'] },
+            {
+                label: 'Guru',
+                icon: Users,
+                href: teachersIndex.url(),
+                roles: ['admin', 'kaprog'],
+            },
             {
                 label: 'Pembimbing',
                 icon: UserCheck,
+                href: pembimbingsIndex.url(),
                 roles: ['admin', 'kaprog'],
             },
             {
