@@ -6,6 +6,7 @@ use App\Models\Classes;
 use App\Models\Departemen;
 use App\Models\Industry;
 use App\Models\Parents;
+use App\Models\Pembimbing;
 use App\Models\PKLPeriod;
 use App\Models\Student;
 use App\Models\Teacher;
@@ -49,12 +50,15 @@ class DemoDataSeeder extends Seeder
             'departemen_id' => $dept->id,
         ]));
 
-        $industries = Industry::factory()->count(3)->create();
+        // Tiap industri (PT) diberi guru pembimbing + pembimbing industri.
+        $industries = collect(range(1, 3))->map(fn () => Industry::factory()->create([
+            'teacher_id' => $teachers->random()->id,
+            'pembimbing_id' => Pembimbing::factory()->create()->id,
+        ]));
 
-        foreach (range(1, 12) as $i) {
+        foreach (range(1, 12) as $ignored) {
             $dept = $departemens->random();
             $class = $classes->firstWhere('departemen_id', $dept->id);
-            $teacher = $teachers->firstWhere('departemen_id', $dept->id);
 
             $user = User::factory()->create();
             $user->assignRole('siswa');
@@ -63,7 +67,6 @@ class DemoDataSeeder extends Seeder
                 'user_id' => $user->id,
                 'departemen_id' => $dept->id,
                 'class_id' => $class->id,
-                'teacher_id' => $teacher->id,
                 'industri_id' => $industries->random()->id,
                 'parent_id' => Parents::factory()->create()->id,
                 'p_k_l_period_id' => $period->id,
