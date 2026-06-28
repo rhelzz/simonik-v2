@@ -1,0 +1,115 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreTeacherRequest;
+use App\Http\Requests\UpdateTeacherRequest;
+use App\Models\Departemen;
+use App\Models\Teacher;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class TeacherController extends Controller
+{
+    /**
+     * Daftar guru dengan pencarian nama.
+     */
+    public function index(Request $request): Response
+    {
+        $search = trim((string) $request->query('search', ''));
+
+        $teachers = Teacher::query()
+            ->with(['users:id,email', 'departements:id,name'])
+            ->withCount('students')
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
+            ->latest()
+            ->paginate(10)
+            ->withQueryString()
+            ->through(fn (Teacher $teacher): array => [
+                'id' => $teacher->id,
+                'name' => $teacher->name,
+                'no_hp' => $teacher->no_hp,
+                'email' => $teacher->users?->email,
+                'departemen' => $teacher->departements?->name,
+                'departemen_id' => $teacher->departemen_id,
+                'students_count' => $teacher->students_count,
+            ]);
+
+        return Inertia::render('teachers/index', [
+            'teachers' => $teachers,
+            'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
+            'filters' => ['search' => $search],
+        ]);
+    }
+
+    /**
+     * Simpan guru baru beserta akun loginnya.
+     */
+    public function store(StoreTeacherRequest $request): RedirectResponse
+    {
+        $data = $request->validated();
+
+        DB::transaction(function () use ($data): void {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => Hash::make($data['password']),
+                'email_verified_at' => now(),
+            ]);
+            $user->assignRole('guru');
+
+            Teacher::create([
+                'user_id' => $user->id,
+                'name' => $data['name'],
+                'no_hp' => $data['no_hp'],
+                'departemen_id' => $data['departemen_id'],
+            ]);
+        });
+
+        return back()->with('success', 'Guru berhasil ditambahkan.');
+    }
+
+    /**
+     * Perbarui guru & akunnya.
+     */
+    public function update(UpdateTeacherRequest $request, Teacher $teacher): RedirectResponse
+    {
+        $data = $request->validated();
+
+        DB::transaction(function () use ($teacher, $data): void {
+            $teacher->users?->update([
+                'name' => $data['name'],
+                'email' => $data['email'],
+            ]);
+
+            $teacher->update([
+                'name' => $data['name'],
+                'no_hp' => $data['no_hp'],
+                'departemen_id' => $data['departemen_id'],
+            ]);
+        });
+
+        return back()->with('success', 'Data guru berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus guru beserta akunnya.
+     */
+    public function destroy(Teacher $teacher): RedirectResponse
+    {
+        // FK students.teacher_id cascade — tolak hapus bila masih membimbing siswa.
+        if ($teacher->students()->exists()) {
+            return back()->with('error', 'Guru tidak bisa dihapus karena masih membimbing siswa.');
+        }
+
+        // Menghapus user akan cascade ke record guru (FK onDelete cascade).
+        $teacher->users?->delete();
+
+        return back()->with('success', 'Guru berhasil dihapus.');
+    }
+}
