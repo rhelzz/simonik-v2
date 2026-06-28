@@ -22,10 +22,8 @@ export function AppLayout({
             <Head title={title} />
 
             {/* Desktop sidebar */}
-            <aside className="fixed inset-y-0 left-0 hidden w-64 p-4 lg:block">
-                <div className="h-full overflow-hidden rounded-3xl shadow-sm shadow-ink/5">
-                    <AppSidebar />
-                </div>
+            <aside className="fixed inset-y-0 left-0 hidden w-64 overflow-hidden border-r border-line bg-surface lg:block">
+                <AppSidebar />
             </aside>
 
             {/* Mobile drawer */}
@@ -44,21 +42,19 @@ export function AppLayout({
                 />
                 <div
                     className={cn(
-                        'absolute inset-y-0 left-0 w-72 max-w-[80%] p-4 transition-transform duration-300',
+                        'absolute inset-y-0 left-0 w-72 max-w-[80%] overflow-hidden border-r border-line bg-surface shadow-xl transition-transform duration-300',
                         mobileOpen ? 'translate-x-0' : '-translate-x-full',
                     )}
                 >
-                    <div className="relative h-full overflow-hidden rounded-3xl shadow-xl">
-                        <button
-                            type="button"
-                            onClick={() => setMobileOpen(false)}
-                            className="absolute top-4 right-4 z-10 grid size-8 place-items-center rounded-lg text-muted"
-                            aria-label="Tutup menu"
-                        >
-                            <X className="size-5" />
-                        </button>
-                        <AppSidebar onNavigate={() => setMobileOpen(false)} />
-                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setMobileOpen(false)}
+                        className="absolute top-4 right-4 z-10 grid size-8 place-items-center rounded-lg text-muted"
+                        aria-label="Tutup menu"
+                    >
+                        <X className="size-5" />
+                    </button>
+                    <AppSidebar onNavigate={() => setMobileOpen(false)} />
                 </div>
             </div>
 
