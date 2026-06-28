@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ActivityMonitorController;
+use App\Http\Controllers\AttendanceMonitorController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
@@ -59,5 +60,14 @@ Route::middleware('auth')->group(function () {
     });
     Route::patch('kegiatan/{activity}/verify', [ActivityMonitorController::class, 'verify'])
         ->name('kegiatan.verify')
+        ->middleware('role:pembimbing|industri|mitra');
+
+    // Pemantauan kehadiran (absensi) siswa oleh staf (role-scoped) + verifikasi.
+    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|mitra')->group(function () {
+        Route::get('absensi', [AttendanceMonitorController::class, 'index'])->name('absensi.index');
+        Route::get('absensi/{attendance}', [AttendanceMonitorController::class, 'show'])->name('absensi.show');
+    });
+    Route::patch('absensi/{attendance}/verify', [AttendanceMonitorController::class, 'verify'])
+        ->name('absensi.verify')
         ->middleware('role:pembimbing|industri|mitra');
 });
