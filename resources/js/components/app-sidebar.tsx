@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { GraduationCap, LogOut } from 'lucide-react';
 import { destroy as logout } from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
+import { edit as profile } from '@/actions/App/Http/Controllers/ProfileController';
 import { navForRoles } from '@/lib/nav';
 import { cn } from '@/lib/utils';
 import type { SharedData } from '@/types';
@@ -102,17 +103,24 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
             {/* User */}
             <div className="m-3 flex shrink-0 items-center gap-3 rounded-2xl bg-canvas p-3">
-                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-white">
-                    {auth.user ? initials(auth.user.name) : 'PK'}
-                </span>
-                <span className="min-w-0 flex-1 leading-tight">
-                    <span className="block truncate text-sm font-semibold text-ink">
-                        {auth.user?.name ?? 'Mode demo'}
+                <Link
+                    href={profile.url()}
+                    onClick={onNavigate}
+                    title="Pengaturan akun"
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-xl transition-colors hover:opacity-80"
+                >
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary text-sm font-semibold text-white">
+                        {auth.user ? initials(auth.user.name) : 'PK'}
                     </span>
-                    <span className="block truncate text-xs text-muted capitalize">
-                        {primaryRole?.replace('_', ' ') ?? 'belum masuk'}
+                    <span className="min-w-0 flex-1 leading-tight">
+                        <span className="block truncate text-sm font-semibold text-ink">
+                            {auth.user?.name ?? 'Mode demo'}
+                        </span>
+                        <span className="block truncate text-xs text-muted capitalize">
+                            {primaryRole?.replace('_', ' ') ?? 'belum masuk'}
+                        </span>
                     </span>
-                </span>
+                </Link>
                 <button
                     type="button"
                     onClick={() => router.post(logout.url())}
