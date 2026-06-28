@@ -1,17 +1,31 @@
 import { usePage } from '@inertiajs/react';
 import {
     Building2,
+    Fingerprint,
     GraduationCap,
+    NotebookPen,
     UserCheck,
     Users,
     Workflow,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useState } from 'react';
 import { AppLayout } from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { SharedData } from '@/types';
 
 type StatusPkl = 'belum' | 'proses' | 'selesai';
+
+type RangeKey = 'today' | 'week' | 'month' | 'all';
+type RateByRange = Record<RangeKey, number>;
+
+const rangeOrder: RangeKey[] = ['today', 'week', 'month', 'all'];
+const rangeLabels: Record<RangeKey, string> = {
+    today: 'Hari ini',
+    week: 'Minggu ini',
+    month: 'Bulan ini',
+    all: 'Keseluruhan',
+};
 
 type DashboardProps = {
     stats: {
@@ -21,6 +35,8 @@ type DashboardProps = {
         teachers: number;
         pembimbings: number;
     };
+    attendanceRate: RateByRange;
+    journalRate: RateByRange;
     recentStudents: Array<{
         id: number;
         name: string;
@@ -90,8 +106,75 @@ function StatCard({
     );
 }
 
+function RateCard({
+    icon: Icon,
+    title,
+    subtitle,
+    data,
+    tint,
+}: {
+    icon: LucideIcon;
+    title: string;
+    subtitle: string;
+    data: RateByRange;
+    tint: string;
+}) {
+    const [range, setRange] = useState<RangeKey>('month');
+    const value = data[range];
+
+    return (
+        <div className="rounded-3xl bg-surface p-5 sm:p-6">
+            <div className="flex items-center gap-3">
+                <span
+                    className={cn(
+                        'grid size-11 place-items-center rounded-xl',
+                        tint,
+                    )}
+                >
+                    <Icon className="size-5" />
+                </span>
+                <div>
+                    <h3 className="text-base font-bold text-ink">{title}</h3>
+                    <p className="text-xs text-muted">{subtitle}</p>
+                </div>
+            </div>
+
+            <div className="mt-4 flex gap-1 rounded-xl bg-canvas p-1">
+                {rangeOrder.map((key) => (
+                    <button
+                        key={key}
+                        type="button"
+                        onClick={() => setRange(key)}
+                        className={cn(
+                            'flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors',
+                            range === key
+                                ? 'bg-surface text-primary shadow-sm'
+                                : 'text-muted hover:text-ink',
+                        )}
+                    >
+                        {rangeLabels[key]}
+                    </button>
+                ))}
+            </div>
+
+            <p className="mt-5 text-4xl font-extrabold tracking-tight text-ink">
+                {value}
+                <span className="text-xl font-bold text-muted">%</span>
+            </p>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-canvas">
+                <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${value}%` }}
+                />
+            </div>
+        </div>
+    );
+}
+
 export default function Dashboard({
     stats,
+    attendanceRate,
+    journalRate,
     recentStudents,
     today,
 }: DashboardProps) {
@@ -149,6 +232,24 @@ export default function Dashboard({
                     label="Pembimbing"
                     value={stats.pembimbings}
                     tint="bg-primary-soft text-primary"
+                />
+            </section>
+
+            {/* Participation rates */}
+            <section className="mt-5 grid gap-4 lg:grid-cols-2">
+                <RateCard
+                    icon={Fingerprint}
+                    title="Rate absensi"
+                    subtitle="Siswa aktif yang hadir di tempat PKL"
+                    data={attendanceRate}
+                    tint="bg-primary-soft text-primary"
+                />
+                <RateCard
+                    icon={NotebookPen}
+                    title="Rate pengisian jurnal"
+                    subtitle="Siswa aktif yang mengisi jurnal harian"
+                    data={journalRate}
+                    tint="bg-warning/15 text-warning"
                 />
             </section>
 
