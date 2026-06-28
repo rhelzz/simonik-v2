@@ -26,3 +26,23 @@
 html {
     background-color: var(--color-canvas);
 }
+
+/* Slim, subtle scrollbar for scroll regions like the sidebar nav. */
+@utility scrollbar-slim {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line) transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        border-radius: 9999px;
+        background-color: var(--color-line);
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+}
