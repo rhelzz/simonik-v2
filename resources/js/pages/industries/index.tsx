@@ -53,7 +53,7 @@ export default function IndustriesIndex({
     function remove(industry: IndustryRow) {
         if (
             confirm(
-                `Hapus industri ${industry.name}? Akun mitra beserta datanya akan ikut terhapus.`,
+                `Hapus industri ${industry.name}? Akun industri beserta datanya akan ikut terhapus.`,
             )
         ) {
             router.delete(destroy.url(industry.id), { preserveScroll: true });

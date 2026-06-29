@@ -78,7 +78,7 @@ export function IndustryForm({
                 <>
                     <section className="rounded-3xl bg-surface p-5 sm:p-6">
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <SectionTitle>Akun mitra</SectionTitle>
+                            <SectionTitle>Akun industri</SectionTitle>
                             <Field
                                 label="Nama industri"
                                 htmlFor="name"
