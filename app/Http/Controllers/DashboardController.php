@@ -60,7 +60,7 @@ class DashboardController extends Controller
         return Inertia::render('dashboard', [
             'stats' => [
                 'students' => Student::where('archived', false)->count(),
-                'activePkl' => count($activeUserIds),
+                'activePkl' => \count($activeUserIds),
                 'teachers' => Teacher::count(),
                 'pembimbings' => Pembimbing::count(),
                 'industries' => Industry::count(),
@@ -96,7 +96,7 @@ class DashboardController extends Controller
         return Inertia::render('dashboard-staff', [
             'stats' => [
                 'students' => (clone $scoped)->count(),
-                'activePkl' => count($activeUserIds),
+                'activePkl' => \count($activeUserIds),
                 'assessed' => Evaluation::query()->whereIn('student_id', $studentIds)->distinct()->count('student_id'),
                 'avgScore' => $avgRaw === null ? null : (int) round((float) $avgRaw),
             ],
@@ -206,7 +206,7 @@ class DashboardController extends Controller
      */
     private function participation(array $activeUserIds): array
     {
-        $activeCount = count($activeUserIds);
+        $activeCount = \count($activeUserIds);
 
         $attendanceDays = $activeCount === 0 ? [] : Attendance::query()
             ->whereIn('user_id', $activeUserIds)
@@ -262,6 +262,10 @@ class DashboardController extends Controller
         $weekStart = $now->copy()->startOfWeek()->toDateString();
         $monthStart = $now->copy()->startOfMonth()->toDateString();
 
+        // Tanggal pertama ada data (sebagai proxy kapan PKL benar-benar dimulai).
+        $allDates = array_column($days, 'd');
+        $firstDate = empty($allDates) ? $today : min($allDates);
+
         return [
             'today' => $this->rate(
                 array_filter($days, fn (array $row): bool => $row['d'] === $today),
@@ -271,19 +275,47 @@ class DashboardController extends Controller
             'week' => $this->rate(
                 array_filter($days, fn (array $row): bool => $row['d'] >= $weekStart),
                 $activeCount,
-                (int) $now->copy()->startOfWeek()->diffInDays($now) + 1,
+                $this->weekdaysBetween(max($weekStart, $firstDate), $today),
             ),
             'month' => $this->rate(
                 array_filter($days, fn (array $row): bool => $row['d'] >= $monthStart),
                 $activeCount,
-                $now->day,
+                $this->weekdaysBetween(max($monthStart, $firstDate), $today),
             ),
             'all' => $this->rate(
                 $days,
                 $activeCount,
-                count(array_unique(array_column($days, 'd'))),
+                $this->weekdaysBetween($firstDate, $today),
             ),
         ];
+    }
+
+    /**
+     * Hitung jumlah hari kerja (Senin–Jumat) antara dua tanggal, inklusif kedua ujung.
+     */
+    private function weekdaysBetween(string $from, string $to): int
+    {
+        $start = Carbon::parse($from)->startOfDay();
+        $end = Carbon::parse($to)->startOfDay();
+
+        if ($start->gt($end)) {
+            return 0;
+        }
+
+        $totalDays = (int) $start->diffInDays($end) + 1;
+        $startDow = $start->dayOfWeek; // 0=Sun … 6=Sat
+
+        $weekdays = (int) floor($totalDays / 7) * 5;
+        $remainder = $totalDays % 7;
+
+        for ($i = 0; $i < $remainder; $i++) {
+            $dow = ($startDow + $i) % 7;
+            if ($dow !== 0 && $dow !== 6) {
+                $weekdays++;
+            }
+        }
+
+        return $weekdays;
     }
 
     /**
@@ -297,7 +329,7 @@ class DashboardController extends Controller
             return 0;
         }
 
-        $studentDays = count(array_unique(
+        $studentDays = \count(array_unique(
             array_map(fn (array $row): string => $row['u'].'|'.$row['d'], $days),
         ));
 
