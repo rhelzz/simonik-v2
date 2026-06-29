@@ -141,17 +141,24 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Frontend**: `pages/attendance-monitor/{index,classes,students,show}.tsx` + komponen reusable **`components/ui/breadcrumb.tsx`** (jejak Jurusan→Kelas→Murid). Kartu jurusan/kelas, tabel murid (badge "n menunggu"), kartu detail absen (foto, link Google Maps, badge status, tombol verifikasi). Menu **Data Absen** kini **aktif** (STAFF + orangtua).
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 120 test passed** (+13 AttendanceMonitorTest). ESLint + tsc + Prettier + `vite build` lolos.
 
+### 21. Jurnal harian (input siswa) + Data Jurnal monitoring drill-down
+- **Jurnal siswa (CRUD sendiri)**: `ActivityController` (gate `role:siswa`, semua dibatasi `user_id=auth` + `ensureOwner()` 403) — `index/create/store/edit/update/destroy` (tanpa show), route `Route::resource('jurnal')` param `activity`, nama `activities.*`. Store/UpdateActivityRequest (judul, date, start/end_time `H:i` + `after`, description **HTML**, tools, image opsional 4MB). Foto disimpan disk `public` (`activities/…`), foto baru ganti lama.
+- **Editor rich-text**: `description` pakai **Tiptap** (`RichTextEditor`, komponen lama dipakai ulang) — disubmit via hidden input ke `<Form>` Inertia. Render **disanitasi DOMPurify** (`RichText`) di daftar jurnal & monitoring (anti stored-XSS). UI `pages/activities/{index,create,edit}.tsx` + komponen `components/activities/activity-form.tsx`. Edit/Hapus hanya untuk jurnal **belum terverifikasi**. Menu **Jurnal Saya** (siswa, seksi PKL Saya).
+- **Data Jurnal (staf, drill-down 4 layer)**: `JournalMonitorController` — pola **identik Data Absen**, reuse trait **`ScopesStudentsByRole`** + komponen **`Breadcrumb`**. Layer 1 jurusan → 2 kelas → 3 murid (jumlah jurnal + `pending_count`) → 4 daftar jurnal (RichText + foto + jam + tools). Verifikasi `verify(Activity)` toggle `activities.verified` '0'↔'1' (gate `role:pembimbing|industri|mitra` + cek scope). Relasi baru `Student::activities()` (`hasMany` via `user_id`). UI `pages/journal-monitor/{index,classes,students,show}.tsx`. Menu **Data Jurnal** kini **aktif** (STAFF + orangtua).
+- **Dashboard**: rate pengisian jurnal kini **terisi riil** (DashboardController sudah menghitungnya sejak §17). **Seeder**: `DemoDataSeeder` menambah jurnal 5 hari kerja terakhir utk siswa `proses` (today unverified).
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 142 test passed** (+22: ActivityTest 12, JournalMonitorTest 10). ESLint + tsc + Prettier + `vite build` lolos. `migrate:fresh --seed` sukses.
+
 ---
 
 ## 📍 Current step
-**Data Absen monitoring jalan**. Staf menelusuri kehadiran berjenjang Jurusan→Kelas→Murid→detail (role-scoped); pembimbing/industri memverifikasi tiap catatan absen. Data absen siswa mengalir riil dari modul Absen Foto + Geo. Di atas: master data penuh, dashboard analitik, Rekap Penilaian.
+**Siklus PKL siswa lengkap**: siswa **absen** (foto+geo) & **isi jurnal harian** (rich-text); staf **memantau** keduanya via drill-down 4 layer (Jurusan→Kelas→Murid→detail, role-scoped) & **memverifikasi**. **Kedua rate dashboard** (absensi & jurnal) kini terisi riil. Di atas: master data penuh, dashboard analitik, Rekap Penilaian.
 
-Sisa "Soon": **Jurnal harian (input siswa)** + Data Jurnal (drill-down + verifikasi), Panduan PKL, Sertifikat, Forum PKL, Kalender.
+Sisa "Soon": Panduan PKL, Sertifikat, Forum PKL, Kalender.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Jurnal harian (input siswa) (Rekomendasi)** — rich-text Tiptap (modul lama dihapus, bangun ulang) → mengisi rate jurnal dashboard, lalu **Data Jurnal** drill-down 4 layer (pola persis Data Absen — bisa reuse `ScopesStudentsByRole` + `Breadcrumb`).
-2. **Panduan PKL** (upload PDF/dokumen → tampil ke siswa), lalu **Sertifikat**.
+1. **Panduan PKL (Rekomendasi)** — CRUD upload PDF/dokumen (admin) → tampil/unduh ke siswa & semua role.
+2. **Sertifikat** — CRUD template (upload gambar/PDF latar) + mapping anchor teks x/y + output per siswa.
 3. **Forum PKL** & **Kalender** — prioritas rendah.

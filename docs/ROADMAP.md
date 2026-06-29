@@ -83,13 +83,13 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 | **Panduan PKL** | ⏳ | CRUD upload PDF/dokumen → tampil ke siswa. |
 | **Absen Foto + Geo** (siswa) | ✅ | Input absen web (foto `getUserMedia`/upload + `navigator.geolocation`): masuk/pulang/izin/sakit, sekali per hari. |
 | **Data Absen** | ✅ | Monitoring **drill-down 4 layer** (§6) Jurusan→Kelas→Murid→detail, role-scoped, + verifikasi (`verified`) oleh pembimbing/industri. |
-| **Data Jurnal** | ⏳ | Monitoring **drill-down 4 layer** (§6). Akan dibangun ulang (monitor flat lama sudah dihapus). |
+| **Data Jurnal** | ✅ | Monitoring **drill-down 4 layer** (§6) Jurusan→Kelas→Murid→detail, role-scoped, + verifikasi (`verified`). Pola identik Data Absen (reuse `ScopesStudentsByRole` + `Breadcrumb`). |
 | **Kalender** | ⏳ | Prioritas rendah (menggantikan rencana "Jadwal"). |
 | **Aspek Penilaian** | ✅ | Master aspek teknis/non-teknis (CRUD admin) — sumber untuk Rekap Penilaian (§7). |
 | **Rekap Penilaian** | ✅ | Input nilai (guru non-teknis, pembimbing teknis) + lihat role-scoped + grade A/B/C/D otomatis (§7). |
 | **Sertifikat** | ⏳ | CRUD template + anchor teks (§8). |
 
-**Menu sisi siswa** (tetap, di luar sudut pandang admin): **Absen Foto + Geo** (input) ✅, **Jurnal harian** (input) ⏳, Panduan PKL (baca), Rekap Penilaian (lihat nilai sendiri) ✅, Sertifikat (unduh), Profil ✅.
+**Menu sisi siswa** (tetap, di luar sudut pandang admin): **Absen Foto + Geo** (input) ✅, **Jurnal harian** (input) ✅, Panduan PKL (baca), Rekap Penilaian (lihat nilai sendiri) ✅, Sertifikat (unduh), Profil ✅.
 
 > Item lama yang **di-drop dari rencana** desain ini: Kunjungan, Sidang, "Jadwal" (→ jadi Kalender), Pengaturan app-level (bisa dipertimbangkan lagi nanti).
 
@@ -106,7 +106,7 @@ Agar rapi, monitoring dipecah berjenjang (bukan tabel flat):
 
 Scope per role tetap berlaku (guru = PT yang dipegang, pembimbing = PT-nya, orangtua = anaknya, admin/kaprog = semua). Verifikasi (pembimbing/industri) tetap pada layer detail.
 
-> **Data Absen** ✅ mengimplementasikan pola ini (lihat [`PROGRESS.md`](PROGRESS.md) §20): scope dibagikan via trait `ScopesStudentsByRole`, navigasi via komponen `Breadcrumb`. **Data Jurnal** akan reuse keduanya.
+> **Data Absen** ✅ (§20) & **Data Jurnal** ✅ (§21) mengimplementasikan pola ini: scope dibagikan via trait `ScopesStudentsByRole`, navigasi via komponen `Breadcrumb`.
 
 ---
 
@@ -171,11 +171,9 @@ C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 
 **Sudah jadi**: Auth/login, Profil+sandi, Landing, **Dashboard analytical** (5 ringkasan + rate absensi/jurnal filter waktu). **Master data admin penuh**: CRUD Siswa, Guru Pembimbing, Industri, Pembimbing Industri, **Orang Tua** (akun `orangtua`), Jurusan, Kelas, **Periode PKL** — semua gate `admin|kaprog`, relasi via industri terpasang (§3), sidebar dropdown Data User. **Rekap Penilaian** (§7): master Aspek Penilaian (admin) + input nilai guru/pembimbing + lihat role-scoped + grade A/B/C/D otomatis. **Absen Foto + Geo (siswa)**: input kehadiran web (foto + geolokasi, masuk/pulang/izin/sakit).
 
-Juga sudah jadi: **Absen Foto + Geo (siswa)** input kehadiran web, dan **Data Absen** monitoring drill-down 4 layer + verifikasi (§6, scope via trait `ScopesStudentsByRole`).
-
-> Modul jurnal lama (Jurnal Saya siswa + monitoring flat) **masih dihapus**; akan dibangun ulang sebagai input jurnal siswa + Data Jurnal drill-down. Rate **absensi** dashboard kini terisi riil dari absen siswa; rate **jurnal** menyusul setelah input jurnal siswa jadi.
+Juga sudah jadi: **Absen Foto + Geo (siswa)** + **Jurnal harian (siswa)** input web; **Data Absen** & **Data Jurnal** monitoring drill-down 4 layer + verifikasi (§6, scope via trait `ScopesStudentsByRole`, navigasi via `Breadcrumb`). **Kedua rate dashboard** (absensi & jurnal) kini terisi riil.
 
 **Urutan rekomendasi berikutnya:**
-1. **Jurnal harian (input siswa)** — rich-text Tiptap (bangun ulang) → mengisi rate jurnal, lalu **Data Jurnal** drill-down (reuse `ScopesStudentsByRole` + `Breadcrumb` dari Data Absen).
-2. **Panduan PKL** (upload dokumen), lalu **Sertifikat**.
+1. **Panduan PKL** — CRUD upload PDF/dokumen (admin) → tampil/unduh ke siswa & semua role.
+2. **Sertifikat** — CRUD template + anchor teks x/y (§8).
 3. **Forum PKL** & **Kalender** — prioritas rendah.
