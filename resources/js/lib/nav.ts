@@ -6,6 +6,7 @@ import {
     CalendarRange,
     Camera,
     ClipboardCheck,
+    FileImage,
     Fingerprint,
     GraduationCap,
     HardHat,
@@ -25,6 +26,8 @@ import { index as aspectsIndex } from '@/actions/App/Http/Controllers/AspectCont
 import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
 import { index as attendanceIndex } from '@/actions/App/Http/Controllers/AttendanceController';
 import { index as attendanceMonitorIndex } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
+import { index as certificatesIndex } from '@/actions/App/Http/Controllers/CertificateController';
+import { index as certificateTemplatesIndex } from '@/actions/App/Http/Controllers/CertificateTemplateController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as guidesIndex } from '@/actions/App/Http/Controllers/GuideController';
@@ -184,7 +187,14 @@ export const navSections: NavSection[] = [
             {
                 label: 'Sertifikat',
                 icon: Award,
+                href: certificatesIndex.url(),
                 roles: ['admin', 'kaprog', 'siswa'],
+            },
+            {
+                label: 'Template Sertifikat',
+                icon: FileImage,
+                href: certificateTemplatesIndex.url(),
+                roles: ['admin', 'kaprog'],
             },
         ],
     },
