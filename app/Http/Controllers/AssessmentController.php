@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ScopesStudentsByRole;
 use App\Http\Requests\AssessmentRequest;
 use App\Models\AspekProduktif;
 use App\Models\Evaluation;
-use App\Models\Industry;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -17,6 +17,8 @@ use Inertia\Response;
 
 class AssessmentController extends Controller
 {
+    use ScopesStudentsByRole;
+
     /**
      * Daftar siswa (dibatasi cakupan role) beserta ringkasan nilai.
      */
@@ -164,78 +166,5 @@ class AssessmentController extends Controller
         }
 
         return back()->with('success', 'Nilai berhasil disimpan.');
-    }
-
-    /**
-     * Query siswa sesuai cakupan role pemanggil.
-     *
-     * @return Builder<Student>
-     */
-    private function scopedStudents(User $user): Builder
-    {
-        if ($user->hasAnyRole(['admin', 'kaprog'])) {
-            return Student::query();
-        }
-
-        if ($user->hasRole('guru')) {
-            return $this->studentsAtIndustries(
-                Industry::query()->where('teacher_id', $user->teachers?->id),
-                $user->teachers?->id,
-            );
-        }
-
-        if ($user->hasRole('pembimbing')) {
-            return $this->studentsAtIndustries(
-                Industry::query()->where('pembimbing_id', $user->pembimbing?->id),
-                $user->pembimbing?->id,
-            );
-        }
-
-        if ($user->hasAnyRole(['mitra', 'industri'])) {
-            $industryId = $user->industries?->id;
-
-            return $industryId === null
-                ? $this->none()
-                : Student::query()->where('industri_id', $industryId);
-        }
-
-        if ($user->hasRole('orangtua')) {
-            $parentId = $user->parents?->id;
-
-            return $parentId === null
-                ? $this->none()
-                : Student::query()->where('parent_id', $parentId);
-        }
-
-        if ($user->hasRole('siswa')) {
-            return Student::query()->where('user_id', $user->id);
-        }
-
-        return $this->none();
-    }
-
-    /**
-     * Siswa di sekumpulan industri; kosong bila profil pemanggil belum ada.
-     *
-     * @param  Builder<Industry>  $industries
-     * @return Builder<Student>
-     */
-    private function studentsAtIndustries(Builder $industries, ?int $profileId): Builder
-    {
-        if ($profileId === null) {
-            return $this->none();
-        }
-
-        return Student::query()->whereIn('industri_id', $industries->select('id'));
-    }
-
-    /**
-     * Query yang tidak pernah menghasilkan baris (cakupan kosong).
-     *
-     * @return Builder<Student>
-     */
-    private function none(): Builder
-    {
-        return Student::query()->whereRaw('1 = 0');
     }
 }
