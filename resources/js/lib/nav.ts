@@ -27,6 +27,7 @@ import { index as attendanceIndex } from '@/actions/App/Http/Controllers/Attenda
 import { index as attendanceMonitorIndex } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
+import { index as guidesIndex } from '@/actions/App/Http/Controllers/GuideController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
 import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentController';
@@ -139,7 +140,11 @@ export const navSections: NavSection[] = [
     {
         title: 'Dokumen & Forum',
         items: [
-            { label: 'Panduan PKL', icon: BookOpen },
+            {
+                label: 'Panduan PKL',
+                icon: BookOpen,
+                href: guidesIndex.url(),
+            },
             { label: 'Forum PKL', icon: MessagesSquare },
         ],
     },
