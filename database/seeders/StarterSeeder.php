@@ -47,7 +47,7 @@ class StarterSeeder extends Seeder
                 'password' => 'password',
             ]
         );
-        if (!$adminUser->hasRole('admin')) {
+        if (! $adminUser->hasRole('admin')) {
             $adminUser->assignRole('admin');
         }
 
@@ -59,7 +59,7 @@ class StarterSeeder extends Seeder
                 'password' => 'password',
             ]
         );
-        if (!$studentUser->hasRole('siswa')) {
+        if (! $studentUser->hasRole('siswa')) {
             $studentUser->assignRole('siswa');
         }
 
@@ -71,7 +71,7 @@ class StarterSeeder extends Seeder
                 'password' => 'password',
             ]
         );
-        if (!$parentUser->hasRole('orangtua')) {
+        if (! $parentUser->hasRole('orangtua')) {
             $parentUser->assignRole('orangtua');
         }
 
@@ -83,7 +83,7 @@ class StarterSeeder extends Seeder
                 'password' => 'password',
             ]
         );
-        if (!$teacherUser->hasRole('guru')) {
+        if (! $teacherUser->hasRole('guru')) {
             $teacherUser->assignRole('guru');
         }
 
@@ -95,7 +95,7 @@ class StarterSeeder extends Seeder
                 'password' => 'password',
             ]
         );
-        if (!$pembimbingUser->hasRole('pembimbing')) {
+        if (! $pembimbingUser->hasRole('pembimbing')) {
             $pembimbingUser->assignRole('pembimbing');
         }
 
