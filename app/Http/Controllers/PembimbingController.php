@@ -48,6 +48,14 @@ class PembimbingController extends Controller
     }
 
     /**
+     * Form tambah pembimbing.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('pembimbings/create');
+    }
+
+    /**
      * Simpan pembimbing baru beserta akun loginnya.
      */
     public function store(StorePembimbingRequest $request): RedirectResponse
@@ -71,7 +79,27 @@ class PembimbingController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Pembimbing berhasil ditambahkan.');
+        return redirect()
+            ->route('pembimbings.index')
+            ->with('success', 'Pembimbing berhasil ditambahkan.');
+    }
+
+    /**
+     * Form edit pembimbing.
+     */
+    public function edit(Pembimbing $pembimbing): Response
+    {
+        $pembimbing->load('user:id,email');
+
+        return Inertia::render('pembimbings/edit', [
+            'pembimbing' => [
+                'id' => $pembimbing->id,
+                'name' => $pembimbing->name,
+                'email' => $pembimbing->user?->email,
+                'no_hp' => $pembimbing->no_hp,
+                'gender' => $pembimbing->gender,
+            ],
+        ]);
     }
 
     /**
@@ -94,7 +122,9 @@ class PembimbingController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Data pembimbing berhasil diperbarui.');
+        return redirect()
+            ->route('pembimbings.index')
+            ->with('success', 'Data pembimbing berhasil diperbarui.');
     }
 
     /**

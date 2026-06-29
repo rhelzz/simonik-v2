@@ -43,8 +43,17 @@ class TeacherController extends Controller
 
         return Inertia::render('teachers/index', [
             'teachers' => $teachers,
-            'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
             'filters' => ['search' => $search],
+        ]);
+    }
+
+    /**
+     * Form tambah guru.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('teachers/create', [
+            'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -72,7 +81,28 @@ class TeacherController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Guru berhasil ditambahkan.');
+        return redirect()
+            ->route('teachers.index')
+            ->with('success', 'Guru berhasil ditambahkan.');
+    }
+
+    /**
+     * Form edit guru.
+     */
+    public function edit(Teacher $teacher): Response
+    {
+        $teacher->load('users:id,email');
+
+        return Inertia::render('teachers/edit', [
+            'teacher' => [
+                'id' => $teacher->id,
+                'name' => $teacher->name,
+                'email' => $teacher->users?->email,
+                'no_hp' => $teacher->no_hp,
+                'departemen_id' => $teacher->departemen_id,
+            ],
+            'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     /**
@@ -95,7 +125,9 @@ class TeacherController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Data guru berhasil diperbarui.');
+        return redirect()
+            ->route('teachers.index')
+            ->with('success', 'Data guru berhasil diperbarui.');
     }
 
     /**

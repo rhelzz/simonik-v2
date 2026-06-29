@@ -46,6 +46,14 @@ class ParentController extends Controller
     }
 
     /**
+     * Form tambah orang tua.
+     */
+    public function create(): Response
+    {
+        return Inertia::render('parents/create');
+    }
+
+    /**
      * Simpan orang tua baru beserta akun loginnya.
      */
     public function store(StoreParentRequest $request): RedirectResponse
@@ -71,7 +79,29 @@ class ParentController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Orang tua berhasil ditambahkan.');
+        return redirect()
+            ->route('parents.index')
+            ->with('success', 'Orang tua berhasil ditambahkan.');
+    }
+
+    /**
+     * Form edit orang tua.
+     */
+    public function edit(Parents $parent): Response
+    {
+        $parent->load('users:id,email');
+
+        return Inertia::render('parents/edit', [
+            'parent' => [
+                'id' => $parent->id,
+                'nama' => $parent->nama,
+                'email' => $parent->users?->email,
+                'gender' => $parent->gender,
+                'alamat' => $parent->alamat,
+                'occupation' => $parent->occupation,
+                'phoneNumber' => $parent->phoneNumber,
+            ],
+        ]);
     }
 
     /**
@@ -96,7 +126,9 @@ class ParentController extends Controller
             ]);
         });
 
-        return back()->with('success', 'Data orang tua berhasil diperbarui.');
+        return redirect()
+            ->route('parents.index')
+            ->with('success', 'Data orang tua berhasil diperbarui.');
     }
 
     /**
