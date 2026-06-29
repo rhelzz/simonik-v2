@@ -168,6 +168,13 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Frontend**: komponen form baru `components/{teachers,pembimbings,parents}/*-form.tsx` (pakai `<Form>` Inertia, password hanya saat tambah) + halaman `pages/{...}/create.tsx` & `edit.tsx`. Halaman `index` ketiganya **dibersihkan dari modal/useForm** → tombol Tambah & ikon Edit kini `<Link>` ke halaman create/edit; hapus tetap inline `confirm` + `router.delete`. Judul disamakan ("Guru Pembimbing", "Pembimbing Industri", "Orang Tua").
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 171 test passed** (28 Guru/Pembimbing/Orang Tua tetap hijau). ESLint + tsc + Prettier + `vite build` lolos.
 
+### 25. Konsolidasi role akun industri (`mitra` → `industri`)
+- **Role `mitra` dihapus** — akun PT/Industri kini **hanya** pakai role **`industri`** (sebelumnya modul Industri assign `mitra` sementara role `industri` cuma akun demo, membingungkan). Tinggal **8 role kanonik**: admin, kaprog, guru, pembimbing, industri, siswa, orangtua, kepala_sekolah.
+- **Backend**: `RoleSeeder` buang `mitra`; `IndustryController::store` `assignRole('industri')`; trait `ScopesStudentsByRole` `hasRole('industri')` (dari `hasAnyRole(['mitra','industri'])`); `canVerify` di Attendance/JournalMonitor `['pembimbing','industri']`; route middleware (assessments, monitoring, kedua verify) buang `|mitra`. Komentar Store/UpdateIndustryRequest dirapikan.
+- **Frontend**: `types/auth.ts` Role buang `'mitra'`; `nav.ts` STAFF buang `'mitra'`; teks UI "Akun mitra" → "Akun industri" (industry-form + industries/index). `DemoUserSeeder` otomatis: kini ada `industri@simonik.test` (tak ada lagi `mitra@…`).
+- **Catatan**: enum `signature_settings.role` (`['kepala_sekolah','mitra']`) dibiarkan — tabel `SignatureSetting` belum dipakai & migration forward-only.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 171 test passed**. ESLint + tsc + Prettier + `vite build` lolos. `migrate:fresh --seed` sukses (8 role).
+
 ---
 
 ## 📍 Current step
@@ -179,6 +186,6 @@ Sisa "Soon": Forum PKL, Kalender (keduanya prioritas rendah).
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Forum PKL (Rekomendasi)** — tanya-jawab antar role (model `Post`/`Comment` sudah ada di skema); CRUD thread + balasan.
-2. **Kalender** — agenda/jadwal kunjungan/PKL; prioritas rendah.
-3. **Polish**: dashboard ringkas per-role (guru/pembimbing/siswa/orangtua), rapikan role `industri` vs `mitra`.
+1. **Dashboard ringkas per-role (Rekomendasi)** — guru/pembimbing/siswa/orangtua lihat versi dashboard sesuai cakupannya (role `industri` vs `mitra` sudah dirapikan §25).
+2. **Forum PKL** — tanya-jawab antar role (model `Post`/`Comment` sudah ada di skema); CRUD thread + balasan.
+3. **Kalender** — agenda/jadwal kunjungan/PKL; prioritas rendah.

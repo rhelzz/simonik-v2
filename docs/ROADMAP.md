@@ -21,12 +21,12 @@ Dokumen ini = **acuan utama** desain SIMONIK: konteks proyek, **model data & rel
 | **Siswa** | `Student` | `siswa` | Peserta PKL. Absen + isi jurnal harian. |
 | **Guru Pembimbing** | `Teacher` | `guru` | Guru sekolah. Memegang **1+ industri (PT)** → otomatis membimbing siswa di PT itu. Menilai **non-teknis**. |
 | **Pembimbing Industri** | `Pembimbing` | `pembimbing` | Pembimbing dari pihak industri. Terikat ke **PT** & siswanya. Menilai **teknis**. Verifikasi. |
-| **Industri (PT)** | `Industry` | `mitra` (akun PT) | Tempat PKL. Punya guru pembimbing, pembimbing industri, dan siswa. |
+| **Industri (PT)** | `Industry` | `industri` (akun PT) | Tempat PKL. Punya guru pembimbing, pembimbing industri, dan siswa. |
 | **Orang Tua** | `Parents` | `orangtua` | Wali; terhubung ke siswa (anak). Pantau (read-only). |
 | Admin / Kaprog | `User`+role | `admin` / `kaprog` | Pengelola sistem & master data. |
 | Kepala Sekolah | `User`+role | `kepala_sekolah` | Oversight/laporan (belum diwujudkan). |
 
-> Catatan role `industri` vs `mitra`: akun PT yang dibuat modul Industri = **`mitra`**. Role `industri` saat ini hanya akun demo → kandidat dirapikan.
+> Role akun PT = **`industri`** (role `mitra` sudah **dihapus**; modul Industri kini assign `industri`, scope & verifikasi pakai `industri`). 8 role kanonik: admin, kaprog, guru, pembimbing, industri, siswa, orangtua, kepala_sekolah.
 
 ---
 
@@ -146,7 +146,7 @@ Scope per role tetap berlaku (guru = PT yang dipegang, pembimbing = PT-nya, oran
 
 C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 
-| Fitur | admin / kaprog | guru | pembimbing | mitra/industri | siswa | orangtua |
+| Fitur | admin / kaprog | guru | pembimbing | industri | siswa | orangtua |
 |---|---|---|---|---|---|---|
 | Dashboard analytical | ✓ penuh | ringkas | ringkas | ringkas | ringkas | ringkas |
 | Data User (CRUD) | C | — | — | — | — | — |
@@ -177,4 +177,4 @@ Juga sudah jadi: **Absen Foto + Geo (siswa)** + **Jurnal harian (siswa)** input 
 **Urutan rekomendasi berikutnya:**
 1. **Forum PKL** — tanya-jawab antar role (model `Post`/`Comment` sudah ada); CRUD thread + balasan.
 2. **Kalender** — agenda/jadwal; prioritas rendah.
-3. **Polish**: dashboard ringkas per-role, rapikan role `industri` vs `mitra`.
+3. **Polish**: dashboard ringkas per-role (guru/pembimbing/siswa/orangtua). ~~rapikan role `industri` vs `mitra`~~ ✅ selesai (role `mitra` dihapus).
