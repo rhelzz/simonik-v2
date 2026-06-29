@@ -163,6 +163,11 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Tanpa dependency PDF server** — output via cetak browser (Save as PDF). Tidak di-seed (admin unggah latar riil; empty-state ramah).
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 171 test passed** (+18: CertificateTemplateTest 11, CertificateTest 7). ESLint + tsc + Prettier + `vite build` lolos. `migrate` sukses.
 
+### 24. Konsistensi CRUD — Guru Pembimbing, Pembimbing Industri, Orang Tua jadi page-based
+- **Konversi dari modal → page-based** (selaras Siswa/Industri): `TeacherController`, `PembimbingController`, `ParentController` kini punya `create`/`edit` (route `->except('show')`), dan `store`/`update` **redirect ke `*.index`** (sebelumnya `back()`). FormRequest tidak berubah.
+- **Frontend**: komponen form baru `components/{teachers,pembimbings,parents}/*-form.tsx` (pakai `<Form>` Inertia, password hanya saat tambah) + halaman `pages/{...}/create.tsx` & `edit.tsx`. Halaman `index` ketiganya **dibersihkan dari modal/useForm** → tombol Tambah & ikon Edit kini `<Link>` ke halaman create/edit; hapus tetap inline `confirm` + `router.delete`. Judul disamakan ("Guru Pembimbing", "Pembimbing Industri", "Orang Tua").
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 171 test passed** (28 Guru/Pembimbing/Orang Tua tetap hijau). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
