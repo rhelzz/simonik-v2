@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Activity;
 use App\Models\AspekProduktif;
 use App\Models\Attendance;
 use App\Models\Classes;
@@ -93,7 +94,9 @@ class DemoDataSeeder extends Seeder
             }
         }
 
-        $this->seedAttendances($students->where('status_pkl', 'proses'));
+        $activeStudents = $students->where('status_pkl', 'proses');
+        $this->seedAttendances($activeStudents);
+        $this->seedActivities($activeStudents);
     }
 
     /**
@@ -120,6 +123,40 @@ class DemoDataSeeder extends Seeder
                     'arrivalTime' => '07:'.str_pad((string) fake()->numberBetween(10, 50), 2, '0', STR_PAD_LEFT).':00',
                     'departureTime' => $back === 0 ? null : '16:00:00',
                     'absenceReason' => null,
+                    'verified' => $back === 0 ? null : '1',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Jurnal kegiatan 5 hari kerja terakhir untuk siswa yang sedang PKL, agar
+     * rate jurnal dashboard & monitoring Data Jurnal langsung berisi.
+     *
+     * @param  Collection<int, Student>  $students
+     */
+    private function seedActivities(Collection $students): void
+    {
+        $today = Carbon::today();
+        $samples = [
+            'Membuat tampilan halaman login',
+            'Integrasi API data pengguna',
+            'Perbaikan bug pada formulir',
+            'Riset komponen tabel data',
+            'Dokumentasi alur fitur',
+        ];
+
+        foreach ($students as $student) {
+            foreach (range(0, 6) as $back) {
+                $date = $today->copy()->subDays($back);
+                if ($date->isWeekend()) {
+                    continue;
+                }
+
+                Activity::factory()->create([
+                    'user_id' => $student->user_id,
+                    'judul' => fake()->randomElement($samples),
+                    'date' => $date->toDateString(),
                     'verified' => $back === 0 ? null : '1',
                 ]);
             }
