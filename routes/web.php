@@ -6,6 +6,8 @@ use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AttendanceMonitorController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\CertificateTemplateController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartemenController;
@@ -68,6 +70,19 @@ Route::middleware('auth')->group(function () {
 
         // Master aspek penilaian (teknis & non-teknis).
         Route::resource('aspects', AspectController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // Template sertifikat (gambar latar + anchor teks).
+        Route::resource('certificate-templates', CertificateTemplateController::class)
+            ->except('show')
+            ->parameters(['certificate-templates' => 'certificateTemplate']);
+        Route::post('certificate-templates/{certificateTemplate}/activate', [CertificateTemplateController::class, 'activate'])
+            ->name('certificate-templates.activate');
+    });
+
+    // Sertifikat — output per siswa (admin/kaprog cetak semua; siswa miliknya).
+    Route::middleware('role:admin|kaprog|siswa')->group(function () {
+        Route::get('sertifikat', [CertificateController::class, 'index'])->name('certificates.index');
+        Route::get('sertifikat/{student}', [CertificateController::class, 'show'])->name('certificates.show');
     });
 
     // Rekap Penilaian — lihat (semua cakupan) + input nilai (guru/pembimbing).
