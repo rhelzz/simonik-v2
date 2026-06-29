@@ -13,11 +13,13 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $user_id
+ * @property string $judul
+ * @property string|null $deskripsi
  * @property string $dokumen
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['user_id', 'dokumen'])]
+#[Fillable(['user_id', 'judul', 'deskripsi', 'dokumen'])]
 class Guide extends Model
 {
     /** @use HasFactory<GuideFactory> */
