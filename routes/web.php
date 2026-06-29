@@ -3,6 +3,7 @@
 use App\Http\Controllers\AspectController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\AttendanceMonitorController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
@@ -73,5 +74,16 @@ Route::middleware('auth')->group(function () {
         Route::post('absen/masuk', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
         Route::post('absen/pulang', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
         Route::post('absen/izin', [AttendanceController::class, 'absence'])->name('attendance.absence');
+    });
+
+    // Data Absen — monitoring drill-down (Jurusan -> Kelas -> Murid -> detail) + verifikasi.
+    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|mitra|orangtua')->group(function () {
+        Route::get('monitoring/absen', [AttendanceMonitorController::class, 'index'])->name('attendance-monitor.index');
+        Route::get('monitoring/absen/jurusan/{departemen}', [AttendanceMonitorController::class, 'classes'])->name('attendance-monitor.classes');
+        Route::get('monitoring/absen/kelas/{class}', [AttendanceMonitorController::class, 'students'])->name('attendance-monitor.students');
+        Route::get('monitoring/absen/murid/{student}', [AttendanceMonitorController::class, 'show'])->name('attendance-monitor.show');
+        Route::patch('monitoring/absen/{attendance}/verifikasi', [AttendanceMonitorController::class, 'verify'])
+            ->middleware('role:pembimbing|industri|mitra')
+            ->name('attendance-monitor.verify');
     });
 });
