@@ -103,10 +103,10 @@ function RecordCard({ record }: { record: AttendanceRecord }) {
                 <img
                     src={record.image}
                     alt={`Foto absen ${record.dateLabel}`}
-                    className="aspect-[4/3] w-full rounded-xl border border-line object-cover sm:w-40"
+                    className="aspect-4/3 w-full rounded-xl border border-line object-cover sm:w-40"
                 />
             ) : (
-                <div className="grid aspect-[4/3] w-full place-items-center rounded-xl border border-dashed border-line text-muted sm:w-40">
+                <div className="grid aspect-4/3 w-full place-items-center rounded-xl border border-dashed border-line text-muted sm:w-40">
                     <CalendarCheck className="size-7" />
                 </div>
             )}
