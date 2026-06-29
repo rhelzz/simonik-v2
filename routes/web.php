@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AspectController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AttendanceController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\IndustryController;
+use App\Http\Controllers\JournalMonitorController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PembimbingController;
@@ -74,10 +76,17 @@ Route::middleware('auth')->group(function () {
         Route::post('absen/masuk', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
         Route::post('absen/pulang', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
         Route::post('absen/izin', [AttendanceController::class, 'absence'])->name('attendance.absence');
+
+        // Jurnal kegiatan harian milik siswa sendiri.
+        Route::resource('jurnal', ActivityController::class)
+            ->parameters(['jurnal' => 'activity'])
+            ->except('show')
+            ->names('activities');
     });
 
-    // Data Absen — monitoring drill-down (Jurusan -> Kelas -> Murid -> detail) + verifikasi.
+    // Monitoring drill-down (Jurusan -> Kelas -> Murid -> detail) + verifikasi.
     Route::middleware('role:admin|kaprog|guru|pembimbing|industri|mitra|orangtua')->group(function () {
+        // Data Absen.
         Route::get('monitoring/absen', [AttendanceMonitorController::class, 'index'])->name('attendance-monitor.index');
         Route::get('monitoring/absen/jurusan/{departemen}', [AttendanceMonitorController::class, 'classes'])->name('attendance-monitor.classes');
         Route::get('monitoring/absen/kelas/{class}', [AttendanceMonitorController::class, 'students'])->name('attendance-monitor.students');
@@ -85,5 +94,14 @@ Route::middleware('auth')->group(function () {
         Route::patch('monitoring/absen/{attendance}/verifikasi', [AttendanceMonitorController::class, 'verify'])
             ->middleware('role:pembimbing|industri|mitra')
             ->name('attendance-monitor.verify');
+
+        // Data Jurnal.
+        Route::get('monitoring/jurnal', [JournalMonitorController::class, 'index'])->name('journal-monitor.index');
+        Route::get('monitoring/jurnal/jurusan/{departemen}', [JournalMonitorController::class, 'classes'])->name('journal-monitor.classes');
+        Route::get('monitoring/jurnal/kelas/{class}', [JournalMonitorController::class, 'students'])->name('journal-monitor.students');
+        Route::get('monitoring/jurnal/murid/{student}', [JournalMonitorController::class, 'show'])->name('journal-monitor.show');
+        Route::patch('monitoring/jurnal/{activity}/verifikasi', [JournalMonitorController::class, 'verify'])
+            ->middleware('role:pembimbing|industri|mitra')
+            ->name('journal-monitor.verify');
     });
 });
