@@ -278,6 +278,14 @@ function CheckInPanel() {
             return;
         }
 
+        if (!window.isSecureContext) {
+            setGeoError(
+                'Geolokasi memerlukan HTTPS. Untuk dev lokal: akses via http://localhost:8000, atau buka chrome://flags/#unsafely-treat-insecure-origin-as-secure dan tambahkan URL ini.',
+            );
+
+            return;
+        }
+
         setGeoLoading(true);
         setGeoError(null);
         navigator.geolocation.getCurrentPosition(
@@ -286,8 +294,17 @@ function CheckInPanel() {
                 form.setData('longitude', String(pos.coords.longitude));
                 setGeoLoading(false);
             },
-            () => {
-                setGeoError('Gagal mengambil lokasi. Izinkan akses lokasi.');
+            (err) => {
+                if (err.code === err.PERMISSION_DENIED) {
+                    setGeoError(
+                        'Akses lokasi ditolak. Izinkan akses lokasi di browser.',
+                    );
+                } else if (err.code === err.TIMEOUT) {
+                    setGeoError('Waktu habis mengambil lokasi. Coba lagi.');
+                } else {
+                    setGeoError('Gagal mengambil lokasi. Pastikan GPS aktif.');
+                }
+
                 setGeoLoading(false);
             },
             { enableHighAccuracy: true, timeout: 10000 },
