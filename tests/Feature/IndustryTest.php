@@ -67,7 +67,7 @@ class IndustryTest extends TestCase
         $this->actingAs($this->admin())->get('/industries')->assertOk();
     }
 
-    public function test_admin_can_create_an_industry_with_mitra_account(): void
+    public function test_admin_can_create_an_industry_with_industri_account(): void
     {
         $this->actingAs($this->admin())
             ->post('/industries', $this->validPayload())
@@ -80,7 +80,7 @@ class IndustryTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'maju@simonik.test']);
 
         $user = User::where('email', 'maju@simonik.test')->firstOrFail();
-        $this->assertTrue($user->hasRole('mitra'));
+        $this->assertTrue($user->hasRole('industri'));
     }
 
     public function test_admin_can_create_an_industry_with_pembimbing(): void
