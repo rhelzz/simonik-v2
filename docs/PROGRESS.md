@@ -133,17 +133,25 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Seeder**: `DemoDataSeeder` menambah absen `hadir` 5 hari kerja terakhir untuk siswa status `proses` (today belum pulang/unverified) → rate dashboard & riwayat langsung terisi.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 107 test passed** (+10 AttendanceTest). ESLint + tsc + Prettier + `vite build` lolos. `migrate:fresh --seed` sukses; `storage:link` aktif.
 
+### 20. Data Absen — monitoring drill-down 4 layer + verifikasi
+- **Drill-down berjenjang** (`AttendanceMonitorController`, gate `role:admin|kaprog|guru|pembimbing|industri|mitra|orangtua`): **Layer 1** `index` (jurusan yg memuat siswa dalam cakupan + jumlah murid) → **Layer 2** `classes(Departemen)` (kelas dalam jurusan, abort 403 bila jurusan tak punya murid dalam cakupan) → **Layer 3** `students(Classes)` (murid + jumlah catatan absen & `pending_count` belum terverifikasi, search nama/NIS, paginate 10) → **Layer 4** `show(Student)` (seluruh absen paginate 15 + ringkasan hadir/izin/sakit/alpha + foto/geolokasi/jam). Setiap layer **role-scoped** sama persis Rekap Penilaian.
+- **Scope di-DRY-kan**: logika `scopedStudents()` diekstrak ke **trait `App\Http\Controllers\Concerns\ScopesStudentsByRole`** (admin/kaprog=semua; guru=`industries.teacher_id`; pembimbing=`industries.pembimbing_id`; mitra/industri=`industries.user_id`; orangtua=`students.parent_id`; siswa=miliknya). `AssessmentController` **direfaktor** memakai trait yg sama (hapus duplikasi 3 method privat).
+- **Verifikasi** `verify(Attendance)` (gate `role:pembimbing|industri|mitra` + cek scope via `user_id`): toggle kolom `attendances.verified` '0'↔'1', flash sukses. Tombol Verifikasi/Batalkan per-catatan di Layer 4 (hanya muncul utk `canVerify`).
+- **Model**: relasi baru `Student::attendances()` = `hasMany(Attendance, 'user_id', 'user_id')` (tabel absen pakai `user_id`, bukan `student_id`).
+- **Frontend**: `pages/attendance-monitor/{index,classes,students,show}.tsx` + komponen reusable **`components/ui/breadcrumb.tsx`** (jejak Jurusan→Kelas→Murid). Kartu jurusan/kelas, tabel murid (badge "n menunggu"), kartu detail absen (foto, link Google Maps, badge status, tombol verifikasi). Menu **Data Absen** kini **aktif** (STAFF + orangtua).
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 120 test passed** (+13 AttendanceMonitorTest). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
-**Absen siswa (foto + geolokasi) jalan**. Siswa melakukan absen masuk (selfie + titik lokasi), absen pulang, atau mengajukan izin/sakit lewat web; riwayat & status hari ini tampil. Data absen kini mengalir riil → **rate absensi dashboard terisi**. Di atas: master data penuh, dashboard analitik, Rekap Penilaian.
+**Data Absen monitoring jalan**. Staf menelusuri kehadiran berjenjang Jurusan→Kelas→Murid→detail (role-scoped); pembimbing/industri memverifikasi tiap catatan absen. Data absen siswa mengalir riil dari modul Absen Foto + Geo. Di atas: master data penuh, dashboard analitik, Rekap Penilaian.
 
-Sisa "Soon": **Jurnal harian (input siswa)** + Data Absen/Data Jurnal (drill-down + verifikasi staf), Panduan PKL, Sertifikat, Forum PKL, Kalender.
+Sisa "Soon": **Jurnal harian (input siswa)** + Data Jurnal (drill-down + verifikasi), Panduan PKL, Sertifikat, Forum PKL, Kalender.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Data Absen drill-down + verifikasi (Rekomendasi)** — monitoring staf 4 layer (Jurusan→Kelas→Murid→detail) atas data absen yang kini mengalir; pembimbing/industri verifikasi (`verified`).
-2. **Jurnal harian (input siswa)** — rich-text Tiptap (modul lama dihapus, bangun ulang) → mengisi rate jurnal & Data Jurnal.
-3. **Panduan PKL** (upload PDF/dokumen → tampil ke siswa), lalu **Sertifikat**.
+1. **Jurnal harian (input siswa) (Rekomendasi)** — rich-text Tiptap (modul lama dihapus, bangun ulang) → mengisi rate jurnal dashboard, lalu **Data Jurnal** drill-down 4 layer (pola persis Data Absen — bisa reuse `ScopesStudentsByRole` + `Breadcrumb`).
+2. **Panduan PKL** (upload PDF/dokumen → tampil ke siswa), lalu **Sertifikat**.
+3. **Forum PKL** & **Kalender** — prioritas rendah.
