@@ -23,6 +23,7 @@ import {
 import { index as aspectsIndex } from '@/actions/App/Http/Controllers/AspectController';
 import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
 import { index as attendanceIndex } from '@/actions/App/Http/Controllers/AttendanceController';
+import { index as attendanceMonitorIndex } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
@@ -137,7 +138,12 @@ export const navSections: NavSection[] = [
     {
         title: 'Monitoring',
         items: [
-            { label: 'Data Absen', icon: Fingerprint, roles: STAFF },
+            {
+                label: 'Data Absen',
+                icon: Fingerprint,
+                href: attendanceMonitorIndex.url(),
+                roles: [...STAFF, 'orangtua'],
+            },
             { label: 'Data Jurnal', icon: NotebookPen, roles: STAFF },
             { label: 'Kalender', icon: CalendarDays, roles: STAFF },
         ],
