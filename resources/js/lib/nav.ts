@@ -43,14 +43,7 @@ import { dashboard } from '@/routes';
 import type { NavItem, NavSection } from '@/types';
 import type { Role } from '@/types/auth';
 
-const STAFF: Role[] = [
-    'admin',
-    'kaprog',
-    'guru',
-    'pembimbing',
-    'industri',
-    'mitra',
-];
+const STAFF: Role[] = ['admin', 'kaprog', 'guru', 'pembimbing', 'industri'];
 
 /**
  * Full sidebar map. Only built features carry an `href`; the rest render as

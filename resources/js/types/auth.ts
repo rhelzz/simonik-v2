@@ -17,7 +17,6 @@ export type Role =
     | 'siswa'
     | 'orangtua'
     | 'industri'
-    | 'mitra'
     | 'kepala_sekolah';
 
 export type Auth = {
