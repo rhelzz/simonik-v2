@@ -37,7 +37,7 @@ class DashboardController extends Controller
             return $this->parentDashboard($user);
         }
 
-        if ($user->hasAnyRole(['guru', 'pembimbing', 'industri'])) {
+        if ($user->hasAnyRole(['guru', 'pembimbing'])) {
             return $this->staffDashboard($user);
         }
 
@@ -87,14 +87,18 @@ class DashboardController extends Controller
             ->pluck('user_id')
             ->all();
 
+        $studentIds = (clone $scoped)->pluck('id');
+
         $participation = $this->participation($activeUserIds);
+
+        $avgRaw = Evaluation::query()->whereIn('student_id', $studentIds)->avg('score');
 
         return Inertia::render('dashboard-staff', [
             'stats' => [
                 'students' => (clone $scoped)->count(),
                 'activePkl' => count($activeUserIds),
-                'pendingAttendance' => $this->pendingCount(Attendance::query(), $activeUserIds),
-                'pendingJournal' => $this->pendingCount(Activity::query(), $activeUserIds),
+                'assessed' => Evaluation::query()->whereIn('student_id', $studentIds)->distinct()->count('student_id'),
+                'avgScore' => $avgRaw === null ? null : (int) round((float) $avgRaw),
             ],
             'attendanceRate' => $participation['attendance'],
             'journalRate' => $participation['journal'],
@@ -221,26 +225,6 @@ class DashboardController extends Controller
             'attendance' => $this->rates($attendanceDays, $activeCount),
             'journal' => $this->rates($journalDays, $activeCount),
         ];
-    }
-
-    /**
-     * Jumlah catatan belum terverifikasi milik sekumpulan siswa.
-     *
-     * @template TModel of \Illuminate\Database\Eloquent\Model
-     *
-     * @param  Builder<TModel>  $query
-     * @param  array<int, int>  $userIds
-     */
-    private function pendingCount(Builder $query, array $userIds): int
-    {
-        if ($userIds === []) {
-            return 0;
-        }
-
-        return $query
-            ->whereIn('user_id', $userIds)
-            ->where(fn (Builder $q) => $q->whereNull('verified')->orWhere('verified', '0'))
-            ->count();
     }
 
     /**

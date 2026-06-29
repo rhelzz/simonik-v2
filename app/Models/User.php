@@ -45,12 +45,6 @@ class User extends Authenticatable
         ];
     }
 
-    /** @return HasOne<Industry, $this> */
-    public function industries(): HasOne
-    {
-        return $this->hasOne(Industry::class);
-    }
-
     /** @return HasOne<Teacher, $this> */
     public function teachers(): HasOne
     {

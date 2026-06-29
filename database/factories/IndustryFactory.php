@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Industry;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,7 +18,6 @@ class IndustryFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
             'name' => fake()->company(),
             'bidang' => fake()->randomElement(['Software House', 'Jaringan', 'Multimedia', 'Perbankan']),
             'alamat' => fake()->address(),

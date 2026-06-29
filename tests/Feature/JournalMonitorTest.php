@@ -131,7 +131,7 @@ class JournalMonitorTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('journal-monitor/students')
                 ->has('students.data', 1)
-                ->where('students.data.0.pending', 1)
+                ->where('students.data.0.total', 1)
             );
     }
 
@@ -145,8 +145,8 @@ class JournalMonitorTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('journal-monitor/show')
                 ->has('records.data', 1)
-                ->where('summary.total', 1)
-                ->where('canVerify', false)
+                ->where('performance.journal.total', 1)
+                ->has('performance.journalRate')
             );
     }
 
@@ -162,48 +162,6 @@ class JournalMonitorTest extends TestCase
 
         $this->actingAs($guru)
             ->get("/monitoring/jurnal/murid/{$other->id}")
-            ->assertForbidden();
-    }
-
-    public function test_pembimbing_can_verify_journal(): void
-    {
-        $s = $this->scenario();
-
-        $this->actingAs($s['pembimbing'])
-            ->patch("/monitoring/jurnal/{$s['activity']->id}/verifikasi")
-            ->assertSessionHas('success');
-
-        $this->assertDatabaseHas('activities', [
-            'id' => $s['activity']->id,
-            'verified' => '1',
-        ]);
-    }
-
-    public function test_admin_cannot_verify(): void
-    {
-        $s = $this->scenario();
-
-        $this->actingAs($this->user('admin'))
-            ->patch("/monitoring/jurnal/{$s['activity']->id}/verifikasi")
-            ->assertForbidden();
-    }
-
-    public function test_pembimbing_cannot_verify_outside_scope(): void
-    {
-        $this->scenario();
-
-        $pembimbing = $this->user('pembimbing');
-        Pembimbing::factory()->create(['user_id' => $pembimbing->id]);
-
-        $otherUser = $this->user('siswa');
-        Student::factory()->create([
-            'user_id' => $otherUser->id,
-            'industri_id' => Industry::factory()->create()->id,
-        ]);
-        $activity = Activity::factory()->create(['user_id' => $otherUser->id]);
-
-        $this->actingAs($pembimbing)
-            ->patch("/monitoring/jurnal/{$activity->id}/verifikasi")
             ->assertForbidden();
     }
 }

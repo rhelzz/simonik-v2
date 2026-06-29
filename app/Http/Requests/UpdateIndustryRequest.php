@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Industry;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,15 +17,9 @@ class UpdateIndustryRequest extends FormRequest
      */
     public function rules(): array
     {
-        /** @var Industry $industry */
-        $industry = $this->route('industry');
-
         return [
-            // Akun login industri
+            // Profil industri (container relasi, tanpa akun)
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($industry->user_id)],
-
-            // Profil industri
             'bidang' => ['required', 'string', 'max:255'],
             'alamat' => ['required', 'string'],
             'longitude' => ['required', 'string', 'max:255'],

@@ -3,9 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class StoreIndustryRequest extends FormRequest
+class UpdateMyIndustryRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -13,22 +12,20 @@ class StoreIndustryRequest extends FormRequest
     }
 
     /**
+     * Pembimbing hanya boleh mengubah profil industrinya — bukan relasi
+     * (guru/pembimbing) yang tetap wewenang admin/kaprog.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            // Profil industri (container relasi, tanpa akun)
             'name' => ['required', 'string', 'max:255'],
             'bidang' => ['required', 'string', 'max:255'],
             'alamat' => ['required', 'string'],
             'longitude' => ['required', 'string', 'max:255'],
             'latitude' => ['required', 'string', 'max:255'],
             'duration' => ['nullable', 'string', 'max:255'],
-
-            // Relasi (guru pembimbing & pembimbing industri, keduanya opsional)
-            'teacher_id' => ['nullable', Rule::exists('teachers', 'id')],
-            'pembimbing_id' => ['nullable', Rule::exists('pembimbings', 'id')],
         ];
     }
 }

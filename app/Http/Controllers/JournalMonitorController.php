@@ -3,25 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
+use App\Http\Controllers\Concerns\SummarizesStudentPerformance;
 use App\Models\Activity;
 use App\Models\Classes;
 use App\Models\Departemen;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Monitoring Data Jurnal berjenjang (Jurusan -> Kelas -> Murid -> detail) yang
- * dibatasi cakupan role, plus verifikasi jurnal oleh pembimbing/industri.
+ * Monitoring Data Jurnal berjenjang (Jurusan -> Kelas -> Murid -> rekap performa)
+ * yang dibatasi cakupan role. Tanpa verifikasi — rekap berbasis hitungan.
  * Pola identik dengan AttendanceMonitorController.
  */
 class JournalMonitorController extends Controller
 {
     use ScopesStudentsByRole;
+    use SummarizesStudentPerformance;
 
     /**
      * Layer 1 — daftar jurusan yang memuat siswa dalam cakupan role.
@@ -99,12 +100,7 @@ class JournalMonitorController extends Controller
         abort_unless((clone $scoped)->exists(), 403);
 
         $students = $scoped
-            ->withCount([
-                'activities',
-                'activities as pending_count' => fn (Builder $query) => $query->where(
-                    fn (Builder $q) => $q->whereNull('verified')->orWhere('verified', '0'),
-                ),
-            ])
+            ->withCount('activities')
             ->when($search !== '', fn (Builder $query) => $query->where(
                 fn (Builder $q) => $q->where('name', 'like', "%{$search}%")
                     ->orWhere('nis', 'like', "%{$search}%"),
@@ -117,7 +113,6 @@ class JournalMonitorController extends Controller
                 'name' => $student->name,
                 'nis' => $student->nis,
                 'total' => (int) $student->getAttribute('activities_count'),
-                'pending' => (int) $student->getAttribute('pending_count'),
             ]);
 
         $class->loadMissing('departemens:id,name');
@@ -133,7 +128,7 @@ class JournalMonitorController extends Controller
     }
 
     /**
-     * Layer 4 — seluruh jurnal satu murid + hak verifikasi.
+     * Layer 4 — seluruh jurnal satu murid + rekap performa berbasis hitungan.
      */
     public function show(Request $request, Student $student): Response
     {
@@ -147,10 +142,7 @@ class JournalMonitorController extends Controller
             ->paginate(10)
             ->through(fn (Activity $activity): array => $this->present($activity));
 
-        $total = $student->activities()->count();
-        $verified = $student->activities()->where('verified', '1')->count();
-
-        $student->loadMissing(['classes:id,name', 'industries:id,name']);
+        $student->loadMissing(['classes:id,name', 'industries:id,name', 'pkl_period:id,start_period,end_period']);
 
         return Inertia::render('journal-monitor/show', [
             'student' => [
@@ -161,36 +153,8 @@ class JournalMonitorController extends Controller
                 'industry' => $student->industries?->name,
             ],
             'records' => $records,
-            'summary' => [
-                'total' => $total,
-                'verified' => $verified,
-                'pending' => $total - $verified,
-            ],
-            'canVerify' => $user->hasAnyRole(['pembimbing', 'industri']),
+            'performance' => $this->performance($student),
         ]);
-    }
-
-    /**
-     * Verifikasi (atau batalkan) satu jurnal. Hanya pembimbing/industri, dan
-     * hanya untuk siswa dalam cakupannya.
-     */
-    public function verify(Request $request, Activity $activity): RedirectResponse
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        abort_unless(
-            $this->scopedStudents($user)->where('user_id', $activity->user_id)->exists(),
-            403,
-        );
-
-        $verified = $activity->verified === '1';
-        $activity->update(['verified' => $verified ? '0' : '1']);
-
-        return back()->with(
-            'success',
-            $verified ? 'Verifikasi dibatalkan.' : 'Jurnal berhasil diverifikasi.',
-        );
     }
 
     /**
@@ -210,7 +174,6 @@ class JournalMonitorController extends Controller
             'description' => $activity->description,
             'tools' => $activity->tools,
             'image' => $activity->image,
-            'verified' => $activity->verified === '1',
         ];
     }
 }

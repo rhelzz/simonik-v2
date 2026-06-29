@@ -25,7 +25,6 @@ type IndustryRow = {
     name: string;
     bidang: string;
     alamat: string;
-    email: string | null;
     guru: string | null;
     pembimbing: string | null;
     students_count: number;
@@ -53,7 +52,7 @@ export default function IndustriesIndex({
     function remove(industry: IndustryRow) {
         if (
             confirm(
-                `Hapus industri ${industry.name}? Akun industri beserta datanya akan ikut terhapus.`,
+                `Hapus industri ${industry.name}? Data industri akan ikut terhapus.`,
             )
         ) {
             router.delete(destroy.url(industry.id), { preserveScroll: true });
@@ -143,7 +142,7 @@ export default function IndustriesIndex({
                                                 {industry.name}
                                             </p>
                                             <p className="text-xs text-muted">
-                                                {industry.email ?? '—'}
+                                                {industry.alamat}
                                             </p>
                                         </td>
                                         <td className="py-3 text-ink/80">

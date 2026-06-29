@@ -17,7 +17,6 @@ type StudentRow = {
     name: string;
     nis: string;
     total: number;
-    pending: number;
 };
 
 type Props = {
@@ -101,9 +100,6 @@ export default function AttendanceMonitorStudents({
                                     <th className="pb-3 font-semibold">
                                         Catatan absen
                                     </th>
-                                    <th className="pb-3 font-semibold">
-                                        Belum diverifikasi
-                                    </th>
                                     <th className="pb-3 text-right font-semibold">
                                         Aksi
                                     </th>
@@ -122,17 +118,6 @@ export default function AttendanceMonitorStudents({
                                         </td>
                                         <td className="py-3 text-ink/80">
                                             {student.total}
-                                        </td>
-                                        <td className="py-3">
-                                            {student.pending > 0 ? (
-                                                <span className="inline-flex rounded-full bg-warning/15 px-2.5 py-1 text-xs font-semibold text-warning">
-                                                    {student.pending} menunggu
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs text-muted">
-                                                    —
-                                                </span>
-                                            )}
                                         </td>
                                         <td className="py-3 text-right">
                                             <Link

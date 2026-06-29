@@ -36,9 +36,6 @@ class IndustryTest extends TestCase
     {
         return [
             'name' => 'PT Maju Jaya',
-            'email' => 'maju@simonik.test',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
             'bidang' => 'Software House',
             'alamat' => 'Jl. Merdeka No. 1',
             'longitude' => '107.609810',
@@ -67,9 +64,12 @@ class IndustryTest extends TestCase
         $this->actingAs($this->admin())->get('/industries')->assertOk();
     }
 
-    public function test_admin_can_create_an_industry_with_industri_account(): void
+    public function test_admin_can_create_an_industry_without_an_account(): void
     {
-        $this->actingAs($this->admin())
+        $admin = $this->admin();
+        $usersBefore = User::query()->count();
+
+        $this->actingAs($admin)
             ->post('/industries', $this->validPayload())
             ->assertRedirect(route('industries.index'));
 
@@ -77,10 +77,9 @@ class IndustryTest extends TestCase
             'name' => 'PT Maju Jaya',
             'bidang' => 'Software House',
         ]);
-        $this->assertDatabaseHas('users', ['email' => 'maju@simonik.test']);
 
-        $user = User::where('email', 'maju@simonik.test')->firstOrFail();
-        $this->assertTrue($user->hasRole('industri'));
+        // Industri hanya container — tidak membuat akun User.
+        $this->assertSame($usersBefore, User::query()->count());
     }
 
     public function test_admin_can_create_an_industry_with_pembimbing(): void
@@ -123,7 +122,6 @@ class IndustryTest extends TestCase
 
         $payload = [
             'name' => 'PT Baru',
-            'email' => 'baru@simonik.test',
             'bidang' => 'Jaringan',
             'alamat' => $industry->alamat,
             'longitude' => $industry->longitude,
@@ -142,23 +140,17 @@ class IndustryTest extends TestCase
             'name' => 'PT Baru',
             'bidang' => 'Jaringan',
         ]);
-        $this->assertDatabaseHas('users', [
-            'id' => $industry->user_id,
-            'email' => 'baru@simonik.test',
-        ]);
     }
 
-    public function test_admin_can_delete_an_industry_and_its_account(): void
+    public function test_admin_can_delete_an_industry(): void
     {
         $industry = Industry::factory()->create();
-        $userId = $industry->user_id;
 
         $this->actingAs($this->admin())
             ->delete("/industries/{$industry->id}")
             ->assertRedirect(route('industries.index'));
 
         $this->assertDatabaseMissing('industries', ['id' => $industry->id]);
-        $this->assertDatabaseMissing('users', ['id' => $userId]);
     }
 
     public function test_industry_with_students_cannot_be_deleted(): void

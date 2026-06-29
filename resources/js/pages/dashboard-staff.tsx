@@ -1,13 +1,13 @@
 import { Link } from '@inertiajs/react';
 import {
+    Award,
+    ClipboardCheck,
     Fingerprint,
     GraduationCap,
     NotebookPen,
-    ShieldAlert,
     Workflow,
 } from 'lucide-react';
-import { index as attendanceMonitorIndex } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
-import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
+import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
 import {
     HeroGreeting,
     RateCard,
@@ -24,8 +24,8 @@ type DashboardStaffProps = {
     stats: {
         students: number;
         activePkl: number;
-        pendingAttendance: number;
-        pendingJournal: number;
+        assessed: number;
+        avgScore: number | null;
     };
     attendanceRate: RateByRange;
     journalRate: RateByRange;
@@ -40,23 +40,13 @@ export default function DashboardStaff({
     recentStudents,
     today,
 }: DashboardStaffProps) {
-    const pendingTotal = stats.pendingAttendance + stats.pendingJournal;
-
     return (
         <AppLayout title="Dashboard">
             <HeroGreeting today={today} fallbackName="Pembina">
                 Anda membina <strong>{stats.students}</strong> siswa,{' '}
                 <strong>{stats.activePkl}</strong> di antaranya sedang menjalani
-                PKL.
-                {pendingTotal > 0 ? (
-                    <>
-                        {' '}
-                        Ada <strong>{pendingTotal}</strong> catatan menunggu
-                        verifikasi Anda.
-                    </>
-                ) : (
-                    ' Semua catatan sudah terverifikasi.'
-                )}
+                PKL. Pantau performa absen, jurnal, dan nilai anak magang Anda
+                di bawah.
             </HeroGreeting>
 
             <section className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -72,42 +62,21 @@ export default function DashboardStaff({
                     value={stats.activePkl}
                     tint="bg-warning/15 text-warning"
                 />
-                <Link href={attendanceMonitorIndex.url()} className="contents">
+                <Link href={assessmentsIndex.url()} className="contents">
                     <StatCard
-                        icon={Fingerprint}
-                        label="Absen menunggu verifikasi"
-                        value={stats.pendingAttendance}
+                        icon={ClipboardCheck}
+                        label="Sudah dinilai"
+                        value={stats.assessed}
                         tint="bg-accent/15 text-accent"
                     />
                 </Link>
-                <Link href={journalMonitorIndex.url()} className="contents">
-                    <StatCard
-                        icon={NotebookPen}
-                        label="Jurnal menunggu verifikasi"
-                        value={stats.pendingJournal}
-                        tint="bg-positive/15 text-positive"
-                    />
-                </Link>
+                <StatCard
+                    icon={Award}
+                    label="Rata-rata nilai"
+                    value={stats.avgScore ?? '—'}
+                    tint="bg-positive/15 text-positive"
+                />
             </section>
-
-            {pendingTotal > 0 && (
-                <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-warning/10 px-4 py-3 text-sm font-medium text-warning">
-                    <ShieldAlert className="size-4 shrink-0" />
-                    <span>{pendingTotal} catatan belum diverifikasi —</span>
-                    <Link
-                        href={attendanceMonitorIndex.url()}
-                        className="font-semibold underline underline-offset-2"
-                    >
-                        Data Absen
-                    </Link>
-                    <Link
-                        href={journalMonitorIndex.url()}
-                        className="font-semibold underline underline-offset-2"
-                    >
-                        Data Jurnal
-                    </Link>
-                </div>
-            )}
 
             <section className="mt-5 grid gap-4 lg:grid-cols-2">
                 <RateCard

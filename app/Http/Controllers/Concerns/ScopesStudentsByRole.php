@@ -38,14 +38,6 @@ trait ScopesStudentsByRole
             );
         }
 
-        if ($user->hasRole('industri')) {
-            $industryId = $user->industries?->id;
-
-            return $industryId === null
-                ? $this->none()
-                : Student::query()->where('industri_id', $industryId);
-        }
-
         if ($user->hasRole('orangtua')) {
             $parentId = $user->parents?->id;
 

@@ -7,11 +7,8 @@ use App\Http\Requests\UpdateIndustryRequest;
 use App\Models\Industry;
 use App\Models\Pembimbing;
 use App\Models\Teacher;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,7 +23,6 @@ class IndustryController extends Controller
 
         $industries = Industry::query()
             ->with([
-                'users:id,email',
                 'pembimbingNormatif:id,name',
                 'teachers:id,name',
             ])
@@ -40,7 +36,6 @@ class IndustryController extends Controller
                 'name' => $industry->name,
                 'bidang' => $industry->bidang,
                 'alamat' => $industry->alamat,
-                'email' => $industry->users?->email,
                 'pembimbing' => $industry->pembimbingNormatif?->name,
                 'guru' => $industry->teachers?->name,
                 'students_count' => $industry->students_count,
@@ -63,26 +58,11 @@ class IndustryController extends Controller
     }
 
     /**
-     * Simpan industri baru beserta akun industrinya.
+     * Simpan industri baru. Industri hanya container relasi (tanpa akun).
      */
     public function store(StoreIndustryRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        DB::transaction(function () use ($data): void {
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'email_verified_at' => now(),
-            ]);
-            $user->assignRole('industri');
-
-            Industry::create([
-                ...$this->profileData($data),
-                'user_id' => $user->id,
-            ]);
-        });
+        Industry::create($this->profileData($request->validated()));
 
         return redirect()
             ->route('industries.index')
@@ -94,13 +74,10 @@ class IndustryController extends Controller
      */
     public function edit(Industry $industry): Response
     {
-        $industry->load('users:id,email');
-
         return Inertia::render('industries/edit', [
             'industry' => [
                 'id' => $industry->id,
                 'name' => $industry->name,
-                'email' => $industry->users?->email,
                 'bidang' => $industry->bidang,
                 'alamat' => $industry->alamat,
                 'longitude' => $industry->longitude,
@@ -114,20 +91,11 @@ class IndustryController extends Controller
     }
 
     /**
-     * Perbarui industri & akunnya.
+     * Perbarui profil industri.
      */
     public function update(UpdateIndustryRequest $request, Industry $industry): RedirectResponse
     {
-        $data = $request->validated();
-
-        DB::transaction(function () use ($industry, $data): void {
-            $industry->users?->update([
-                'name' => $data['name'],
-                'email' => $data['email'],
-            ]);
-
-            $industry->update($this->profileData($data));
-        });
+        $industry->update($this->profileData($request->validated()));
 
         return redirect()
             ->route('industries.index')
@@ -135,7 +103,7 @@ class IndustryController extends Controller
     }
 
     /**
-     * Hapus industri beserta akunnya.
+     * Hapus industri (container relasi, tanpa akun).
      */
     public function destroy(Industry $industry): RedirectResponse
     {
@@ -144,8 +112,7 @@ class IndustryController extends Controller
             return back()->with('error', 'Industri tidak bisa dihapus karena masih menjadi tempat PKL siswa.');
         }
 
-        // Menghapus user akan cascade ke record industri (FK onDelete cascade).
-        $industry->users?->delete();
+        $industry->delete();
 
         return redirect()
             ->route('industries.index')

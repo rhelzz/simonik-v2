@@ -33,6 +33,7 @@ import { index as departemensIndex } from '@/actions/App/Http/Controllers/Depart
 import { index as guidesIndex } from '@/actions/App/Http/Controllers/GuideController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
+import { show as myIndustryShow } from '@/actions/App/Http/Controllers/MyIndustryController';
 import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentController';
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
 import { index as periodsIndex } from '@/actions/App/Http/Controllers/PeriodController';
@@ -43,7 +44,7 @@ import { dashboard } from '@/routes';
 import type { NavItem, NavSection } from '@/types';
 import type { Role } from '@/types/auth';
 
-const STAFF: Role[] = ['admin', 'kaprog', 'guru', 'pembimbing', 'industri'];
+const STAFF: Role[] = ['admin', 'kaprog', 'guru', 'pembimbing'];
 
 /**
  * Full sidebar map. Only built features carry an `href`; the rest render as
@@ -97,11 +98,6 @@ export const navSections: NavSection[] = [
                         href: teachersIndex.url(),
                     },
                     {
-                        label: 'Data Industri',
-                        icon: Building2,
-                        href: industriesIndex.url(),
-                    },
-                    {
                         label: 'Pembimbing Industri',
                         icon: HardHat,
                         href: pembimbingsIndex.url(),
@@ -112,6 +108,18 @@ export const navSections: NavSection[] = [
                         href: parentsIndex.url(),
                     },
                 ],
+            },
+            {
+                label: 'Data Industri',
+                icon: Building2,
+                href: industriesIndex.url(),
+                roles: ['admin', 'kaprog'],
+            },
+            {
+                label: 'Industri Saya',
+                icon: Building2,
+                href: myIndustryShow.url(),
+                roles: ['pembimbing'],
             },
             {
                 label: 'Data Jurusan',

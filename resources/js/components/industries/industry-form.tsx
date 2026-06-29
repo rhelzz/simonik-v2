@@ -10,7 +10,6 @@ export type IndustryOptions = {
 
 export type IndustryDefaults = {
     name?: string;
-    email?: string;
     bidang?: string;
     alamat?: string;
     longitude?: string;
@@ -70,19 +69,18 @@ export function IndustryForm({
     industry?: IndustryDefaults;
     submitLabel: string;
 }) {
-    const isCreate = !industry;
-
     return (
         <Form action={action} method={method} className="space-y-8">
             {({ processing, errors }) => (
                 <>
                     <section className="rounded-3xl bg-surface p-5 sm:p-6">
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <SectionTitle>Akun industri</SectionTitle>
+                            <SectionTitle>Profil industri</SectionTitle>
                             <Field
                                 label="Nama industri"
                                 htmlFor="name"
                                 error={errors.name}
+                                full
                             >
                                 <input
                                     id="name"
@@ -92,57 +90,6 @@ export function IndustryForm({
                                     required
                                 />
                             </Field>
-                            <Field
-                                label="Email"
-                                htmlFor="email"
-                                error={errors.email}
-                            >
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    defaultValue={industry?.email}
-                                    className={inputClass}
-                                    required
-                                />
-                            </Field>
-                            {isCreate && (
-                                <>
-                                    <Field
-                                        label="Kata sandi"
-                                        htmlFor="password"
-                                        error={errors.password}
-                                    >
-                                        <input
-                                            id="password"
-                                            name="password"
-                                            type="password"
-                                            autoComplete="new-password"
-                                            className={inputClass}
-                                            required
-                                        />
-                                    </Field>
-                                    <Field
-                                        label="Konfirmasi kata sandi"
-                                        htmlFor="password_confirmation"
-                                    >
-                                        <input
-                                            id="password_confirmation"
-                                            name="password_confirmation"
-                                            type="password"
-                                            autoComplete="new-password"
-                                            className={inputClass}
-                                            required
-                                        />
-                                    </Field>
-                                </>
-                            )}
-                        </div>
-                    </section>
-
-                    <section className="rounded-3xl bg-surface p-5 sm:p-6">
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <SectionTitle>Profil industri</SectionTitle>
                             <Field
                                 label="Bidang"
                                 htmlFor="bidang"

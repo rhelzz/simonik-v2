@@ -17,7 +17,6 @@ type StudentRow = {
     name: string;
     nis: string;
     total: number;
-    pending: number;
 };
 
 export default function JournalMonitorStudents({
@@ -99,9 +98,6 @@ export default function JournalMonitorStudents({
                                     <th className="pb-3 font-semibold">
                                         Jumlah jurnal
                                     </th>
-                                    <th className="pb-3 font-semibold">
-                                        Belum diverifikasi
-                                    </th>
                                     <th className="pb-3 text-right font-semibold">
                                         Aksi
                                     </th>
@@ -120,17 +116,6 @@ export default function JournalMonitorStudents({
                                         </td>
                                         <td className="py-3 text-ink/80">
                                             {student.total}
-                                        </td>
-                                        <td className="py-3">
-                                            {student.pending > 0 ? (
-                                                <span className="inline-flex rounded-full bg-warning/15 px-2.5 py-1 text-xs font-semibold text-warning">
-                                                    {student.pending} menunggu
-                                                </span>
-                                            ) : (
-                                                <span className="text-xs text-muted">
-                                                    —
-                                                </span>
-                                            )}
                                         </td>
                                         <td className="py-3 text-right">
                                             <Link

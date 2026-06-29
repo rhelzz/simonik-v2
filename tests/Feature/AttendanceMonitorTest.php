@@ -146,7 +146,7 @@ class AttendanceMonitorTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('attendance-monitor/students')
                 ->has('students.data', 1)
-                ->where('students.data.0.pending', 1)
+                ->where('students.data.0.total', 1)
             );
     }
 
@@ -160,8 +160,8 @@ class AttendanceMonitorTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('attendance-monitor/show')
                 ->has('records.data', 1)
-                ->where('summary.hadir', 1)
-                ->where('canVerify', false)
+                ->where('performance.attendance.hadir', 1)
+                ->has('performance.attendanceRate')
             );
     }
 
@@ -177,63 +177,6 @@ class AttendanceMonitorTest extends TestCase
 
         $this->actingAs($guru)
             ->get("/monitoring/absen/murid/{$other->id}")
-            ->assertForbidden();
-    }
-
-    public function test_pembimbing_can_verify_attendance(): void
-    {
-        $s = $this->scenario();
-
-        $this->actingAs($s['pembimbing'])
-            ->patch("/monitoring/absen/{$s['attendance']->id}/verifikasi")
-            ->assertSessionHas('success');
-
-        $this->assertDatabaseHas('attendances', [
-            'id' => $s['attendance']->id,
-            'verified' => '1',
-        ]);
-    }
-
-    public function test_verify_toggles_back_to_unverified(): void
-    {
-        $s = $this->scenario();
-
-        $this->actingAs($s['pembimbing'])
-            ->patch("/monitoring/absen/{$s['attendance']->id}/verifikasi");
-        $this->actingAs($s['pembimbing'])
-            ->patch("/monitoring/absen/{$s['attendance']->id}/verifikasi");
-
-        $this->assertDatabaseHas('attendances', [
-            'id' => $s['attendance']->id,
-            'verified' => '0',
-        ]);
-    }
-
-    public function test_admin_cannot_verify(): void
-    {
-        $s = $this->scenario();
-
-        $this->actingAs($this->user('admin'))
-            ->patch("/monitoring/absen/{$s['attendance']->id}/verifikasi")
-            ->assertForbidden();
-    }
-
-    public function test_pembimbing_cannot_verify_outside_scope(): void
-    {
-        $this->scenario();
-
-        $pembimbing = $this->user('pembimbing');
-        Pembimbing::factory()->create(['user_id' => $pembimbing->id]);
-
-        $otherUser = $this->user('siswa');
-        Student::factory()->create([
-            'user_id' => $otherUser->id,
-            'industri_id' => Industry::factory()->create()->id,
-        ]);
-        $attendance = Attendance::factory()->create(['user_id' => $otherUser->id]);
-
-        $this->actingAs($pembimbing)
-            ->patch("/monitoring/absen/{$attendance->id}/verifikasi")
             ->assertForbidden();
     }
 }

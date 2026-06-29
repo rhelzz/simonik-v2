@@ -14,6 +14,7 @@ use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\JournalMonitorController;
+use App\Http\Controllers\MyIndustryController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PembimbingController;
@@ -53,6 +54,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('panduan/{guide}', [GuideController::class, 'destroy'])->name('guides.destroy');
     });
 
+    // Industri Saya — pembimbing kelola profil industrinya + pantau anak magang.
+    Route::middleware('role:pembimbing')->group(function () {
+        Route::get('industri-saya', [MyIndustryController::class, 'show'])->name('my-industry.show');
+        Route::get('industri-saya/edit', [MyIndustryController::class, 'edit'])->name('my-industry.edit');
+        Route::put('industri-saya', [MyIndustryController::class, 'update'])->name('my-industry.update');
+    });
+
     // Master data pengguna (dikelola admin/kaprog).
     Route::middleware('role:admin|kaprog')->group(function () {
         Route::resource('students', StudentController::class)->except('show');
@@ -86,7 +94,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Rekap Penilaian — lihat (semua cakupan) + input nilai (guru/pembimbing).
-    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|siswa|orangtua')->group(function () {
+    Route::middleware('role:admin|kaprog|guru|pembimbing|siswa|orangtua')->group(function () {
         Route::get('penilaian', [AssessmentController::class, 'index'])->name('assessments.index');
         Route::get('penilaian/{student}', [AssessmentController::class, 'show'])->name('assessments.show');
         Route::put('penilaian/{student}', [AssessmentController::class, 'update'])
@@ -108,24 +116,18 @@ Route::middleware('auth')->group(function () {
             ->names('activities');
     });
 
-    // Monitoring drill-down (Jurusan -> Kelas -> Murid -> detail) + verifikasi.
-    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|orangtua')->group(function () {
+    // Monitoring drill-down (Jurusan -> Kelas -> Murid -> rekap performa).
+    Route::middleware('role:admin|kaprog|guru|pembimbing|orangtua')->group(function () {
         // Data Absen.
         Route::get('monitoring/absen', [AttendanceMonitorController::class, 'index'])->name('attendance-monitor.index');
         Route::get('monitoring/absen/jurusan/{departemen}', [AttendanceMonitorController::class, 'classes'])->name('attendance-monitor.classes');
         Route::get('monitoring/absen/kelas/{class}', [AttendanceMonitorController::class, 'students'])->name('attendance-monitor.students');
         Route::get('monitoring/absen/murid/{student}', [AttendanceMonitorController::class, 'show'])->name('attendance-monitor.show');
-        Route::patch('monitoring/absen/{attendance}/verifikasi', [AttendanceMonitorController::class, 'verify'])
-            ->middleware('role:pembimbing|industri')
-            ->name('attendance-monitor.verify');
 
         // Data Jurnal.
         Route::get('monitoring/jurnal', [JournalMonitorController::class, 'index'])->name('journal-monitor.index');
         Route::get('monitoring/jurnal/jurusan/{departemen}', [JournalMonitorController::class, 'classes'])->name('journal-monitor.classes');
         Route::get('monitoring/jurnal/kelas/{class}', [JournalMonitorController::class, 'students'])->name('journal-monitor.students');
         Route::get('monitoring/jurnal/murid/{student}', [JournalMonitorController::class, 'show'])->name('journal-monitor.show');
-        Route::patch('monitoring/jurnal/{activity}/verifikasi', [JournalMonitorController::class, 'verify'])
-            ->middleware('role:pembimbing|industri')
-            ->name('journal-monitor.verify');
     });
 });

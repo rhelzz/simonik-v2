@@ -12,7 +12,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $user_id
  * @property string $name
  * @property string $bidang
  * @property string $alamat
@@ -25,7 +24,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 #[Fillable([
-    'user_id',
     'name',
     'bidang',
     'alamat',
@@ -39,12 +37,6 @@ class Industry extends Model
 {
     /** @use HasFactory<IndustryFactory> */
     use HasFactory;
-
-    /** @return BelongsTo<User, $this> */
-    public function users(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id');
-    }
 
     /** @return HasMany<Student, $this> */
     public function students(): HasMany

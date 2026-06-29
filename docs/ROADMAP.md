@@ -20,13 +20,13 @@ Dokumen ini = **acuan utama** desain SIMONIK: konteks proyek, **model data & rel
 |---|---|---|---|
 | **Siswa** | `Student` | `siswa` | Peserta PKL. Absen + isi jurnal harian. |
 | **Guru Pembimbing** | `Teacher` | `guru` | Guru sekolah. Memegang **1+ industri (PT)** → otomatis membimbing siswa di PT itu. Menilai **non-teknis**. |
-| **Pembimbing Industri** | `Pembimbing` | `pembimbing` | Pembimbing dari pihak industri. Terikat ke **PT** & siswanya. Menilai **teknis**. Verifikasi. |
-| **Industri (PT)** | `Industry` | `industri` (akun PT) | Tempat PKL. Punya guru pembimbing, pembimbing industri, dan siswa. |
+| **Pembimbing Industri** | `Pembimbing` | `pembimbing` | Pembimbing dari pihak industri. Terikat ke **PT** & siswanya. Menilai **teknis**. Kelola profil industrinya + pantau performa anak magang. |
+| **Industri (PT)** | `Industry` | — (bukan akun) | **Container relasi** (guru, pembimbing, siswa). Bukan User — kontrolnya ada di akun **Pembimbing Industri**. Dikelola admin/kaprog sebagai master data. |
 | **Orang Tua** | `Parents` | `orangtua` | Wali; terhubung ke siswa (anak). Pantau (read-only). |
 | Admin / Kaprog | `User`+role | `admin` / `kaprog` | Pengelola sistem & master data. |
 | Kepala Sekolah | `User`+role | `kepala_sekolah` | Oversight/laporan (belum diwujudkan). |
 
-> Role akun PT = **`industri`** (role `mitra` sudah **dihapus**; modul Industri kini assign `industri`, scope & verifikasi pakai `industri`). 8 role kanonik: admin, kaprog, guru, pembimbing, industri, siswa, orangtua, kepala_sekolah.
+> Industri **bukan lagi akun User** (role `industri` **dihapus** mengikuti penghapusan `mitra`; lihat PROGRESS §27). **7 role kanonik**: admin, kaprog, guru, pembimbing, siswa, orangtua, kepala_sekolah. Cakupan siswa untuk staf: guru lewat `industries.teacher_id`, pembimbing lewat `industries.pembimbing_id`.
 
 ---
 
@@ -64,7 +64,7 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 6. **Rate absensi** — % kehadiran, **filter**: hari ini / minggu ini / bulan ini / keseluruhan.
 7. **Rate pengisian jurnal harian** — % murid yang konsisten mengisi jurnal, **filter** sama seperti absensi.
 
-> ✅ Dashboard role lain sudah ada (PROGRESS §26): guru/pembimbing/industri → `dashboard-staff` (stat & rate scoped + verifikasi tertunda); siswa → `dashboard-student` (absen hari ini, nilai, jurnal, quick-action); orangtua → `dashboard-parent` (ringkasan per anak).
+> ✅ Dashboard role lain sudah ada (PROGRESS §26, §27): guru/pembimbing → `dashboard-staff` (stat & rate scoped + rekap nilai/grade, tanpa verifikasi); siswa → `dashboard-student` (absen hari ini, nilai, jurnal, quick-action); orangtua → `dashboard-parent` (ringkasan per anak).
 
 ---
 
@@ -75,15 +75,16 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 | Menu | Status | Catatan |
 |---|---|---|
 | **Dashboard** | ✅ | Analytical: 5 ringkasan kuantitatif + rate absensi & rate jurnal dengan filter waktu (§4). |
-| **Data User** (dropdown) | ✅ | Dropdown jalan. Submenu: Data Siswa ✅, Guru Pembimbing ✅, Data Industri ✅, Pembimbing Industri ✅, Orang Tua ✅. Relasi via industri sudah terpasang (§3). |
+| **Data User** (dropdown) | ✅ | Dropdown jalan. Submenu: Data Siswa ✅, Guru Pembimbing ✅, Pembimbing Industri ✅, Orang Tua ✅. (Data Industri **dikeluarkan** dari dropdown ini → jadi item Data Master tersendiri, §27.) Relasi via industri sudah terpasang (§3). |
+| **Data Industri** | ✅ | Item Data Master tersendiri (CRUD container relasi, tanpa akun). Untuk pembimbing tampil sebagai **Industri Saya** (§27). |
 | **Data Jurusan** | ✅ | Referensi relasi murid & industri. |
 | **Data Kelas** | ✅ | Referensi relasi murid. |
 | **Periode PKL** | ✅ | CRUD gelombang + rentang tanggal. |
 | **Forum PKL** | ⏳ | Prioritas rendah. |
 | **Panduan PKL** | ✅ | CRUD upload dokumen PDF/Office (admin/kaprog) → lihat & unduh semua role (§22). |
 | **Absen Foto + Geo** (siswa) | ✅ | Input absen web (foto `getUserMedia`/upload + `navigator.geolocation`): masuk/pulang/izin/sakit, sekali per hari. |
-| **Data Absen** | ✅ | Monitoring **drill-down 4 layer** (§6) Jurusan→Kelas→Murid→detail, role-scoped, + verifikasi (`verified`) oleh pembimbing/industri. |
-| **Data Jurnal** | ✅ | Monitoring **drill-down 4 layer** (§6) Jurusan→Kelas→Murid→detail, role-scoped, + verifikasi (`verified`). Pola identik Data Absen (reuse `ScopesStudentsByRole` + `Breadcrumb`). |
+| **Data Absen** | ✅ | Monitoring **drill-down 4 layer** (§6) Jurusan→Kelas→Murid→**rekap performa**, role-scoped. Verifikasi **dihapus** (§27) → diganti rekap berbasis hitungan (count + rate). |
+| **Data Jurnal** | ✅ | Monitoring **drill-down 4 layer** (§6) Jurusan→Kelas→Murid→**rekap performa**, role-scoped. Tanpa verifikasi (§27). Pola identik Data Absen (reuse `ScopesStudentsByRole` + `Breadcrumb`). |
 | **Kalender** | ⏳ | Prioritas rendah (menggantikan rencana "Jadwal"). |
 | **Aspek Penilaian** | ✅ | Master aspek teknis/non-teknis (CRUD admin) — sumber untuk Rekap Penilaian (§7). |
 | **Rekap Penilaian** | ✅ | Input nilai (guru non-teknis, pembimbing teknis) + lihat role-scoped + grade A/B/C/D otomatis (§7). |
@@ -104,7 +105,7 @@ Agar rapi, monitoring dipecah berjenjang (bukan tabel flat):
 - **Layer 3** — pilih **Murid** dalam kelas itu
 - **Layer 4** — tampil **seluruh data absen** (atau **jurnal**) murid tersebut
 
-Scope per role tetap berlaku (guru = PT yang dipegang, pembimbing = PT-nya, orangtua = anaknya, admin/kaprog = semua). Verifikasi (pembimbing/industri) tetap pada layer detail.
+Scope per role tetap berlaku (guru = PT yang dipegang, pembimbing = PT-nya, orangtua = anaknya, admin/kaprog = semua). Layer 4 menampilkan **rekap performa** (count kehadiran/jurnal + rate% + nilai/grade) menggantikan verifikasi (§27).
 
 > **Data Absen** ✅ (§20) & **Data Jurnal** ✅ (§21) mengimplementasikan pola ini: scope dibagikan via trait `ScopesStudentsByRole`, navigasi via komponen `Breadcrumb`.
 
@@ -146,25 +147,28 @@ Scope per role tetap berlaku (guru = PT yang dipegang, pembimbing = PT-nya, oran
 
 C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 
-| Fitur | admin / kaprog | guru | pembimbing | industri | siswa | orangtua |
-|---|---|---|---|---|---|---|
-| Dashboard analytical | ✓ penuh | ringkas | ringkas | ringkas | ringkas | ringkas |
-| Data User (CRUD) | C | — | — | — | — | — |
-| Jurusan / Kelas (CRUD) | C | — | — | — | — | — |
-| Periode PKL (CRUD) | C | — | — | — | — | — |
-| Panduan PKL | C | V | V | V | V | V |
-| Data Absen (monitor) | V semua | V (PT-nya) | V (PT-nya) | V (PT-nya) | — | V (anak) |
-| Data Jurnal (monitor) | V semua | V (PT-nya) | V (PT-nya) | V (PT-nya) | — | V (anak) |
-| Absen Foto + Geo (input) | — | — | — | — | I | — |
-| Jurnal harian (input) | — | — | — | — | I | — |
-| Verifikasi absen/jurnal | — | — | ✓ | ✓ | — | — |
-| Rekap Penilaian — master aspek | C | — | — | — | — | — |
-| Rekap Penilaian — isi nilai | — | I (non-teknis) | I (teknis) | — | — | — |
-| Rekap Penilaian — lihat | ✓ semua | ✓ (PT-nya) | ✓ (PT-nya) | — | ✓ (sendiri) | ✓ (anak) |
-| Sertifikat | C template | — | — | — | unduh | — |
-| Forum PKL (⏳) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
-| Kalender (⏳) | ✓ | ✓ | ✓ | — | — | — |
-| Profil & ganti sandi | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Fitur | admin / kaprog | guru | pembimbing | siswa | orangtua |
+|---|---|---|---|---|---|
+| Dashboard analytical | ✓ penuh | ringkas | ringkas | ringkas | ringkas |
+| Data User (CRUD) | C | — | — | — | — |
+| Data Industri (CRUD) | C | — | — | — | — |
+| Industri Saya (kelola sendiri) | — | — | C (industrinya) | — | — |
+| Jurusan / Kelas (CRUD) | C | — | — | — | — |
+| Periode PKL (CRUD) | C | — | — | — | — |
+| Panduan PKL | C | V | V | V | V |
+| Data Absen (monitor + rekap) | V semua | V (PT-nya) | V (PT-nya) | — | V (anak) |
+| Data Jurnal (monitor + rekap) | V semua | V (PT-nya) | V (PT-nya) | — | V (anak) |
+| Absen Foto + Geo (input) | — | — | — | I | — |
+| Jurnal harian (input) | — | — | — | I | — |
+| Rekap Penilaian — master aspek | C | — | — | — | — |
+| Rekap Penilaian — isi nilai | — | I (non-teknis) | I (teknis) | — | — |
+| Rekap Penilaian — lihat | ✓ semua | ✓ (PT-nya) | ✓ (PT-nya) | ✓ (sendiri) | ✓ (anak) |
+| Sertifikat | C template | — | — | unduh | — |
+| Forum PKL (⏳) | ✓ | ✓ | ✓ | ✓ | — |
+| Kalender (⏳) | ✓ | ✓ | ✓ | — | — |
+| Profil & ganti sandi | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+> Verifikasi absen/jurnal **dihapus** (§27) — diganti rekap performa berbasis hitungan.
 
 ---
 
@@ -172,7 +176,7 @@ C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 
 **Sudah jadi**: Auth/login, Profil+sandi, Landing, **Dashboard analytical** (5 ringkasan + rate absensi/jurnal filter waktu). **Master data admin penuh**: CRUD Siswa, Guru Pembimbing, Industri, Pembimbing Industri, **Orang Tua** (akun `orangtua`), Jurusan, Kelas, **Periode PKL** — semua gate `admin|kaprog`, relasi via industri terpasang (§3), sidebar dropdown Data User. **Rekap Penilaian** (§7): master Aspek Penilaian (admin) + input nilai guru/pembimbing + lihat role-scoped + grade A/B/C/D otomatis. **Absen Foto + Geo (siswa)**: input kehadiran web (foto + geolokasi, masuk/pulang/izin/sakit).
 
-Juga sudah jadi: **Absen Foto + Geo (siswa)** + **Jurnal harian (siswa)** input web; **Data Absen** & **Data Jurnal** monitoring drill-down 4 layer + verifikasi (§6, scope via trait `ScopesStudentsByRole`, navigasi via `Breadcrumb`); **Panduan PKL** (CRUD dokumen admin + unduh semua role); **Sertifikat** (CRUD template anchor + cetak per siswa, §8). **Kedua rate dashboard** (absensi & jurnal) kini terisi riil.
+Juga sudah jadi: **Absen Foto + Geo (siswa)** + **Jurnal harian (siswa)** input web; **Data Absen** & **Data Jurnal** monitoring drill-down 4 layer + **rekap performa** (count + rate + nilai/grade, tanpa verifikasi §27; scope via trait `ScopesStudentsByRole`, navigasi via `Breadcrumb`); **Industri Saya** (pembimbing kelola industrinya + pantau anak magang, §27); **Panduan PKL** (CRUD dokumen admin + unduh semua role); **Sertifikat** (CRUD template anchor + cetak per siswa, §8). **Kedua rate dashboard** (absensi & jurnal) kini terisi riil.
 
 **Urutan rekomendasi berikutnya:**
 1. **Forum PKL** — tanya-jawab antar role (model `Post`/`Comment` sudah ada); CRUD thread + balasan.
