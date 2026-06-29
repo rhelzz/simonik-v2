@@ -130,6 +130,17 @@ class Student extends Model
         return $this->hasMany(Attendance::class, 'user_id', 'user_id');
     }
 
+    /**
+     * Jurnal kegiatan harian siswa, ditautkan lewat `user_id` (akun siswa)
+     * karena tabel `activities` menyimpan `user_id`, bukan `student_id`.
+     *
+     * @return HasMany<Activity, $this>
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(Activity::class, 'user_id', 'user_id');
+    }
+
     /** @return HasMany<GuidanceReport, $this> */
     public function guidance_report(): HasMany
     {
