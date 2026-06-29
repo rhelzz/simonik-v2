@@ -90,7 +90,7 @@ These are distilled from the Laravel Boost guidelines bundled with this project 
 - Run the full gate that CI enforces: `composer ci:check` (PHP lint + Prettier + `tsc` + tests), or the pieces individually (`composer test`, `npm run lint`, `npm run types:check`).
 
 ### Git & progress workflow
-- **One changed folder = one commit.** When committing/pushing, group the changed files by their folder and create a separate commit per folder (e.g. `database/migrations/`, `app/Models/`, `database/factories/`). Stage and commit each folder on its own; don't mix folders in a single commit. Files that don't belong to a clear feature folder (e.g. root files) get their own commit.
+- **Commit all changes together** when instructed. Don't automatically commit — wait for explicit instruction to stage all modified files and commit together in a single commit. When user says "commit and push", stage everything and create one commit with a descriptive message.
 - **Do not add a `Co-Authored-By` trailer** to commit messages.
 - Push to `main`.
 - **Keep two docs in sync** (both live in `docs/`):
