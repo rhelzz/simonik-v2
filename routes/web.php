@@ -86,7 +86,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Rekap Penilaian — lihat (semua cakupan) + input nilai (guru/pembimbing).
-    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|mitra|siswa|orangtua')->group(function () {
+    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|siswa|orangtua')->group(function () {
         Route::get('penilaian', [AssessmentController::class, 'index'])->name('assessments.index');
         Route::get('penilaian/{student}', [AssessmentController::class, 'show'])->name('assessments.show');
         Route::put('penilaian/{student}', [AssessmentController::class, 'update'])
@@ -109,14 +109,14 @@ Route::middleware('auth')->group(function () {
     });
 
     // Monitoring drill-down (Jurusan -> Kelas -> Murid -> detail) + verifikasi.
-    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|mitra|orangtua')->group(function () {
+    Route::middleware('role:admin|kaprog|guru|pembimbing|industri|orangtua')->group(function () {
         // Data Absen.
         Route::get('monitoring/absen', [AttendanceMonitorController::class, 'index'])->name('attendance-monitor.index');
         Route::get('monitoring/absen/jurusan/{departemen}', [AttendanceMonitorController::class, 'classes'])->name('attendance-monitor.classes');
         Route::get('monitoring/absen/kelas/{class}', [AttendanceMonitorController::class, 'students'])->name('attendance-monitor.students');
         Route::get('monitoring/absen/murid/{student}', [AttendanceMonitorController::class, 'show'])->name('attendance-monitor.show');
         Route::patch('monitoring/absen/{attendance}/verifikasi', [AttendanceMonitorController::class, 'verify'])
-            ->middleware('role:pembimbing|industri|mitra')
+            ->middleware('role:pembimbing|industri')
             ->name('attendance-monitor.verify');
 
         // Data Jurnal.
@@ -125,7 +125,7 @@ Route::middleware('auth')->group(function () {
         Route::get('monitoring/jurnal/kelas/{class}', [JournalMonitorController::class, 'students'])->name('journal-monitor.students');
         Route::get('monitoring/jurnal/murid/{student}', [JournalMonitorController::class, 'show'])->name('journal-monitor.show');
         Route::patch('monitoring/jurnal/{activity}/verifikasi', [JournalMonitorController::class, 'verify'])
-            ->middleware('role:pembimbing|industri|mitra')
+            ->middleware('role:pembimbing|industri')
             ->name('journal-monitor.verify');
     });
 });
