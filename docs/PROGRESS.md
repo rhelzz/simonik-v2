@@ -148,17 +148,24 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Dashboard**: rate pengisian jurnal kini **terisi riil** (DashboardController sudah menghitungnya sejak §17). **Seeder**: `DemoDataSeeder` menambah jurnal 5 hari kerja terakhir utk siswa `proses` (today unverified).
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 142 test passed** (+22: ActivityTest 12, JournalMonitorTest 10). ESLint + tsc + Prettier + `vite build` lolos. `migrate:fresh --seed` sukses.
 
+### 22. Panduan PKL — CRUD dokumen (admin) + lihat/unduh (semua role)
+- **Skema**: migration baru (forward-only) menambah `guides.judul` (string) + `guides.deskripsi` (text nullable) ke tabel lama yang cuma punya `user_id`+`dokumen`. Model `Guide` fillable diperluas; factory diisi judul/deskripsi.
+- **Backend** (`GuideController`): `index` (semua role login — daftar panduan + flag `can.manage`), `store`/`update`/`destroy` **gate `role:admin|kaprog`**. `GuideRequest` (judul wajib, deskripsi opsional, **dokumen wajib saat tambah / opsional saat ubah**, mimes pdf/doc/docx/ppt/pptx/xls/xlsx maks 10 MB). Berkas di disk `public` (`guides/…`), foto/berkas lama dihapus saat diganti/hapus. `present()` mengekspos tipe (ekstensi) + ukuran human-readable + tanggal unggah; accessor `Guide::dokumen` → URL publik.
+- **Routes**: `GET /panduan` (semua role, dalam grup `auth`), `POST/PUT/DELETE /panduan` di sub-grup `role:admin|kaprog`.
+- **Frontend**: `pages/guides/index.tsx` — kartu dokumen (ikon + tipe/ukuran/tanggal + tombol "Buka / Unduh" `target=_blank`). Admin/kaprog melihat tombol **Tambah/Edit/Hapus** + modal unggah (`useForm` + `forceFormData`, PUT via `_method` spoof). Menu **Panduan PKL** kini **aktif** untuk **semua role** (seksi Dokumen & Forum). Tidak di-seed (admin unggah berkas riil; empty-state ramah).
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 153 test passed** (+11 GuideTest). ESLint + tsc + Prettier + `vite build` lolos. `migrate` sukses.
+
 ---
 
 ## 📍 Current step
-**Siklus PKL siswa lengkap**: siswa **absen** (foto+geo) & **isi jurnal harian** (rich-text); staf **memantau** keduanya via drill-down 4 layer (Jurusan→Kelas→Murid→detail, role-scoped) & **memverifikasi**. **Kedua rate dashboard** (absensi & jurnal) kini terisi riil. Di atas: master data penuh, dashboard analitik, Rekap Penilaian.
+**Siklus PKL siswa lengkap + dokumen panduan**: siswa **absen** (foto+geo) & **isi jurnal** (rich-text); staf **memantau** keduanya via drill-down 4 layer & **memverifikasi**; **Panduan PKL** (dokumen PDF/Office) dikelola admin & dapat diunduh semua role. Kedua rate dashboard terisi riil. Di atas: master data penuh, dashboard analitik, Rekap Penilaian.
 
-Sisa "Soon": Panduan PKL, Sertifikat, Forum PKL, Kalender.
+Sisa "Soon": Sertifikat, Forum PKL, Kalender.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Panduan PKL (Rekomendasi)** — CRUD upload PDF/dokumen (admin) → tampil/unduh ke siswa & semua role.
-2. **Sertifikat** — CRUD template (upload gambar/PDF latar) + mapping anchor teks x/y + output per siswa.
-3. **Forum PKL** & **Kalender** — prioritas rendah.
+1. **Sertifikat (Rekomendasi)** — CRUD template (upload gambar/PDF latar) + mapping anchor teks x/y + output per siswa (unduh).
+2. **Forum PKL** — tanya-jawab antar role (Post/Comment, model sudah ada).
+3. **Kalender** — agenda/jadwal PKL; prioritas rendah.
