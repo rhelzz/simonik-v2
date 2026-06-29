@@ -87,7 +87,7 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 | **Kalender** | ⏳ | Prioritas rendah (menggantikan rencana "Jadwal"). |
 | **Aspek Penilaian** | ✅ | Master aspek teknis/non-teknis (CRUD admin) — sumber untuk Rekap Penilaian (§7). |
 | **Rekap Penilaian** | ✅ | Input nilai (guru non-teknis, pembimbing teknis) + lihat role-scoped + grade A/B/C/D otomatis (§7). |
-| **Sertifikat** | ⏳ | CRUD template + anchor teks (§8). |
+| **Sertifikat** | ✅ | CRUD template (latar + anchor x/y, template aktif) + output cetak per siswa via `window.print()` (§8, PROGRESS §23). |
 
 **Menu sisi siswa** (tetap, di luar sudut pandang admin): **Absen Foto + Geo** (input) ✅, **Jurnal harian** (input) ✅, Panduan PKL (baca), Rekap Penilaian (lihat nilai sendiri) ✅, Sertifikat (unduh), Profil ✅.
 
@@ -127,11 +127,12 @@ Scope per role tetap berlaku (guru = PT yang dipegang, pembimbing = PT-nya, oran
 
 ---
 
-## 8. Sertifikat
+## 8. Sertifikat ✅ (implementasi di [`PROGRESS.md`](PROGRESS.md) §23)
 
-- CRUD **template sertifikat**: upload **gambar/PDF** latar.
-- **Mapping anchor teks**: posisi **x, y** + perataan (mis. rata tengah) untuk menaruh nama/teks di atas template.
-- Output: sertifikat per siswa (unduh). Model kandidat: `Certificate`, `SignatureSetting`.
+- CRUD **template sertifikat** (`certificate_templates`): upload **gambar latar** (JPG/PNG) + tandai satu template **aktif**.
+- **Mapping anchor teks**: tiap field (nama/nis/nomor/industri/tanggal) punya posisi **x, y** (persen) + ukuran (`cqw`) + perataan + warna + enable. Editor punya **live preview**.
+- Output: halaman cetak per siswa (template aktif + data ter-resolve) → **unduh via cetak browser** (`window.print()`, `@page landscape`). Tanpa dependency PDF server.
+- Catatan: model lama `Certificate`/`SignatureSetting` **belum dipakai** (kandidat bila perlu menyimpan berkas/tanda tangan tergenerasi).
 
 ---
 
@@ -171,9 +172,9 @@ C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 
 **Sudah jadi**: Auth/login, Profil+sandi, Landing, **Dashboard analytical** (5 ringkasan + rate absensi/jurnal filter waktu). **Master data admin penuh**: CRUD Siswa, Guru Pembimbing, Industri, Pembimbing Industri, **Orang Tua** (akun `orangtua`), Jurusan, Kelas, **Periode PKL** — semua gate `admin|kaprog`, relasi via industri terpasang (§3), sidebar dropdown Data User. **Rekap Penilaian** (§7): master Aspek Penilaian (admin) + input nilai guru/pembimbing + lihat role-scoped + grade A/B/C/D otomatis. **Absen Foto + Geo (siswa)**: input kehadiran web (foto + geolokasi, masuk/pulang/izin/sakit).
 
-Juga sudah jadi: **Absen Foto + Geo (siswa)** + **Jurnal harian (siswa)** input web; **Data Absen** & **Data Jurnal** monitoring drill-down 4 layer + verifikasi (§6, scope via trait `ScopesStudentsByRole`, navigasi via `Breadcrumb`); **Panduan PKL** (CRUD dokumen admin + unduh semua role). **Kedua rate dashboard** (absensi & jurnal) kini terisi riil.
+Juga sudah jadi: **Absen Foto + Geo (siswa)** + **Jurnal harian (siswa)** input web; **Data Absen** & **Data Jurnal** monitoring drill-down 4 layer + verifikasi (§6, scope via trait `ScopesStudentsByRole`, navigasi via `Breadcrumb`); **Panduan PKL** (CRUD dokumen admin + unduh semua role); **Sertifikat** (CRUD template anchor + cetak per siswa, §8). **Kedua rate dashboard** (absensi & jurnal) kini terisi riil.
 
 **Urutan rekomendasi berikutnya:**
-1. **Sertifikat** — CRUD template + anchor teks x/y (§8) + output per siswa.
-2. **Forum PKL** — tanya-jawab (model Post/Comment sudah ada).
-3. **Kalender** — prioritas rendah.
+1. **Forum PKL** — tanya-jawab antar role (model `Post`/`Comment` sudah ada); CRUD thread + balasan.
+2. **Kalender** — agenda/jadwal; prioritas rendah.
+3. **Polish**: dashboard ringkas per-role, rapikan role `industri` vs `mitra`.

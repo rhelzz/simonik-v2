@@ -155,17 +155,25 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Frontend**: `pages/guides/index.tsx` — kartu dokumen (ikon + tipe/ukuran/tanggal + tombol "Buka / Unduh" `target=_blank`). Admin/kaprog melihat tombol **Tambah/Edit/Hapus** + modal unggah (`useForm` + `forceFormData`, PUT via `_method` spoof). Menu **Panduan PKL** kini **aktif** untuk **semua role** (seksi Dokumen & Forum). Tidak di-seed (admin unggah berkas riil; empty-state ramah).
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 153 test passed** (+11 GuideTest). ESLint + tsc + Prettier + `vite build` lolos. `migrate` sukses.
 
+### 23. Sertifikat — CRUD template (anchor x/y) + output cetak per siswa
+- **Skema**: migration baru `certificate_templates` (name, background_path, **anchors JSON**, is_active). Model `CertificateTemplate` (casts `anchors`=>array, `is_active`=>bool; accessor `background` → URL; scope `active`; konstanta `FIELDS` = nama/nis/nomor/industri/tanggal). Factory + state `active()`.
+- **Template (admin/kaprog)**: `CertificateTemplateController` (`index/create/store/edit/update/destroy` + **`activate`**) gate `role:admin|kaprog`. `CertificateTemplateRequest`: `prepareForValidation` men-decode `anchors` (string JSON dari form multipart) → array, lalu validasi berjenjang (`field` in FIELDS, x/y 0–100, size 1–100, align, color, enabled). Background wajib saat tambah / opsional saat ubah (cek `route('certificateTemplate')` — **param resource di-rename agar binding cocok**). `activate` set satu template aktif (transaksi). Berkas latar di disk `public`.
+- **Output (admin/kaprog + siswa)**: `CertificateController` — `index` (siswa → redirect ke miliknya; admin → daftar siswa + `hasActiveTemplate`), `show(Student)` (siswa hanya miliknya 403; admin semua) merender **template aktif + anchor di-resolve ke data siswa** (nomor `PKL/{tahun}/{id}`, tanggal dari `pkl_end`/now). Hanya anchor `enabled` dikirim.
+- **Frontend**: komponen **`CertificatePreview`** (latar + teks ter-anchor pakai **container-query `cqw`** → skala identik pratinjau & cetak) dipakai editor & halaman cetak. `certificate-templates/{index,create,edit}` + `CertificateTemplateForm` (upload latar, editor anchor per-field x/y/size/align/color + **live preview**). `certificates/{index,show}`; halaman cetak pakai `@media print` (`@page landscape`, sembunyikan chrome) + tombol **Cetak/Unduh PDF** (`window.print()`). Menu **Sertifikat** (output, admin/kaprog/siswa) + **Template Sertifikat** (admin/kaprog) aktif.
+- **Tanpa dependency PDF server** — output via cetak browser (Save as PDF). Tidak di-seed (admin unggah latar riil; empty-state ramah).
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 171 test passed** (+18: CertificateTemplateTest 11, CertificateTest 7). ESLint + tsc + Prettier + `vite build` lolos. `migrate` sukses.
+
 ---
 
 ## 📍 Current step
-**Siklus PKL siswa lengkap + dokumen panduan**: siswa **absen** (foto+geo) & **isi jurnal** (rich-text); staf **memantau** keduanya via drill-down 4 layer & **memverifikasi**; **Panduan PKL** (dokumen PDF/Office) dikelola admin & dapat diunduh semua role. Kedua rate dashboard terisi riil. Di atas: master data penuh, dashboard analitik, Rekap Penilaian.
+**Alur PKL end-to-end lengkap**: master data → absen + jurnal (input siswa) → monitoring drill-down + verifikasi → Rekap Penilaian → **Sertifikat** (template anchor + cetak per siswa) → Panduan PKL. Dashboard analitik dengan kedua rate terisi riil.
 
-Sisa "Soon": Sertifikat, Forum PKL, Kalender.
+Sisa "Soon": Forum PKL, Kalender (keduanya prioritas rendah).
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Sertifikat (Rekomendasi)** — CRUD template (upload gambar/PDF latar) + mapping anchor teks x/y + output per siswa (unduh).
-2. **Forum PKL** — tanya-jawab antar role (Post/Comment, model sudah ada).
-3. **Kalender** — agenda/jadwal PKL; prioritas rendah.
+1. **Forum PKL (Rekomendasi)** — tanya-jawab antar role (model `Post`/`Comment` sudah ada di skema); CRUD thread + balasan.
+2. **Kalender** — agenda/jadwal kunjungan/PKL; prioritas rendah.
+3. **Polish**: dashboard ringkas per-role (guru/pembimbing/siswa/orangtua), rapikan role `industri` vs `mitra`.
