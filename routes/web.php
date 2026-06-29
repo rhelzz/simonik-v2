@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartemenController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\JournalMonitorController;
 use App\Http\Controllers\ParentController;
@@ -41,6 +42,14 @@ Route::middleware('auth')->group(function () {
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+
+    // Panduan PKL — semua role bisa lihat & unduh; kelola hanya admin/kaprog.
+    Route::get('panduan', [GuideController::class, 'index'])->name('guides.index');
+    Route::middleware('role:admin|kaprog')->group(function () {
+        Route::post('panduan', [GuideController::class, 'store'])->name('guides.store');
+        Route::put('panduan/{guide}', [GuideController::class, 'update'])->name('guides.update');
+        Route::delete('panduan/{guide}', [GuideController::class, 'destroy'])->name('guides.destroy');
+    });
 
     // Master data pengguna (dikelola admin/kaprog).
     Route::middleware('role:admin|kaprog')->group(function () {
