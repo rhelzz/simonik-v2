@@ -20,6 +20,7 @@ import {
     Users,
     UsersRound,
 } from 'lucide-react';
+import { index as activitiesIndex } from '@/actions/App/Http/Controllers/ActivityController';
 import { index as aspectsIndex } from '@/actions/App/Http/Controllers/AspectController';
 import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
 import { index as attendanceIndex } from '@/actions/App/Http/Controllers/AttendanceController';
@@ -27,6 +28,7 @@ import { index as attendanceMonitorIndex } from '@/actions/App/Http/Controllers/
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
+import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
 import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentController';
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
 import { index as periodsIndex } from '@/actions/App/Http/Controllers/PeriodController';
@@ -69,6 +71,12 @@ export const navSections: NavSection[] = [
                 label: 'Absen Foto + Geo',
                 icon: Camera,
                 href: attendanceIndex.url(),
+                roles: ['siswa'],
+            },
+            {
+                label: 'Jurnal Saya',
+                icon: NotebookPen,
+                href: activitiesIndex.url(),
                 roles: ['siswa'],
             },
         ],
@@ -144,7 +152,12 @@ export const navSections: NavSection[] = [
                 href: attendanceMonitorIndex.url(),
                 roles: [...STAFF, 'orangtua'],
             },
-            { label: 'Data Jurnal', icon: NotebookPen, roles: STAFF },
+            {
+                label: 'Data Jurnal',
+                icon: NotebookPen,
+                href: journalMonitorIndex.url(),
+                roles: [...STAFF, 'orangtua'],
+            },
             { label: 'Kalender', icon: CalendarDays, roles: STAFF },
         ],
     },
