@@ -168,7 +168,7 @@ class AttendanceMonitorController extends Controller
                 'sakit' => (int) $summary->get('sakit', 0),
                 'alpha' => (int) $summary->get('alpha', 0),
             ],
-            'canVerify' => $user->hasAnyRole(['pembimbing', 'industri', 'mitra']),
+            'canVerify' => $user->hasAnyRole(['pembimbing', 'industri']),
         ]);
     }
 

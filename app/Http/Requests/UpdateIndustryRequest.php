@@ -22,7 +22,7 @@ class UpdateIndustryRequest extends FormRequest
         $industry = $this->route('industry');
 
         return [
-            // Akun login mitra industri
+            // Akun login industri
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($industry->user_id)],
 

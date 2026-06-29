@@ -166,7 +166,7 @@ class JournalMonitorController extends Controller
                 'verified' => $verified,
                 'pending' => $total - $verified,
             ],
-            'canVerify' => $user->hasAnyRole(['pembimbing', 'industri', 'mitra']),
+            'canVerify' => $user->hasAnyRole(['pembimbing', 'industri']),
         ]);
     }
 

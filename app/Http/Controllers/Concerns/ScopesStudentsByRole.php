@@ -38,7 +38,7 @@ trait ScopesStudentsByRole
             );
         }
 
-        if ($user->hasAnyRole(['mitra', 'industri'])) {
+        if ($user->hasRole('industri')) {
             $industryId = $user->industries?->id;
 
             return $industryId === null

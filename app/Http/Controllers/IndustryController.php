@@ -63,7 +63,7 @@ class IndustryController extends Controller
     }
 
     /**
-     * Simpan industri baru beserta akun mitra-nya.
+     * Simpan industri baru beserta akun industrinya.
      */
     public function store(StoreIndustryRequest $request): RedirectResponse
     {
@@ -76,7 +76,7 @@ class IndustryController extends Controller
                 'password' => Hash::make($data['password']),
                 'email_verified_at' => now(),
             ]);
-            $user->assignRole('mitra');
+            $user->assignRole('industri');
 
             Industry::create([
                 ...$this->profileData($data),
