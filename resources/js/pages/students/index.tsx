@@ -2,6 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import {
     ChevronLeft,
     ChevronRight,
+    Eye,
     Pencil,
     Plus,
     Search,
@@ -15,6 +16,7 @@ import {
     destroy,
     edit,
     index,
+    show,
 } from '@/actions/App/Http/Controllers/StudentController';
 import { AppLayout } from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -29,6 +31,7 @@ type StudentRow = {
     gender: string;
     status_pkl: StatusPkl;
     class: string | null;
+    industri: string | null;
     email: string | null;
     image: string | null;
 };
@@ -159,6 +162,9 @@ export default function StudentsIndex({
                                         Kelas
                                     </th>
                                     <th className="pb-3 font-semibold">
+                                        Industri
+                                    </th>
+                                    <th className="pb-3 font-semibold">
                                         Status PKL
                                     </th>
                                     <th className="pb-3 text-right font-semibold">
@@ -183,6 +189,9 @@ export default function StudentsIndex({
                                         <td className="py-3 text-ink/80">
                                             {student.class ?? '—'}
                                         </td>
+                                        <td className="py-3 text-ink/80">
+                                            {student.industri ?? '—'}
+                                        </td>
                                         <td className="py-3">
                                             <span
                                                 className={cn(
@@ -201,6 +210,13 @@ export default function StudentsIndex({
                                         </td>
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">
+                                                <Link
+                                                    href={show.url(student.id)}
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    aria-label={`Lihat detail ${student.name}`}
+                                                >
+                                                    <Eye className="size-4" />
+                                                </Link>
                                                 <Link
                                                     href={edit.url(student.id)}
                                                     className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"

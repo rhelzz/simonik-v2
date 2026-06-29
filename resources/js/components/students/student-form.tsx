@@ -1,5 +1,6 @@
 import { Form, Link } from '@inertiajs/react';
-import { LoaderCircle } from 'lucide-react';
+import { AlertCircle, Check, LoaderCircle, X } from 'lucide-react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/StudentController';
 
@@ -82,6 +83,19 @@ export function StudentForm({
     submitLabel: string;
 }) {
     const isCreate = !student;
+    const [selectedDepartemen, setSelectedDepartemen] = useState<number | null>(
+        student?.departemen_id ?? null,
+    );
+    const [password, setPassword] = useState('');
+    const [passwordConfirmation, setPasswordConfirmation] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+
+    const passwordMatch =
+        password && passwordConfirmation ? password === passwordConfirmation : null;
+
+    const filteredClasses = selectedDepartemen
+        ? options.classes.filter((cls) => cls.departemen_id === selectedDepartemen)
+        : options.classes;
 
     return (
         <Form action={action} method={method} className="space-y-8">
@@ -117,7 +131,7 @@ export function StudentForm({
                                     required
                                 />
                             </Field>
-                            {isCreate && (
+                            {isCreate ? (
                                 <>
                                     <Field
                                         label="Kata sandi"
@@ -146,6 +160,86 @@ export function StudentForm({
                                             required
                                         />
                                     </Field>
+                                </>
+                            ) : (
+                                <>
+                                    <Field
+                                        label="Kata sandi (kosongkan jika tidak ingin mengubah)"
+                                        htmlFor="password"
+                                        error={errors.password}
+                                    >
+                                        <input
+                                            id="password"
+                                            name="password"
+                                            type="password"
+                                            autoComplete="new-password"
+                                            value={password}
+                                            onChange={(e) =>
+                                                setPassword(e.target.value)
+                                            }
+                                            className={inputClass}
+                                        />
+                                    </Field>
+                                    {password && (
+                                        <Field
+                                            label="Konfirmasi kata sandi"
+                                            htmlFor="password_confirmation"
+                                            error={errors.password_confirmation}
+                                        >
+                                            <div className="relative">
+                                                <input
+                                                    id="password_confirmation"
+                                                    name="password_confirmation"
+                                                    type={
+                                                        showPassword
+                                                            ? 'text'
+                                                            : 'password'
+                                                    }
+                                                    autoComplete="new-password"
+                                                    value={passwordConfirmation}
+                                                    onChange={(e) =>
+                                                        setPasswordConfirmation(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className={inputClass}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setShowPassword(
+                                                            !showPassword,
+                                                        )
+                                                    }
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted transition-colors hover:text-ink"
+                                                >
+                                                    {showPassword ? (
+                                                        <X className="size-4" />
+                                                    ) : (
+                                                        <Check className="size-4" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                            {passwordConfirmation && (
+                                                <div
+                                                    className={`mt-1.5 flex items-center gap-2 text-xs font-medium ${passwordMatch ? 'text-positive' : 'text-red-500'}`}
+                                                >
+                                                    {passwordMatch ? (
+                                                        <>
+                                                            <Check className="size-3.5" />
+                                                            Kata sandi cocok
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <AlertCircle className="size-3.5" />
+                                                            Kata sandi tidak
+                                                            cocok
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </Field>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -343,6 +437,13 @@ export function StudentForm({
                                     id="departemen_id"
                                     name="departemen_id"
                                     defaultValue={student?.departemen_id ?? ''}
+                                    onChange={(e) =>
+                                        setSelectedDepartemen(
+                                            e.target.value
+                                                ? parseInt(e.target.value)
+                                                : null,
+                                        )
+                                    }
                                     className={inputClass}
                                     required
                                 >
@@ -367,11 +468,14 @@ export function StudentForm({
                                     defaultValue={student?.class_id ?? ''}
                                     className={inputClass}
                                     required
+                                    disabled={!selectedDepartemen}
                                 >
                                     <option value="" disabled>
-                                        Pilih kelas…
+                                        {selectedDepartemen
+                                            ? 'Pilih kelas…'
+                                            : 'Pilih jurusan terlebih dahulu…'}
                                     </option>
-                                    {options.classes.map((cls) => (
+                                    {filteredClasses.map((cls) => (
                                         <option key={cls.id} value={cls.id}>
                                             {cls.name}
                                         </option>
