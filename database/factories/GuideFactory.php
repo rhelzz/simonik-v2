@@ -20,6 +20,8 @@ class GuideFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'judul' => fake()->sentence(4),
+            'deskripsi' => fake()->optional()->paragraph(),
             'dokumen' => 'guides/'.fake()->uuid().'.pdf',
         ];
     }
