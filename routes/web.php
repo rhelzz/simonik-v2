@@ -65,8 +65,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin|kaprog')->group(function () {
         Route::resource('students', StudentController::class);
         Route::resource('industries', IndustryController::class)->except('show');
-        Route::resource('teachers', TeacherController::class)->except('show');
-        Route::resource('pembimbings', PembimbingController::class)->except('show');
+        Route::resource('teachers', TeacherController::class);
+        Route::resource('pembimbings', PembimbingController::class);
         Route::resource('parents', ParentController::class)->except('show');
 
         // Data referensi akademik.

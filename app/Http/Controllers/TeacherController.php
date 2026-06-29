@@ -131,6 +131,34 @@ class TeacherController extends Controller
     }
 
     /**
+     * Detail guru lengkap dengan relasi.
+     */
+    public function show(Teacher $teacher): Response
+    {
+        $teacher->load([
+            'users:id,name,email',
+            'departements:id,name',
+        ]);
+
+        $industries = $teacher->industries()->get(['id', 'name']);
+
+        return Inertia::render('teachers/show', [
+            'teacher' => [
+                'id' => $teacher->id,
+                'name' => $teacher->name,
+                'email' => $teacher->users?->email,
+                'no_hp' => $teacher->no_hp,
+                'departemen' => $teacher->departements?->name,
+            ],
+            'industries' => $industries->map(fn ($industry) => [
+                'id' => $industry->id,
+                'name' => $industry->name,
+            ])->toArray(),
+            'students_count' => $teacher->students()->count(),
+        ]);
+    }
+
+    /**
      * Hapus guru beserta akunnya.
      */
     public function destroy(Teacher $teacher): RedirectResponse

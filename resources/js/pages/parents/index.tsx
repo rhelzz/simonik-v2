@@ -18,7 +18,7 @@ type Parent = {
     occupation: string;
     phoneNumber: string;
     email: string | null;
-    students_count: number;
+    students: string[];
 };
 
 type ParentsIndexProps = {
@@ -129,7 +129,22 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                                             {parent.occupation}
                                         </td>
                                         <td className="py-3 text-ink/80">
-                                            {parent.students_count}
+                                            {parent.students.length === 0 ? (
+                                                '—'
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    {parent.students.map(
+                                                        (name, idx) => (
+                                                            <div
+                                                                key={idx}
+                                                                className="text-sm"
+                                                            >
+                                                                • {name}
+                                                            </div>
+                                                        ),
+                                                    )}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">

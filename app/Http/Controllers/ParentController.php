@@ -16,15 +16,14 @@ use Inertia\Response;
 class ParentController extends Controller
 {
     /**
-     * Daftar orang tua/wali + jumlah anak (siswa).
+     * Daftar orang tua/wali + nama-nama anak (siswa).
      */
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
 
         $parents = Parents::query()
-            ->with('users:id,email')
-            ->withCount('students')
+            ->with(['users:id,email', 'students:id,name,parent_id'])
             ->when($search !== '', fn ($query) => $query->where('nama', 'like', "%{$search}%"))
             ->latest()
             ->paginate(10)
@@ -36,7 +35,7 @@ class ParentController extends Controller
                 'occupation' => $parent->occupation,
                 'phoneNumber' => $parent->phoneNumber,
                 'email' => $parent->users?->email,
-                'students_count' => $parent->students_count,
+                'students' => $parent->students->pluck('name')->toArray(),
             ]);
 
         return Inertia::render('parents/index', [

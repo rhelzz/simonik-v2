@@ -128,6 +128,44 @@ class PembimbingController extends Controller
     }
 
     /**
+     * Detail pembimbing lengkap dengan relasi.
+     */
+    public function show(Pembimbing $pembimbing): Response
+    {
+        $pembimbing->load([
+            'user:id,name,email',
+        ]);
+
+        $industry = $pembimbing->industry()->first(['id', 'name']);
+        $students = $pembimbing->students()
+            ->with(['users:id,email'])
+            ->latest('students.created_at')
+            ->get(['students.id', 'students.name', 'students.nis', 'students.user_id']);
+
+        return Inertia::render('pembimbings/show', [
+            'pembimbing' => [
+                'id' => $pembimbing->id,
+                'name' => $pembimbing->name,
+                'email' => $pembimbing->user?->email,
+                'no_hp' => $pembimbing->no_hp,
+                'gender' => match (strtolower($pembimbing->gender ?? '')) {
+                    'male', 'm', 'l' => 'Laki-laki',
+                    'female', 'f', 'p' => 'Perempuan',
+                    default => '—',
+                },
+                'industri' => $industry?->name,
+            ],
+            'students' => $students->map(fn ($student) => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'nis' => $student->nis,
+                'email' => $student->users?->email,
+            ])->toArray(),
+            'total_students' => $students->count(),
+        ]);
+    }
+
+    /**
      * Hapus pembimbing beserta akunnya.
      */
     public function destroy(Pembimbing $pembimbing): RedirectResponse

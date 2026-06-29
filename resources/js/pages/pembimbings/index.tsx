@@ -1,11 +1,12 @@
 import { Link, router } from '@inertiajs/react';
-import { HardHat, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Eye, HardHat, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import {
     create,
     destroy,
     edit,
     index,
+    show,
 } from '@/actions/App/Http/Controllers/PembimbingController';
 import { Pagination } from '@/components/ui/pagination';
 import { AppLayout } from '@/layouts/app-layout';
@@ -138,6 +139,15 @@ export default function PembimbingsIndex({
                                         </td>
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">
+                                                <Link
+                                                    href={show.url(
+                                                        pembimbing.id,
+                                                    )}
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    aria-label={`Lihat detail ${pembimbing.name}`}
+                                                >
+                                                    <Eye className="size-4" />
+                                                </Link>
                                                 <Link
                                                     href={edit.url(
                                                         pembimbing.id,

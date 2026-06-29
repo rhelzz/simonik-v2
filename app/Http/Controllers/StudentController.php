@@ -177,14 +177,15 @@ class StudentController extends Controller
             'users:id,name,email',
             'classes:id,name',
             'departements:id,name',
-            'industries:id,name',
+            'industries:id,name,teacher_id,pembimbing_id',
+            'industries.teachers:id,name,no_hp',
+            'industries.pembimbingNormatif:id,name,no_hp',
             'parents:id,nama,phoneNumber',
         ]);
 
-        // Dapatkan guru pembimbing dari industri
         $industry = $student->industries;
-        $teacher = $industry?->teachers()->first(['id', 'name', 'no_hp']);
-        $pembimbing = $industry?->pembimbingNormatif()->first(['id', 'name', 'no_hp']);
+        $teacher = $industry?->teachers;
+        $pembimbing = $industry?->pembimbingNormatif;
 
         return Inertia::render('students/show', [
             'student' => [

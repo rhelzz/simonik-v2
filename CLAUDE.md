@@ -70,6 +70,7 @@ These are distilled from the Laravel Boost guidelines bundled with this project 
 
 ### Inertia v2 + React 19
 - **Pass data as page props from controllers** (`Inertia::render`), not via separate fetch/axios calls — a page is a function of its props. Share cross-cutting data once in `HandleInertiaRequests::share()` (already holds `auth.user`); read it with `usePage().props`.
+- **Map enum/foreign key values in the backend**, not the frontend. When passing data with enum columns (e.g., gender: 'male'/'female'), map them to display labels ('Laki-laki'/'Perempuan') in the controller before sending to React. This keeps the UI layer simple and data transformations centralized. Never hardcode enum mappings in React components.
 - **Navigate with Inertia**, never `<a href>` or `window.location`: use `<Link>` and `router.visit/post/...` from `@inertiajs/react`. Add `prefetch` to links for perceived speed.
 - **Build forms with the `<Form>` component** (or `useForm` for programmatic control) — both handle CSRF, the `errors` object, and `processing` automatically. Surface server validation errors; don't re-implement all rules on the client.
 - This is Inertia v2+, so use **deferred props** (always render a pulsing/skeleton empty state for the `undefined` phase), `WhenVisible` for infinite scroll, `usePoll` for polling, and partial reloads (`only: [...]`) for expensive props.
