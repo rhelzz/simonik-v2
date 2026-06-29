@@ -64,7 +64,7 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 6. **Rate absensi** — % kehadiran, **filter**: hari ini / minggu ini / bulan ini / keseluruhan.
 7. **Rate pengisian jurnal harian** — % murid yang konsisten mengisi jurnal, **filter** sama seperti absensi.
 
-> Dashboard role lain (guru/pembimbing/siswa/orangtua) = versi ringkas sesuai cakupannya (menyusul).
+> ✅ Dashboard role lain sudah ada (PROGRESS §26): guru/pembimbing/industri → `dashboard-staff` (stat & rate scoped + verifikasi tertunda); siswa → `dashboard-student` (absen hari ini, nilai, jurnal, quick-action); orangtua → `dashboard-parent` (ringkasan per anak).
 
 ---
 
@@ -177,4 +177,4 @@ Juga sudah jadi: **Absen Foto + Geo (siswa)** + **Jurnal harian (siswa)** input 
 **Urutan rekomendasi berikutnya:**
 1. **Forum PKL** — tanya-jawab antar role (model `Post`/`Comment` sudah ada); CRUD thread + balasan.
 2. **Kalender** — agenda/jadwal; prioritas rendah.
-3. **Polish**: dashboard ringkas per-role (guru/pembimbing/siswa/orangtua). ~~rapikan role `industri` vs `mitra`~~ ✅ selesai (role `mitra` dihapus).
+3. ~~**Polish**: dashboard ringkas per-role; rapikan role `industri` vs `mitra`~~ ✅ **selesai** (dashboard per-role §26; role `mitra` dihapus §25).

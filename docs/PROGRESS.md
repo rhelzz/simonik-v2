@@ -175,6 +175,14 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Catatan**: enum `signature_settings.role` (`['kepala_sekolah','mitra']`) dibiarkan — tabel `SignatureSetting` belum dipakai & migration forward-only.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 171 test passed**. ESLint + tsc + Prettier + `vite build` lolos. `migrate:fresh --seed` sukses (8 role).
 
+### 26. Dashboard ringkas per-role
+- **`DashboardController` kini bercabang per role** (`__invoke`): admin/kaprog/kepala_sekolah → dashboard analitik penuh (lama); guru/pembimbing/industri → **`dashboard-staff`**; siswa → **`dashboard-student`**; orangtua → **`dashboard-parent`**. Logika rate/partisipasi diekstrak ke helper `participation()`/`rates()`/`rate()` (DRY); scope siswa pakai trait **`ScopesStudentsByRole`**.
+- **Staf** (`dashboard-staff`): stat **dibatasi cakupan** (siswa dibina, PKL berjalan, **absen & jurnal menunggu verifikasi** via `pendingCount`), rate absensi/jurnal scoped, daftar siswa bimbingan + banner + kartu link ke Data Absen/Jurnal.
+- **Siswa** (`dashboard-student`): status absen hari ini, nilai rata-rata + grade, hari hadir & jurnal bulan ini, total jurnal, info PKL (industri/periode/status), 4 quick-action (Absen/Jurnal/Rekap/Sertifikat).
+- **Orang tua** (`dashboard-parent`): kartu per anak (kehadiran & jurnal bulan ini, grade, status) + link lihat absen/jurnal/nilai anak (route-scoped).
+- **Frontend DRY**: widget bersama diekstrak ke `components/dashboard/widgets.tsx` (`HeroGreeting`, `StatCard`, `RateCard`, `RecentStudentsTable`, status/grade helper); `pages/dashboard.tsx` (admin) ikut direfaktor memakainya.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 175 test passed** (+4 DashboardTest: guru/siswa/orangtua/kepala_sekolah). ESLint + tsc + Prettier + `vite build` lolos.
+
 ---
 
 ## 📍 Current step
@@ -186,6 +194,6 @@ Sisa "Soon": Forum PKL, Kalender (keduanya prioritas rendah).
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
 
-1. **Dashboard ringkas per-role (Rekomendasi)** — guru/pembimbing/siswa/orangtua lihat versi dashboard sesuai cakupannya (role `industri` vs `mitra` sudah dirapikan §25).
-2. **Forum PKL** — tanya-jawab antar role (model `Post`/`Comment` sudah ada di skema); CRUD thread + balasan.
-3. **Kalender** — agenda/jadwal kunjungan/PKL; prioritas rendah.
+1. **Forum PKL (Rekomendasi)** — tanya-jawab antar role (model `Post`/`Comment` sudah ada di skema); CRUD thread + balasan.
+2. **Kalender** — agenda/jadwal kunjungan/PKL; prioritas rendah.
+3. **Polish lanjutan**: konversi master-data kecil (Jurusan/Kelas/Aspek/Periode) modal→page bila ingin 100% seragam; dashboard kepala_sekolah khusus oversight.
