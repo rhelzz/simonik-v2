@@ -21,7 +21,6 @@ class RoleSeeder extends Seeder
         'siswa',
         'orangtua',
         'industri',
-        'mitra',
         'kepala_sekolah',
     ];
 
