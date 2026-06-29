@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Attendance;
+use App\Models\Industry;
+use App\Models\Parents;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,8 +26,13 @@ class DashboardTest extends TestCase
 
     private function admin(): User
     {
+        return $this->user('admin');
+    }
+
+    private function user(string $role): User
+    {
         $user = User::factory()->create();
-        $user->assignRole('admin');
+        $user->assignRole($role);
 
         return $user;
     }
@@ -66,6 +74,60 @@ class DashboardTest extends TestCase
             ->get('/dashboard')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('attendanceRate.today', 50)
+            );
+    }
+
+    public function test_kepala_sekolah_sees_full_admin_dashboard(): void
+    {
+        $this->actingAs($this->user('kepala_sekolah'))
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page->component('dashboard'));
+    }
+
+    public function test_guru_sees_scoped_staff_dashboard(): void
+    {
+        $guruUser = $this->user('guru');
+        $teacher = Teacher::factory()->create(['user_id' => $guruUser->id]);
+        $industry = Industry::factory()->create(['teacher_id' => $teacher->id]);
+        Student::factory()->create(['industri_id' => $industry->id]);
+        // Siswa di PT lain tidak masuk cakupan guru ini.
+        Student::factory()->create();
+
+        $this->actingAs($guruUser)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard-staff')
+                ->where('stats.students', 1)
+                ->has('attendanceRate.today')
+            );
+    }
+
+    public function test_student_sees_personal_dashboard(): void
+    {
+        $siswa = $this->user('siswa');
+        Student::factory()->create(['user_id' => $siswa->id]);
+
+        $this->actingAs($siswa)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard-student')
+                ->has('stats.journalTotal')
+                ->has('todayStatus')
+            );
+    }
+
+    public function test_orangtua_sees_children_dashboard(): void
+    {
+        $ortuUser = $this->user('orangtua');
+        $parent = Parents::factory()->create(['user_id' => $ortuUser->id]);
+        Student::factory()->count(2)->create(['parent_id' => $parent->id]);
+        Student::factory()->create();
+
+        $this->actingAs($ortuUser)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard-parent')
+                ->has('children', 2)
             );
     }
 }
