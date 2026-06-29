@@ -1,10 +1,9 @@
-import { Camera, RotateCcw, Upload } from 'lucide-react';
+import { Camera, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import type { ChangeEvent } from 'react';
 
 /**
- * Pengambilan foto absen. Mengutamakan kamera langsung (getUserMedia) sebagai
- * bukti kehadiran, dengan opsi unggah berkas bila kamera tidak tersedia.
+ * Pengambilan foto absen via kamera langsung (getUserMedia) sebagai bukti
+ * kehadiran — preview & hasil di-mirror agar sesuai pandangan pengguna.
  * Hasil selalu berupa `File` yang dikirim ke parent lewat `onCapture`.
  */
 export function PhotoCapture({
@@ -20,6 +19,11 @@ export function PhotoCapture({
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (stream && videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(() => {});
+        }
+
         return () => {
             stream?.getTracks().forEach((track) => track.stop());
         };
@@ -33,27 +37,70 @@ export function PhotoCapture({
     async function startCamera() {
         setError(null);
 
+        if (!window.isSecureContext) {
+            setError(
+                'Kamera memerlukan HTTPS. Akses via https:// atau localhost.',
+            );
+
+            return;
+        }
+
         if (!navigator.mediaDevices?.getUserMedia) {
-            setError('Kamera tidak tersedia di perangkat ini. Unggah foto.');
+            setError('Kamera tidak tersedia di perangkat ini.');
 
             return;
         }
 
         try {
-            const next = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user' },
-                audio: false,
-            });
-            setStream(next);
+            let next: MediaStream;
 
-            if (videoRef.current) {
-                videoRef.current.srcObject = next;
-                await videoRef.current.play();
+            try {
+                next = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user' },
+                    audio: false,
+                });
+            } catch {
+                next = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false,
+                });
             }
-        } catch {
-            setError(
-                'Tidak bisa mengakses kamera. Izinkan akses atau unggah foto.',
-            );
+
+            setStream(next);
+        } catch (err) {
+            const name = err instanceof DOMException ? err.name : '';
+
+            if (
+                name === 'NotAllowedError' ||
+                name === 'PermissionDeniedError'
+            ) {
+                setError(
+                    'Akses kamera ditolak. Klik ikon kunci/kamera di address bar browser lalu izinkan, kemudian muat ulang halaman.',
+                );
+            } else if (
+                name === 'NotFoundError' ||
+                name === 'DevicesNotFoundError'
+            ) {
+                setError(
+                    'Kamera tidak ditemukan. Pastikan webcam terpasang dan terdeteksi sistem.',
+                );
+            } else if (
+                name === 'NotReadableError' ||
+                name === 'TrackStartError'
+            ) {
+                setError(
+                    'Kamera sedang dipakai aplikasi lain (Zoom, Teams, dll). Tutup aplikasi tersebut lalu coba lagi.',
+                );
+            } else if (
+                name === 'OverconstrainedError' ||
+                name === 'ConstraintNotSatisfiedError'
+            ) {
+                setError('Kamera tidak mendukung konfigurasi yang diminta.');
+            } else {
+                setError(
+                    'Tidak bisa mengakses kamera. Pastikan izin kamera sudah diaktifkan di browser.',
+                );
+            }
         }
     }
 
@@ -67,7 +114,13 @@ export function PhotoCapture({
         const canvas = document.createElement('canvas');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        canvas.getContext('2d')?.drawImage(video, 0, 0);
+        const ctx = canvas.getContext('2d');
+
+        if (ctx) {
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0);
+        }
 
         canvas.toBlob(
             (blob) => {
@@ -87,18 +140,6 @@ export function PhotoCapture({
         );
     }
 
-    function onFile(event: ChangeEvent<HTMLInputElement>) {
-        const file = event.target.files?.[0];
-
-        if (!file) {
-            return;
-        }
-
-        setError(null);
-        setPreview(URL.createObjectURL(file));
-        onCapture(file);
-    }
-
     function reset() {
         setPreview(null);
         onCapture(null);
@@ -106,7 +147,7 @@ export function PhotoCapture({
 
     return (
         <div className="space-y-3">
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-line bg-canvas">
+            <div className="relative aspect-4/3 w-full overflow-hidden rounded-2xl border border-line bg-canvas">
                 {preview ? (
                     <img
                         src={preview}
@@ -118,7 +159,7 @@ export function PhotoCapture({
                         ref={videoRef}
                         playsInline
                         muted
-                        className="size-full object-cover"
+                        className="size-full scale-x-[-1] object-cover"
                     />
                 ) : (
                     <div className="grid size-full place-items-center text-center">
@@ -167,28 +208,15 @@ export function PhotoCapture({
                         </button>
                     </>
                 ) : (
-                    <>
-                        <button
-                            type="button"
-                            onClick={startCamera}
-                            disabled={disabled}
-                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-                        >
-                            <Camera className="size-4" />
-                            Buka kamera
-                        </button>
-                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm font-semibold text-ink transition-colors hover:bg-canvas">
-                            <Upload className="size-4" />
-                            Unggah foto
-                            <input
-                                type="file"
-                                accept="image/*"
-                                capture="environment"
-                                onChange={onFile}
-                                className="hidden"
-                            />
-                        </label>
-                    </>
+                    <button
+                        type="button"
+                        onClick={startCamera}
+                        disabled={disabled}
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+                    >
+                        <Camera className="size-4" />
+                        Buka kamera
+                    </button>
                 )}
             </div>
         </div>
