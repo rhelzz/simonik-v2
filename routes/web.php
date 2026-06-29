@@ -63,7 +63,7 @@ Route::middleware('auth')->group(function () {
 
     // Master data pengguna (dikelola admin/kaprog).
     Route::middleware('role:admin|kaprog')->group(function () {
-        Route::resource('students', StudentController::class)->except('show');
+        Route::resource('students', StudentController::class);
         Route::resource('industries', IndustryController::class)->except('show');
         Route::resource('teachers', TeacherController::class)->except('show');
         Route::resource('pembimbings', PembimbingController::class)->except('show');
