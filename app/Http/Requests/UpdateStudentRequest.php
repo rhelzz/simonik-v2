@@ -25,6 +25,7 @@ class UpdateStudentRequest extends FormRequest
             // Akun login siswa
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($student->user_id)],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
 
             // Profil siswa
             'nis' => ['required', 'string', 'max:50'],

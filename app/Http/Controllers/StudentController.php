@@ -31,7 +31,7 @@ class StudentController extends Controller
 
         $students = Student::query()
             ->where('archived', false)
-            ->with(['classes:id,name', 'users:id,email'])
+            ->with(['classes:id,name', 'users:id,email', 'industries:id,name'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($q) use ($search): void {
                     $q->where('name', 'like', "%{$search}%")
@@ -49,6 +49,7 @@ class StudentController extends Controller
                 'gender' => $student->gender,
                 'status_pkl' => $student->status_pkl,
                 'class' => $student->classes?->name,
+                'industri' => $student->industries?->name,
                 'email' => $student->users?->email,
                 'image' => $student->image,
             ]);
@@ -141,10 +142,16 @@ class StudentController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($request, $student, $data): void {
-            $student->users?->update([
+            $userUpdate = [
                 'name' => $data['name'],
                 'email' => $data['email'],
-            ]);
+            ];
+
+            if (! empty($data['password'])) {
+                $userUpdate['password'] = Hash::make($data['password']);
+            }
+
+            $student->users?->update($userUpdate);
 
             $profile = $this->profileData($data);
 
@@ -159,6 +166,50 @@ class StudentController extends Controller
         return redirect()
             ->route('students.index')
             ->with('success', 'Data siswa berhasil diperbarui.');
+    }
+
+    /**
+     * Detail siswa lengkap dengan relasi.
+     */
+    public function show(Student $student): Response
+    {
+        $student->load([
+            'users:id,name,email',
+            'classes:id,name',
+            'departements:id,name',
+            'industries:id,name',
+            'parents:id,nama,phoneNumber',
+        ]);
+
+        // Dapatkan guru pembimbing dari industri
+        $industry = $student->industries;
+        $teacher = $industry?->teachers()->first(['id', 'name', 'no_hp']);
+        $pembimbing = $industry?->pembimbingNormatif()->first(['id', 'name', 'no_hp']);
+
+        return Inertia::render('students/show', [
+            'student' => [
+                'id' => $student->id,
+                'name' => $student->users?->name,
+                'email' => $student->users?->email,
+                'nis' => $student->nis,
+                'gender' => $student->gender,
+                'placeOfBirth' => $student->placeOfBirth,
+                'dateOfBirth' => $student->dateOfBirth->format('d F Y'),
+                'bloodType' => $student->bloodType,
+                'alamat' => $student->alamat,
+                'status_pkl' => $student->status_pkl,
+                'pkl_start' => $student->pkl_start?->format('d F Y'),
+                'pkl_end' => $student->pkl_end?->format('d F Y'),
+            ],
+            'relations' => [
+                'class' => $student->classes?->name,
+                'departemen' => $student->departements?->name,
+                'industri' => $student->industries?->name ?? '—',
+                'guru_pembimbing' => $teacher ? $teacher->name.' ('.$teacher->no_hp.')' : '—',
+                'pembimbing_industri' => $pembimbing ? $pembimbing->name.' ('.$pembimbing->no_hp.')' : '—',
+                'orang_tua' => $student->parents?->nama.' ('.$student->parents?->phoneNumber.')' ?? '—',
+            ],
+        ]);
     }
 
     /**
