@@ -119,6 +119,17 @@ class Student extends Model
         return $this->hasMany(Evaluation::class);
     }
 
+    /**
+     * Absensi siswa, ditautkan lewat `user_id` (akun siswa) karena tabel
+     * `attendances` menyimpan `user_id`, bukan `student_id`.
+     *
+     * @return HasMany<Attendance, $this>
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class, 'user_id', 'user_id');
+    }
+
     /** @return HasMany<GuidanceReport, $this> */
     public function guidance_report(): HasMany
     {
