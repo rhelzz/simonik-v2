@@ -285,16 +285,42 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
 
 ---
 
+### 34. M1.3 — Geofencing + Anti-Fake (WFO) (Blueprint Modul)
+
+- **Backend:**
+  - Membuat helper method `calculateDistance` di `AttendanceController` menggunakan rumus Haversine untuk menghitung jarak antara koordinat presensi siswa dan koordinat industri dalam satuan meter.
+  - Memperbarui `CheckInRequest` dan `CheckOutRequest` untuk mewajibkan input parameter geolokasi: `latitude` (antara -90 dan 90), `longitude` (antara -180 dan 180), dan `gps_accuracy` (float).
+  - Mengimplementasikan validasi Geofencing pada `checkIn` dan `checkOut` di `AttendanceController` (WFO mode): jika jarak ke industri (`distance_m`) melebihi `radius` industri, presensi ditolak dengan pesan kesalahan.
+  - Mengimplementasikan **Anti-Fake GPS Heuristics**:
+    - **Tolak Akurasi Rendah:** Menolak mentah-mentah jika `gps_accuracy` > 100 meter (misalnya karena spoofing atau sinyal terhalang).
+    - **Tandai Suspect:** Menandai `is_suspect = true` jika `gps_accuracy` buruk (antara 50m dan 100m).
+    - **Lompatan Tidak Wajar (Unnatural Leap):** Membandingkan koordinat presensi saat ini dengan koordinat terakhir (untuk check-in) atau koordinat check-in hari ini (untuk check-out). Jika jarak tempuh > 100 km dalam selang waktu kurang dari 12 jam, record ditandai `is_suspect = true`.
+  - Menyimpan data `distance_m`, `gps_accuracy`, dan flag `is_suspect` pada tabel `attendances`.
+- **Frontend:**
+  - Memperbarui form `CheckInPanel` dan `CheckOutPanel` pada dasbor absensi siswa ([AttendanceIndex](file:///C:/laragon/www/simonik-v2/resources/js/pages/attendance/index.tsx)) untuk mengaktifkan pelacakan geolokasi (dengan parameter `enableHighAccuracy: true` dan timeout 10 detik), mengumpulkan `gps_accuracy`, dan mengirimkannya ke endpoint absensi.
+  - Menampilkan koordinat geolokasi beserta tingkat akurasi GPS secara real-time pada panel absensi.
+  - Memasang indikator visual berupa badge kuning "Terlambat" dan badge merah "Mencurigakan" pada tabel riwayat absensi siswa jika flag `isLate` atau `isSuspect` bernilai true.
+- **Tests:**
+  - Memperbarui test-payload absensi yang ada agar menyertakan parameter `gps_accuracy` dan koordinat checkout.
+  - Menambahkan test cases baru di `AttendanceTest.php` untuk memverifikasi fungsionalitas geofencing & anti-fake:
+    - `test_check_in_outside_radius_is_rejected`: Memastikan absensi ditolak jika berada di luar radius industri.
+    - `test_check_in_poor_gps_accuracy_is_rejected`: Memastikan absensi ditolak jika akurasi GPS > 100 meter.
+    - `test_check_in_mediocre_gps_accuracy_is_flagged_suspect`: Memastikan absensi disetujui namun ditandai `is_suspect = true` jika akurasi GPS antara 50m dan 100m.
+    - `test_check_in_unnatural_leap_is_flagged_suspect`: Memastikan absensi ditandai `is_suspect = true` jika terdapat perpindahan jarak ekstrim (> 100 km) dalam waktu singkat (2 jam).
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 206/206 passed + 670 assertions**. `npm run lint` + `npm run types:check` lolos.
+
+---
+
 ## 📍 Current step
-**M1.2 Jam Kerja Dinamis selesai.** Pembimbing industri (atau admin/kaprog) dapat menentukan jam masuk & jam pulang untuk industri. Waktu kerja ini secara dinamis terintegrasi sebagai toleransi presensi siswa, di mana absensi di luar waktu masuk akan otomatis ditandai terlambat (`is_late`). Dasbor siswa juga menampilkan jam kerja industri saat ini secara informatif.
+**M1.3 Geofencing + Anti-Fake (WFO) selesai.** Sistem presensi masuk dan pulang kini dilengkapi dengan validasi geofencing instan (rumus Haversine vs radius industri) dan heuristik anti-fake (penolakan akurasi buruk, penandaan suspect jika akurasi meragukan atau terjadi lompatan koordinat tak wajar). Dasbor siswa menampilkan informasi akurasi GPS secara langsung saat merekam lokasi.
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M1.3** (Geofencing + Anti-Fake WFO) — prasyarat M1.1 ✅ + M1.2 ✅ terpenuhi
+- **M1.4** (Mode WFO/WFA + Approval WFA) — prasyarat M1.3 ✅ + M0.3 ✅ terpenuhi
 - Fase 3 (Gamifikasi Jurnal) — independen, bisa langsung
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M1.3 Geofencing + Anti-Fake (WFO)** — validasi presensi siswa: tolak absen jika di luar koordinat/radius industri, hitung jarak haversine, periksa akurasi GPS, dan tangkal manipulasi GPS (is_suspect). Prasyarat M1.1 ✅ + M1.2 ✅ terpenuhi.
+1. **M1.4 Mode WFO/WFA + Approval WFA** — siswa mengajukan WFA (lokasi/alasan); pembimbing/guru menyetujui menggunakan Approval Engine (M0.3); jika WFA aktif, geofencing dilewati. Prasyarat M1.3 ✅ + M0.3 ✅ terpenuhi.
 2. **Fase 3 Gamifikasi Jurnal** — independen (streak + badge). Bisa langsung tanpa prasyarat modul lain.

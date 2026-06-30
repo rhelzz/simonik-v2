@@ -263,7 +263,7 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 - [x] M0.3 Approval Engine
 - [x] M1.1 Koordinat Dinamis & Radius
 - [x] M1.2 Jam Kerja Dinamis
-- [ ] M1.3 Geofencing + Anti-Fake (WFO)
+- [x] M1.3 Geofencing + Anti-Fake (WFO)
 - [ ] M1.4 Mode WFO/WFA + Approval WFA
 - [ ] M2.1 Pengajuan Libur
 - [ ] M2.2 Sakit/Izin Multi-step

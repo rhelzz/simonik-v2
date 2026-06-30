@@ -34,6 +34,7 @@ type AttendanceRecord = {
     arrivalTime: string | null;
     departureTime: string | null;
     isLate: boolean;
+    isSuspect: boolean;
     absenceReason: string | null;
     image: string | null;
     emotion: EmotionKey | null;
@@ -135,7 +136,19 @@ export default function AttendanceIndex({
                                                 </span>
                                             </td>
                                             <td className="py-3 text-ink/80">
-                                                {row.arrivalTime ?? '—'}
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <span>{row.arrivalTime ?? '—'}</span>
+                                                    {row.isLate && (
+                                                        <span className="inline-flex rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
+                                                            Terlambat
+                                                        </span>
+                                                    )}
+                                                    {row.isSuspect && (
+                                                        <span className="inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-800 dark:bg-rose-950/30 dark:text-rose-400" title="Koordinat atau akurasi GPS mencurigakan">
+                                                            Mencurigakan
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="py-3 text-ink/80">
                                                 {row.departureTime ?? '—'}
@@ -299,10 +312,68 @@ function AbsenceState({ today }: { today: AttendanceRecord }) {
 }
 
 function CheckOutPanel() {
-    const form = useForm<{ image: File | null; emotion: string }>({
+    const [geoLoading, setGeoLoading] = useState(false);
+    const [geoError, setGeoError] = useState<string | null>(null);
+
+    const form = useForm<{
+        image: File | null;
+        emotion: string;
+        latitude: string;
+        longitude: string;
+        gps_accuracy: string;
+    }>({
         image: null,
         emotion: '',
+        latitude: '',
+        longitude: '',
+        gps_accuracy: '',
     });
+
+    const hasLocation = form.data.latitude !== '' && form.data.longitude !== '';
+
+    function captureLocation() {
+        if (!navigator.geolocation) {
+            setGeoError('Geolokasi tidak didukung browser ini.');
+
+            return;
+        }
+
+        if (!window.isSecureContext) {
+            setGeoError(
+                'Geolokasi memerlukan HTTPS. Untuk dev lokal: akses via http://localhost:8000, atau buka chrome://flags/#unsafely-treat-insecure-origin-as-secure dan tambahkan URL ini.',
+            );
+
+            return;
+        }
+
+        setGeoLoading(true);
+        setGeoError(null);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                form.setData((oldData) => ({
+                    ...oldData,
+                    latitude: String(pos.coords.latitude),
+                    longitude: String(pos.coords.longitude),
+                    gps_accuracy: String(pos.coords.accuracy),
+                }));
+                setGeoLoading(false);
+            },
+            (err) => {
+                if (err.code === err.PERMISSION_DENIED) {
+                    setGeoError(
+                        'Akses lokasi ditolak. Izinkan akses lokasi di browser.',
+                    );
+                } else if (err.code === err.TIMEOUT) {
+                    setGeoError('Waktu habis mengambil lokasi. Coba lagi.');
+                } else {
+                    setGeoError('Gagal mengambil lokasi. Pastikan GPS aktif.');
+                }
+
+                setGeoLoading(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 },
+        );
+    }
 
     function submit(event: FormEvent) {
         event.preventDefault();
@@ -328,9 +399,47 @@ function CheckOutPanel() {
                     {form.errors.image}
                 </p>
             )}
+
+            <div className="space-y-2">
+                <button
+                    type="button"
+                    onClick={captureLocation}
+                    disabled={geoLoading}
+                    className={cn(
+                        'inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-60',
+                        hasLocation
+                            ? 'border-positive/40 bg-positive/10 text-positive'
+                            : 'border-line text-ink hover:bg-canvas',
+                    )}
+                >
+                    {geoLoading ? (
+                        <LoaderCircle className="size-4 animate-spin" />
+                    ) : (
+                        <MapPin className="size-4" />
+                    )}
+                    {hasLocation ? 'Lokasi terekam' : 'Ambil lokasi'}
+                </button>
+                {hasLocation && (
+                    <p className="text-center text-xs text-muted">
+                        {Number(form.data.latitude).toFixed(5)},{' '}
+                        {Number(form.data.longitude).toFixed(5)}
+                        {form.data.gps_accuracy && ` (±${Math.round(Number(form.data.gps_accuracy))}m)`}
+                    </p>
+                )}
+                {(geoError ||
+                    form.errors.latitude ||
+                    form.errors.longitude) && (
+                    <p className="text-xs font-medium text-red-500">
+                        {geoError ??
+                            form.errors.latitude ??
+                            form.errors.longitude}
+                    </p>
+                )}
+            </div>
+
             <button
                 type="submit"
-                disabled={form.processing || !form.data.image}
+                disabled={form.processing || !form.data.image || !hasLocation}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
             >
                 {form.processing ? (
@@ -353,12 +462,14 @@ function CheckInPanel() {
         image: File | null;
         latitude: string;
         longitude: string;
+        gps_accuracy: string;
         description: string;
         emotion: string;
     }>({
         image: null,
         latitude: '',
         longitude: '',
+        gps_accuracy: '',
         description: '',
         emotion: '',
     });
@@ -384,8 +495,12 @@ function CheckInPanel() {
         setGeoError(null);
         navigator.geolocation.getCurrentPosition(
             (pos) => {
-                form.setData('latitude', String(pos.coords.latitude));
-                form.setData('longitude', String(pos.coords.longitude));
+                form.setData((oldData) => ({
+                    ...oldData,
+                    latitude: String(pos.coords.latitude),
+                    longitude: String(pos.coords.longitude),
+                    gps_accuracy: String(pos.coords.accuracy),
+                }));
                 setGeoLoading(false);
             },
             (err) => {
@@ -456,6 +571,7 @@ function CheckInPanel() {
                     <p className="text-center text-xs text-muted">
                         {Number(form.data.latitude).toFixed(5)},{' '}
                         {Number(form.data.longitude).toFixed(5)}
+                        {form.data.gps_accuracy && ` (±${Math.round(Number(form.data.gps_accuracy))}m)`}
                     </p>
                 )}
                 {(geoError ||

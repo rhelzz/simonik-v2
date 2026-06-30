@@ -59,6 +59,7 @@ class AttendanceTest extends TestCase
                 'image' => UploadedFile::fake()->image('selfie.jpg'),
                 'latitude' => '-6.200000',
                 'longitude' => '106.816666',
+                'gps_accuracy' => 15.0,
             ])
             ->assertSessionHas('success');
 
@@ -77,7 +78,7 @@ class AttendanceTest extends TestCase
     {
         $this->actingAs($this->siswa())
             ->post('/absen/masuk', [])
-            ->assertSessionHasErrors(['image', 'latitude', 'longitude']);
+            ->assertSessionHasErrors(['image', 'latitude', 'longitude', 'gps_accuracy']);
     }
 
     public function test_student_cannot_check_in_twice_in_one_day(): void
@@ -96,6 +97,7 @@ class AttendanceTest extends TestCase
                 'image' => UploadedFile::fake()->image('selfie.jpg'),
                 'latitude' => '-6.2',
                 'longitude' => '106.8',
+                'gps_accuracy' => 15.0,
             ])
             ->assertSessionHas('error');
 
@@ -117,6 +119,9 @@ class AttendanceTest extends TestCase
         $this->actingAs($siswa)
             ->post('/absen/pulang', [
                 'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.200000',
+                'longitude' => '106.816666',
+                'gps_accuracy' => 15.0,
             ])
             ->assertSessionHas('success');
 
@@ -130,6 +135,9 @@ class AttendanceTest extends TestCase
         $this->actingAs($this->siswa())
             ->post('/absen/pulang', [
                 'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.200000',
+                'longitude' => '106.816666',
+                'gps_accuracy' => 15.0,
             ])
             ->assertSessionHas('error');
     }
@@ -168,6 +176,8 @@ class AttendanceTest extends TestCase
             'jam_masuk' => '08:00:00',
             'jam_pulang' => '17:00:00',
             'radius' => 100,
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
         ]);
         Student::factory()->create([
             'user_id' => $siswa->id,
@@ -181,6 +191,7 @@ class AttendanceTest extends TestCase
                 'image' => UploadedFile::fake()->image('selfie.jpg'),
                 'latitude' => '-6.200000',
                 'longitude' => '106.816666',
+                'gps_accuracy' => 10.0,
             ])
             ->assertSessionHas('success');
 
@@ -201,6 +212,8 @@ class AttendanceTest extends TestCase
             'jam_masuk' => '08:00:00',
             'jam_pulang' => '17:00:00',
             'radius' => 100,
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
         ]);
         Student::factory()->create([
             'user_id' => $siswa->id,
@@ -214,6 +227,7 @@ class AttendanceTest extends TestCase
                 'image' => UploadedFile::fake()->image('selfie.jpg'),
                 'latitude' => '-6.200000',
                 'longitude' => '106.816666',
+                'gps_accuracy' => 10.0,
             ])
             ->assertSessionHas('success');
 
@@ -223,5 +237,137 @@ class AttendanceTest extends TestCase
         ]);
 
         Carbon::setTestNow();
+    }
+
+    public function test_check_in_outside_radius_is_rejected(): void
+    {
+        Storage::fake('public');
+        $siswa = $this->siswa();
+
+        $industry = Industry::factory()->create([
+            'radius' => 100,
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
+        ]);
+        Student::factory()->create([
+            'user_id' => $siswa->id,
+            'industri_id' => $industry->id,
+        ]);
+
+        // Absen dari jarak yang sangat jauh (mis. bandung vs jakarta)
+        $this->actingAs($siswa)
+            ->post('/absen/masuk', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.914744',
+                'longitude' => '107.609810',
+                'gps_accuracy' => 10.0,
+            ])
+            ->assertSessionHasErrors(['latitude'])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('attendances', [
+            'user_id' => $siswa->id,
+        ]);
+    }
+
+    public function test_check_in_poor_gps_accuracy_is_rejected(): void
+    {
+        Storage::fake('public');
+        $siswa = $this->siswa();
+
+        $industry = Industry::factory()->create([
+            'radius' => 100,
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
+        ]);
+        Student::factory()->create([
+            'user_id' => $siswa->id,
+            'industri_id' => $industry->id,
+        ]);
+
+        // Akurasi 150 meter (batas tolak > 100)
+        $this->actingAs($siswa)
+            ->post('/absen/masuk', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.200000',
+                'longitude' => '106.816666',
+                'gps_accuracy' => 150.0,
+            ])
+            ->assertSessionHasErrors(['latitude'])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('attendances', [
+            'user_id' => $siswa->id,
+        ]);
+    }
+
+    public function test_check_in_mediocre_gps_accuracy_is_flagged_suspect(): void
+    {
+        Storage::fake('public');
+        $siswa = $this->siswa();
+
+        $industry = Industry::factory()->create([
+            'radius' => 100,
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
+        ]);
+        Student::factory()->create([
+            'user_id' => $siswa->id,
+            'industri_id' => $industry->id,
+        ]);
+
+        // Akurasi 60 meter (50 < gps_accuracy <= 100 -> disetujui tapi suspect)
+        $this->actingAs($siswa)
+            ->post('/absen/masuk', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.200000',
+                'longitude' => '106.816666',
+                'gps_accuracy' => 60.0,
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $siswa->id,
+            'is_suspect' => true,
+        ]);
+    }
+
+    public function test_check_in_unnatural_leap_is_flagged_suspect(): void
+    {
+        Storage::fake('public');
+        $siswa = $this->siswa();
+
+        $industry = Industry::factory()->create([
+            'radius' => 500000, // radius besar agar geofencing lolos
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
+        ]);
+        Student::factory()->create([
+            'user_id' => $siswa->id,
+            'industri_id' => $industry->id,
+        ]);
+
+        // Buat record absensi kemarin/tadi pagi di Jakarta
+        Attendance::factory()->create([
+            'user_id' => $siswa->id,
+            'date' => Carbon::today()->subDay()->toDateString(),
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
+            'created_at' => Carbon::now()->subHours(2),
+        ]);
+
+        // Absen di Bandung (jarak > 100km) dalam selang waktu 2 jam
+        $this->actingAs($siswa)
+            ->post('/absen/masuk', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.914744',
+                'longitude' => '107.609810',
+                'gps_accuracy' => 10.0,
+            ])
+            ->assertSessionHas('success');
+
+        // Harus masuk dengan status is_suspect = true karena lompatan jarak ekstrim dalam waktu singkat
+        $attendance = Attendance::orderByDesc('id')->first();
+        $this->assertTrue($attendance->is_suspect);
     }
 }

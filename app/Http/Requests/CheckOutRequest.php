@@ -20,6 +20,9 @@ class CheckOutRequest extends FormRequest
     {
         return [
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'gps_accuracy' => ['required', 'numeric'],
             'emotion' => ['nullable', 'string', 'in:neutral,happy,sad,angry,fearful,disgusted,surprised'],
         ];
     }
