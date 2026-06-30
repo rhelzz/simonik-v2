@@ -1,17 +1,23 @@
 import {
     Award,
+    BarChart3,
     BookOpen,
     Building2,
     CalendarDays,
+    CalendarOff,
     CalendarRange,
     Camera,
     ClipboardCheck,
     FileImage,
+    FileText,
     Fingerprint,
+    Flame,
     GraduationCap,
+    Handshake,
     HardHat,
     LayoutDashboard,
     ListChecks,
+    MailCheck,
     MessagesSquare,
     Network,
     NotebookPen,
@@ -20,6 +26,7 @@ import {
     UserCog,
     Users,
     UsersRound,
+    Wallet,
 } from 'lucide-react';
 import { index as activitiesIndex } from '@/actions/App/Http/Controllers/ActivityController';
 import { index as aspectsIndex } from '@/actions/App/Http/Controllers/AspectController';
@@ -44,7 +51,7 @@ import { dashboard } from '@/routes';
 import type { NavItem, NavSection } from '@/types';
 import type { Role } from '@/types/auth';
 
-const STAFF: Role[] = ['admin', 'kaprog', 'guru', 'pembimbing'];
+const STAFF: Role[] = ['admin', 'wakasek', 'kaprog', 'guru', 'pembimbing'];
 
 /**
  * Full sidebar map. Only built features carry an `href`; the rest render as
@@ -75,6 +82,18 @@ export const navSections: NavSection[] = [
                 label: 'Jurnal Saya',
                 icon: NotebookPen,
                 href: activitiesIndex.url(),
+                roles: ['siswa'],
+            },
+            {
+                label: 'Pengajuan Libur',
+                icon: CalendarOff,
+                // M2.1 — belum tersedia
+                roles: ['siswa'],
+            },
+            {
+                label: 'Streak & Badge',
+                icon: Flame,
+                // M3.3 — belum tersedia
                 roles: ['siswa'],
             },
         ],
@@ -167,7 +186,36 @@ export const navSections: NavSection[] = [
                 href: journalMonitorIndex.url(),
                 roles: [...STAFF, 'orangtua'],
             },
+            {
+                label: 'Inbox Persetujuan',
+                icon: MailCheck,
+                // M2.3 — belum tersedia
+                roles: ['kaprog', 'guru', 'pembimbing', 'orangtua'],
+            },
             { label: 'Kalender', icon: CalendarDays, roles: STAFF },
+        ],
+    },
+    {
+        title: 'Humas & Keuangan',
+        items: [
+            {
+                label: 'Akuntabilitas Dana',
+                icon: Wallet,
+                // M5.1 — belum tersedia
+                roles: ['wakasek'],
+            },
+            {
+                label: 'Kemitraan & Kuota',
+                icon: Handshake,
+                // M5.2 — belum tersedia
+                roles: ['admin', 'wakasek'],
+            },
+            {
+                label: 'Statistik Global',
+                icon: BarChart3,
+                // M5.3 — belum tersedia
+                roles: ['wakasek'],
+            },
         ],
     },
     {
@@ -189,13 +237,19 @@ export const navSections: NavSection[] = [
                 label: 'Sertifikat',
                 icon: Award,
                 href: certificatesIndex.url(),
-                roles: ['admin', 'kaprog', 'siswa'],
+                roles: ['admin', 'wakasek', 'kaprog', 'siswa'],
             },
             {
                 label: 'Template Sertifikat',
                 icon: FileImage,
                 href: certificateTemplatesIndex.url(),
                 roles: ['admin', 'kaprog'],
+            },
+            {
+                label: 'Rapor Digital',
+                icon: FileText,
+                // M4.2 — belum tersedia
+                roles: ['admin', 'wakasek', 'kaprog', 'siswa'],
             },
         ],
     },

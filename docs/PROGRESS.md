@@ -201,17 +201,31 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Fix kritis Vite HMR**: mengganti `type FaceApiModule = typeof import('@vladmandic/face-api')` dengan inline interface — bahkan type-only import dari paket ini membuat Vite gagal reload modul saat HMR. Seluruh referensi ke `@vladmandic/face-api` dihilangkan dari kode.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 174 test passed**. ESLint (termasuk `react-hooks/set-state-in-effect` suppress di 1 baris intentional) + tsc + Prettier lolos.
 
+### 29. M0.1 — Refactor Peran & Kerangka Navigasi (Blueprint Modul)
+
+- **Peran:** Role `kepala_sekolah` **dihapus** (role + semua user yg hanya punya role itu); role `wakasek` (Wakasek Humas/Hubin) **ditambahkan** → **7 role kanonik final**: admin, wakasek, kaprog, guru, pembimbing, siswa, orangtua.
+- **Migrasi:** `2026_06_30_131118_replace_kepala_sekolah_with_wakasek_role` — hapus user & model_has_roles untuk kepala_sekolah, tambah role wakasek via DB:: (forward-only).
+- **Seeder:** `RoleSeeder::ROLES` diperbarui (wakasek in, kepala_sekolah out). `SignatureSettingFactory` default `role` diubah ke `wakasek`.
+- **Backend:** `DashboardController` — cabang `wakasek` → `wakasekDashboard()` (stats global: total siswa/PKL/industri/guru, render `dashboard-wakasek`). `ScopesStudentsByRole` — `wakasek` dapat global view (sama dengan admin/kaprog). `routes/web.php` — `wakasek` ditambahkan ke middleware monitoring, penilaian (view), dan sertifikat.
+- **Frontend:** `types/auth.ts` (Role: kepala_sekolah → wakasek). `lib/nav.ts` — STAFF array include wakasek; tambah placeholder "Soon" untuk semua modul blueprint mendatang: Pengajuan Libur (M2.1), Streak & Badge (M3.3) di PKL Saya; Inbox Persetujuan (M2.3) di Monitoring; Rapor Digital (M4.2) di Penilaian; section baru **Humas & Keuangan** (Akuntabilitas Dana M5.1, Kemitraan & Kuota M5.2, Statistik Global M5.3, roles: wakasek/admin). Sertifikat di-extend ke wakasek.
+- **Page baru:** `pages/dashboard-wakasek.tsx` — skeleton dengan 4 stat cards + 3 "Segera hadir" cards untuk M5.x.
+- **Tests:** DashboardTest — `test_kepala_sekolah` → `test_wakasek_sees_wakasek_dashboard` (assert component dashboard-wakasek + 4 stat props). AssessmentTest — `test_roles_outside_scope_are_forbidden` → `test_wakasek_can_view_assessments`. AttendanceMonitorTest + JournalMonitorTest — forbidden kepala_sekolah → positive test wakasek bisa akses.
+- ✅ **`composer test` penuh: 174/174 passed + 603 assertions**. `npm run types:check` + `npm run lint` + `npm run build` lolos. Migration applied ke dev DB.
+
 ---
 
 ## 📍 Current step
-**Alur PKL end-to-end lengkap** + **deteksi emosi absensi**: master data → absen + jurnal (input siswa, dengan deteksi emosi real-time + badge baked ke foto) → monitoring drill-down + **rekap performa** → Rekap Penilaian → **Sertifikat** → Panduan PKL. **Industri = container relasi**; kontrol industri ada di **Pembimbing Industri** (Industri Saya). Dashboard analitik riil. 7 role kanonik.
+**Alur PKL end-to-end lengkap** + **deteksi emosi absensi** + **kerangka navigasi blueprint selesai (M0.1)**. 7 role kanonik final: admin, wakasek, kaprog, guru, pembimbing, siswa, orangtua. Semua item modul blueprint (M0.2–M6.1) sudah terpasang sebagai placeholder "Soon" di sidebar.
 
-Sisa "Soon": Forum PKL, Kalender (keduanya prioritas rendah).
+Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
+- **M0.2** (Fondasi Skema Presensi) — prasyarat untuk semua Fase 1
+- **M0.3** (Approval Engine) — prasyarat untuk WFA, Libur, Sakit/Izin
+- Fase 3 (Gamifikasi Jurnal) — independen, bisa langsung
 
 ---
 
-## ⏭️ Next step — opsi terbaik (detail & spec di [`ROADMAP.md`](ROADMAP.md))
+## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **Forum PKL (Rekomendasi)** — tanya-jawab antar role (model `Post`/`Comment` sudah ada di skema); CRUD thread + balasan.
-2. **Kalender** — agenda/jadwal kunjungan/PKL; prioritas rendah.
-3. **Polish lanjutan**: konversi master-data kecil (Jurusan/Kelas/Aspek/Periode) modal→page bila ingin 100% seragam; dashboard kepala_sekolah khusus oversight.
+1. **M0.2 Fondasi Skema Presensi** — migrasi tambah radius/jam kerja ke industries, mode/is_late/gps_accuracy ke attendances. Prasyarat utama Fase 1.
+2. **M0.3 Approval Engine** — model approvals polimorfik + service First-to-Approve. Prasyarat WFA & Libur & Sakit/Izin.
+3. **Fase 3 Gamifikasi Jurnal** — independen (streak + badge). Bisa langsung tanpa M0.2/M0.3.

@@ -1,8 +1,10 @@
-import { Clock, NotebookPen, Wrench } from 'lucide-react';
+import { Clock, Eye, NotebookPen, Wrench } from 'lucide-react';
+import { useState } from 'react';
 import { index } from '@/actions/App/Http/Controllers/JournalMonitorController';
 import { PerformanceSummary } from '@/components/performance-summary';
 import type { Performance } from '@/components/performance-summary';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
+import { Modal } from '@/components/ui/modal';
 import { Pagination } from '@/components/ui/pagination';
 import { RichText } from '@/components/ui/rich-text';
 import { AppLayout } from '@/layouts/app-layout';
@@ -37,6 +39,8 @@ export default function JournalMonitorShow({
     records,
     performance,
 }: Props) {
+    const [selectedRecord, setSelectedRecord] = useState<JournalRecord | null>(null);
+
     return (
         <AppLayout title="Data Jurnal">
             <div className="space-y-5">
@@ -80,7 +84,11 @@ export default function JournalMonitorShow({
                     ) : (
                         <div className="mt-4 space-y-3">
                             {records.data.map((record) => (
-                                <RecordCard key={record.id} record={record} />
+                                <RecordCard
+                                    key={record.id}
+                                    record={record}
+                                    onShowDetail={setSelectedRecord}
+                                />
                             ))}
                         </div>
                     )}
@@ -88,11 +96,71 @@ export default function JournalMonitorShow({
                     <Pagination meta={records} />
                 </section>
             </div>
+
+            <Modal
+                open={!!selectedRecord}
+                onClose={() => setSelectedRecord(null)}
+                title="Detail Jurnal"
+            >
+                {selectedRecord && (
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="text-base font-bold text-ink">
+                                {selectedRecord.judul}
+                            </h3>
+                            <p className="text-xs text-muted mt-1">
+                                {selectedRecord.dateLabel}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted border-y border-line py-2">
+                            <span className="inline-flex items-center gap-1.5">
+                                <Clock className="size-3.5" />
+                                {selectedRecord.start_time} – {selectedRecord.end_time}
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                                <Wrench className="size-3.5" />
+                                {selectedRecord.tools}
+                            </span>
+                        </div>
+
+                        {selectedRecord.image && (
+                            <div className="mt-3">
+                                <img
+                                    src={selectedRecord.image}
+                                    alt={`Foto kegiatan ${selectedRecord.judul}`}
+                                    className="aspect-video w-full rounded-xl border border-line object-cover"
+                                />
+                            </div>
+                        )}
+
+                        <div className="mt-3 max-h-[35vh] overflow-y-auto pr-1 text-sm text-ink/90">
+                            <RichText html={selectedRecord.description} />
+                        </div>
+
+                        <div className="mt-5 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedRecord(null)}
+                                className="rounded-xl bg-canvas px-4 py-2 text-sm font-semibold text-ink/70 transition-colors hover:bg-line"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </AppLayout>
     );
 }
 
-function RecordCard({ record }: { record: JournalRecord }) {
+function RecordCard({
+    record,
+    onShowDetail,
+}: {
+    record: JournalRecord;
+    onShowDetail: (record: JournalRecord) => void;
+}) {
     return (
         <article className="rounded-2xl border border-line bg-canvas/30 p-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -113,15 +181,16 @@ function RecordCard({ record }: { record: JournalRecord }) {
                 </span>
             </div>
 
-            {record.image && (
-                <img
-                    src={record.image}
-                    alt={`Foto kegiatan ${record.judul}`}
-                    className="mt-3 aspect-video w-full max-w-sm rounded-xl border border-line object-cover"
-                />
-            )}
-
-            <RichText html={record.description} className="mt-3" />
+            <div className="mt-3 flex items-center border-t border-line pt-3">
+                <button
+                    type="button"
+                    onClick={() => onShowDetail(record)}
+                    className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-ink/75 transition-colors hover:bg-canvas"
+                >
+                    <Eye className="size-4" />
+                    Detail
+                </button>
+            </div>
         </article>
     );
 }

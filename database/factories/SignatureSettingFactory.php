@@ -19,7 +19,7 @@ class SignatureSettingFactory extends Factory
     public function definition(): array
     {
         return [
-            'role' => 'kepala_sekolah',
+            'role' => 'wakasek',
             'name' => fake()->name(),
             'ttd_path' => 'signatures/'.fake()->uuid().'.png',
             'department_id' => Departemen::factory(),

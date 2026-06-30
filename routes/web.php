@@ -87,14 +87,14 @@ Route::middleware('auth')->group(function () {
             ->name('certificate-templates.activate');
     });
 
-    // Sertifikat — output per siswa (admin/kaprog cetak semua; siswa miliknya).
-    Route::middleware('role:admin|kaprog|siswa')->group(function () {
+    // Sertifikat — output per siswa (admin/kaprog/wakasek cetak semua; siswa miliknya).
+    Route::middleware('role:admin|kaprog|wakasek|siswa')->group(function () {
         Route::get('sertifikat', [CertificateController::class, 'index'])->name('certificates.index');
         Route::get('sertifikat/{student}', [CertificateController::class, 'show'])->name('certificates.show');
     });
 
     // Rekap Penilaian — lihat (semua cakupan) + input nilai (guru/pembimbing).
-    Route::middleware('role:admin|kaprog|guru|pembimbing|siswa|orangtua')->group(function () {
+    Route::middleware('role:admin|kaprog|wakasek|guru|pembimbing|siswa|orangtua')->group(function () {
         Route::get('penilaian', [AssessmentController::class, 'index'])->name('assessments.index');
         Route::get('penilaian/{student}', [AssessmentController::class, 'show'])->name('assessments.show');
         Route::put('penilaian/{student}', [AssessmentController::class, 'update'])
@@ -118,7 +118,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Monitoring drill-down (Jurusan -> Kelas -> Murid -> rekap performa).
-    Route::middleware('role:admin|kaprog|guru|pembimbing|orangtua')->group(function () {
+    Route::middleware('role:admin|kaprog|wakasek|guru|pembimbing|orangtua')->group(function () {
         // Data Absen.
         Route::get('monitoring/absen', [AttendanceMonitorController::class, 'index'])->name('attendance-monitor.index');
         Route::get('monitoring/absen/jurusan/{departemen}', [AttendanceMonitorController::class, 'classes'])->name('attendance-monitor.classes');

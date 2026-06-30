@@ -15,12 +15,12 @@ class RoleSeeder extends Seeder
      */
     public const ROLES = [
         'admin',
+        'wakasek',
         'kaprog',
         'guru',
         'pembimbing',
         'siswa',
         'orangtua',
-        'kepala_sekolah',
     ];
 
     /**

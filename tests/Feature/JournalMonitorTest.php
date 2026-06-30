@@ -83,11 +83,11 @@ class JournalMonitorTest extends TestCase
         $this->get('/monitoring/jurnal')->assertRedirect('/login');
     }
 
-    public function test_roles_outside_scope_are_forbidden(): void
+    public function test_wakasek_can_view_monitor(): void
     {
-        $this->actingAs($this->user('kepala_sekolah'))
+        $this->actingAs($this->user('wakasek'))
             ->get('/monitoring/jurnal')
-            ->assertForbidden();
+            ->assertInertia(fn (Assert $page) => $page->component('journal-monitor/index'));
     }
 
     public function test_siswa_cannot_access_monitor(): void

@@ -67,11 +67,11 @@ class AssessmentTest extends TestCase
         $this->get('/penilaian')->assertRedirect('/login');
     }
 
-    public function test_roles_outside_scope_are_forbidden(): void
+    public function test_wakasek_can_view_assessments(): void
     {
-        $this->actingAs($this->user('kepala_sekolah'))
+        $this->actingAs($this->user('wakasek'))
             ->get('/penilaian')
-            ->assertForbidden();
+            ->assertInertia(fn (Assert $page) => $page->component('assessments/index'));
     }
 
     public function test_admin_can_view_assessment_list(): void

@@ -20,7 +20,7 @@ trait ScopesStudentsByRole
      */
     protected function scopedStudents(User $user): Builder
     {
-        if ($user->hasAnyRole(['admin', 'kaprog'])) {
+        if ($user->hasAnyRole(['admin', 'kaprog', 'wakasek'])) {
             return Student::query();
         }
 

@@ -1,10 +1,12 @@
 import { Link, router } from '@inertiajs/react';
-import { Clock, NotebookPen, Pencil, Plus, Trash2, Wrench } from 'lucide-react';
+import { Clock, Eye, NotebookPen, Pencil, Plus, Trash2, Wrench } from 'lucide-react';
+import { useState } from 'react';
 import {
     create,
     destroy,
     edit,
 } from '@/actions/App/Http/Controllers/ActivityController';
+import { Modal } from '@/components/ui/modal';
 import { Pagination } from '@/components/ui/pagination';
 import { RichText } from '@/components/ui/rich-text';
 import { AppLayout } from '@/layouts/app-layout';
@@ -28,6 +30,8 @@ export default function ActivitiesIndex({
 }: {
     activities: Paginated<Activity>;
 }) {
+    const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+
     function remove(activity: Activity) {
         if (confirm(`Hapus jurnal "${activity.judul}"?`)) {
             router.delete(destroy.url(activity.id), { preserveScroll: true });
@@ -95,12 +99,15 @@ export default function ActivitiesIndex({
                                     </span>
                                 </div>
 
-                                <RichText
-                                    html={activity.description}
-                                    className="mt-3 line-clamp-3"
-                                />
-
                                 <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedActivity(activity)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-ink/75 transition-colors hover:bg-canvas"
+                                    >
+                                        <Eye className="size-4" />
+                                        Detail
+                                    </button>
                                     <Link
                                         href={edit.url(activity.id)}
                                         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-canvas"
@@ -124,6 +131,60 @@ export default function ActivitiesIndex({
 
                 <Pagination meta={activities} />
             </section>
+
+            <Modal
+                open={!!selectedActivity}
+                onClose={() => setSelectedActivity(null)}
+                title="Detail Jurnal"
+            >
+                {selectedActivity && (
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="text-base font-bold text-ink">
+                                {selectedActivity.judul}
+                            </h3>
+                            <p className="text-xs text-muted mt-1">
+                                {selectedActivity.dateLabel}
+                            </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted border-y border-line py-2">
+                            <span className="inline-flex items-center gap-1.5">
+                                <Clock className="size-3.5" />
+                                {selectedActivity.start_time} – {selectedActivity.end_time}
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                                <Wrench className="size-3.5" />
+                                {selectedActivity.tools}
+                            </span>
+                        </div>
+
+                        {selectedActivity.image && (
+                            <div className="mt-3">
+                                <img
+                                    src={selectedActivity.image}
+                                    alt={`Foto kegiatan ${selectedActivity.judul}`}
+                                    className="aspect-video w-full rounded-xl border border-line object-cover"
+                                />
+                            </div>
+                        )}
+
+                        <div className="mt-3 max-h-[35vh] overflow-y-auto pr-1 text-sm text-ink/90">
+                            <RichText html={selectedActivity.description} />
+                        </div>
+
+                        <div className="mt-5 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedActivity(null)}
+                                className="rounded-xl bg-canvas px-4 py-2 text-sm font-semibold text-ink/70 transition-colors hover:bg-line"
+                            >
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </AppLayout>
     );
 }

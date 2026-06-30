@@ -41,7 +41,11 @@ class DashboardController extends Controller
             return $this->staffDashboard($user);
         }
 
-        // admin / kaprog / kepala_sekolah: analitik penuh.
+        if ($user->hasRole('wakasek')) {
+            return $this->wakasekDashboard();
+        }
+
+        // admin / kaprog: analitik penuh.
         return $this->adminDashboard();
     }
 
@@ -70,6 +74,22 @@ class DashboardController extends Controller
             'recentStudents' => $this->presentStudents(
                 Student::query()->with(['classes:id,name', 'industries:id,name'])->latest()->take(5),
             ),
+            'today' => Carbon::now()->translatedFormat('l, d F Y'),
+        ]);
+    }
+
+    /**
+     * Dashboard Wakasek Humas/Hubin — ringkasan global & placeholder modul M5.x.
+     */
+    private function wakasekDashboard(): Response
+    {
+        return Inertia::render('dashboard-wakasek', [
+            'stats' => [
+                'students' => Student::where('archived', false)->count(),
+                'activePkl' => Student::where('status_pkl', 'proses')->count(),
+                'industries' => Industry::count(),
+                'teachers' => Teacher::count(),
+            ],
             'today' => Carbon::now()->translatedFormat('l, d F Y'),
         ]);
     }

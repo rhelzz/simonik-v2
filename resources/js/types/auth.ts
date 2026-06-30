@@ -11,12 +11,12 @@ export type User = {
 
 export type Role =
     | 'admin'
+    | 'wakasek'
     | 'kaprog'
     | 'guru'
     | 'pembimbing'
     | 'siswa'
-    | 'orangtua'
-    | 'kepala_sekolah';
+    | 'orangtua';
 
 export type Auth = {
     user: User | null;

@@ -77,11 +77,17 @@ class DashboardTest extends TestCase
             );
     }
 
-    public function test_kepala_sekolah_sees_full_admin_dashboard(): void
+    public function test_wakasek_sees_wakasek_dashboard(): void
     {
-        $this->actingAs($this->user('kepala_sekolah'))
+        $this->actingAs($this->user('wakasek'))
             ->get('/dashboard')
-            ->assertInertia(fn (Assert $page) => $page->component('dashboard'));
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard-wakasek')
+                ->has('stats.students')
+                ->has('stats.activePkl')
+                ->has('stats.industries')
+                ->has('stats.teachers')
+            );
     }
 
     public function test_guru_sees_scoped_staff_dashboard(): void
