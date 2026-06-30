@@ -64,14 +64,14 @@ Route::middleware('auth')->group(function () {
     // Master data pengguna (dikelola admin/kaprog).
     Route::middleware('role:admin|kaprog')->group(function () {
         Route::resource('students', StudentController::class);
-        Route::resource('industries', IndustryController::class)->except('show');
+        Route::resource('industries', IndustryController::class);
         Route::resource('teachers', TeacherController::class);
         Route::resource('pembimbings', PembimbingController::class);
         Route::resource('parents', ParentController::class)->except('show');
 
         // Data referensi akademik.
-        Route::resource('departemens', DepartemenController::class)->only(['index', 'store', 'update', 'destroy']);
-        Route::resource('classes', ClassController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('departemens', DepartemenController::class)->only(['index', 'store', 'update', 'destroy', 'show']);
+        Route::resource('classes', ClassController::class)->only(['index', 'store', 'update', 'destroy', 'show']);
 
         // Periode / gelombang PKL.
         Route::resource('periods', PeriodController::class)->only(['index', 'store', 'update', 'destroy']);

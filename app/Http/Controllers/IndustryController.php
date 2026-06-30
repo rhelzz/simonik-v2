@@ -70,6 +70,44 @@ class IndustryController extends Controller
     }
 
     /**
+     * Detail industri beserta relasi & daftar siswa PKL.
+     */
+    public function show(Industry $industry): Response
+    {
+        $industry->load([
+            'teachers:id,name',
+            'pembimbingNormatif:id,name,no_hp',
+        ]);
+
+        $students = $industry->students()
+            ->with('classes:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'nis', 'status_pkl', 'class_id']);
+
+        return Inertia::render('industries/show', [
+            'industry' => [
+                'id' => $industry->id,
+                'name' => $industry->name,
+                'bidang' => $industry->bidang,
+                'alamat' => $industry->alamat,
+                'longitude' => $industry->longitude,
+                'latitude' => $industry->latitude,
+                'duration' => $industry->duration,
+                'guru' => $industry->teachers?->name,
+                'pembimbing' => $industry->pembimbingNormatif?->name,
+                'pembimbing_no_hp' => $industry->pembimbingNormatif?->no_hp,
+            ],
+            'students' => $students->map(fn ($s) => [
+                'id' => $s->id,
+                'name' => $s->name,
+                'nis' => $s->nis,
+                'status_pkl' => $s->status_pkl,
+                'class' => $s->classes?->name,
+            ]),
+        ]);
+    }
+
+    /**
      * Form edit industri.
      */
     public function edit(Industry $industry): Response

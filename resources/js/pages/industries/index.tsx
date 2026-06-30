@@ -3,6 +3,7 @@ import {
     Building2,
     ChevronLeft,
     ChevronRight,
+    Eye,
     Pencil,
     Plus,
     Search,
@@ -15,6 +16,7 @@ import {
     destroy,
     edit,
     index,
+    show,
 } from '@/actions/App/Http/Controllers/IndustryController';
 import { AppLayout } from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -159,6 +161,13 @@ export default function IndustriesIndex({
                                         </td>
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">
+                                                <Link
+                                                    href={show.url(industry.id)}
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    aria-label={`Lihat ${industry.name}`}
+                                                >
+                                                    <Eye className="size-4" />
+                                                </Link>
                                                 <Link
                                                     href={edit.url(industry.id)}
                                                     className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"

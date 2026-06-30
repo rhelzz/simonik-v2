@@ -36,6 +36,30 @@ class DepartemenController extends Controller
         ]);
     }
 
+    public function show(Departemen $departemen): Response
+    {
+        $classes = $departemen->classes()
+            ->withCount('students')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug']);
+
+        return Inertia::render('departemens/show', [
+            'departemen' => [
+                'id' => $departemen->id,
+                'name' => $departemen->name,
+                'slug' => $departemen->slug,
+                'classes_count' => $classes->count(),
+                'students_count' => $classes->sum('students_count'),
+            ],
+            'classes' => $classes->map(fn ($c) => [
+                'id' => $c->id,
+                'name' => $c->name,
+                'slug' => $c->slug,
+                'students_count' => $c->students_count,
+            ]),
+        ]);
+    }
+
     public function store(DepartemenRequest $request): RedirectResponse
     {
         $name = $request->string('name')->value();

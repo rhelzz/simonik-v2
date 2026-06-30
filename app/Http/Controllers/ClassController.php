@@ -40,6 +40,34 @@ class ClassController extends Controller
         ]);
     }
 
+    public function show(Classes $class): Response
+    {
+        $class->load('departemens:id,name');
+
+        $students = $class->students()
+            ->with('industries:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'nis', 'gender', 'status_pkl', 'industri_id']);
+
+        return Inertia::render('classes/show', [
+            'class' => [
+                'id' => $class->id,
+                'name' => $class->name,
+                'slug' => $class->slug,
+                'departemen' => $class->departemens?->name,
+                'students_count' => $students->count(),
+            ],
+            'students' => $students->map(fn ($s) => [
+                'id' => $s->id,
+                'name' => $s->name,
+                'nis' => $s->nis,
+                'gender' => $s->gender === 'L' ? 'Laki-laki' : 'Perempuan',
+                'status_pkl' => $s->status_pkl,
+                'industri' => $s->industries?->name,
+            ]),
+        ]);
+    }
+
     public function store(ClassRequest $request): RedirectResponse
     {
         $data = $request->validated();

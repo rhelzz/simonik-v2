@@ -1,5 +1,6 @@
-import { router, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import {
+    Eye,
     LoaderCircle,
     Pencil,
     Plus,
@@ -12,6 +13,7 @@ import type { FormEvent } from 'react';
 import {
     destroy,
     index,
+    show,
     store,
     update,
 } from '@/actions/App/Http/Controllers/ClassController';
@@ -183,6 +185,13 @@ export default function ClassesIndex({
                                         </td>
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">
+                                                <Link
+                                                    href={show.url(row.id)}
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    aria-label={`Lihat ${row.name}`}
+                                                >
+                                                    <Eye className="size-4" />
+                                                </Link>
                                                 <button
                                                     type="button"
                                                     onClick={() =>

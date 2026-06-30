@@ -1,5 +1,6 @@
-import { router, useForm } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import {
+    Eye,
     FolderTree,
     LoaderCircle,
     Pencil,
@@ -12,6 +13,7 @@ import type { FormEvent } from 'react';
 import {
     destroy,
     index,
+    show,
     store,
     update,
 } from '@/actions/App/Http/Controllers/DepartemenController';
@@ -175,6 +177,13 @@ export default function DepartemensIndex({
                                         </td>
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">
+                                                <Link
+                                                    href={show.url(departemen.id)}
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    aria-label={`Lihat ${departemen.name}`}
+                                                >
+                                                    <Eye className="size-4" />
+                                                </Link>
                                                 <button
                                                     type="button"
                                                     onClick={() =>
