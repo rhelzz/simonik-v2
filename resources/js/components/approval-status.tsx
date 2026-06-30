@@ -1,6 +1,9 @@
 import { useForm } from '@inertiajs/react';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
-import { approve, reject } from '@/actions/App/Http/Controllers/ApprovalController';
+import {
+    approve,
+    reject,
+} from '@/actions/App/Http/Controllers/ApprovalController';
 import { cn } from '@/lib/utils';
 
 export type ApprovalData = {
@@ -66,7 +69,8 @@ export function ApprovalStatus({
                 <p className="text-sm text-muted">
                     oleh{' '}
                     <span className="font-medium text-ink">
-                        {ROLE_LABELS[approval.approver_role] ?? approval.approver_role}
+                        {ROLE_LABELS[approval.approver_role] ??
+                            approval.approver_role}
                     </span>
                 </p>
             )}

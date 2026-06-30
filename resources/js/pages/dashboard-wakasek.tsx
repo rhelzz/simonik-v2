@@ -96,14 +96,14 @@ function ComingSoonCard({
     module: string;
 }) {
     return (
-        <div className="bg-canvas rounded-xl border border-dashed p-5 opacity-60">
+        <div className="rounded-xl border border-dashed bg-canvas p-5 opacity-60">
             <div className="mb-3 flex items-center gap-3">
-                <span className="bg-primary-soft text-primary flex h-9 w-9 items-center justify-center rounded-lg">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-soft text-primary">
                     <Icon className="h-5 w-5" />
                 </span>
                 <div>
                     <p className="text-sm font-semibold">{title}</p>
-                    <span className="text-muted-foreground bg-muted rounded px-1.5 py-0.5 text-xs font-medium">
+                    <span className="text-muted-foreground rounded bg-muted px-1.5 py-0.5 text-xs font-medium">
                         {module} · Segera hadir
                     </span>
                 </div>

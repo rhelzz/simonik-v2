@@ -39,7 +39,9 @@ export default function JournalMonitorShow({
     records,
     performance,
 }: Props) {
-    const [selectedRecord, setSelectedRecord] = useState<JournalRecord | null>(null);
+    const [selectedRecord, setSelectedRecord] = useState<JournalRecord | null>(
+        null,
+    );
 
     return (
         <AppLayout title="Data Jurnal">
@@ -108,15 +110,16 @@ export default function JournalMonitorShow({
                             <h3 className="text-base font-bold text-ink">
                                 {selectedRecord.judul}
                             </h3>
-                            <p className="text-xs text-muted mt-1">
+                            <p className="mt-1 text-xs text-muted">
                                 {selectedRecord.dateLabel}
                             </p>
                         </div>
 
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted border-y border-line py-2">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 border-y border-line py-2 text-xs text-muted">
                             <span className="inline-flex items-center gap-1.5">
                                 <Clock className="size-3.5" />
-                                {selectedRecord.start_time} – {selectedRecord.end_time}
+                                {selectedRecord.start_time} –{' '}
+                                {selectedRecord.end_time}
                             </span>
                             <span className="inline-flex items-center gap-1.5">
                                 <Wrench className="size-3.5" />

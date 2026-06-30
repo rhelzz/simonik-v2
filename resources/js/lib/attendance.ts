@@ -11,6 +11,8 @@ export function attendanceLabel(status: string | null): string {
             return 'Izin';
         case 'sakit':
             return 'Sakit';
+        case 'libur':
+            return 'Libur';
         case 'alpha':
             return 'Alpha';
         default:
@@ -27,6 +29,8 @@ export function attendanceStyle(status: string | null): string {
             return 'bg-warning/15 text-warning';
         case 'sakit':
             return 'bg-primary/10 text-primary';
+        case 'libur':
+            return 'bg-cyan-500/10 text-cyan-500';
         case 'alpha':
             return 'bg-red-50 text-red-600';
         default:

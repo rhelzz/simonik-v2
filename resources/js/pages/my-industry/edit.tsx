@@ -131,7 +131,11 @@ export default function MyIndustryEdit({ industry }: { industry: Industry }) {
                                         id="radius"
                                         name="radius"
                                         value={rad}
-                                        onChange={(e) => setRad(parseInt(e.target.value) || 0)}
+                                        onChange={(e) =>
+                                            setRad(
+                                                parseInt(e.target.value) || 0,
+                                            )
+                                        }
                                         placeholder="100"
                                         className={inputClass}
                                         required
@@ -169,7 +173,7 @@ export default function MyIndustryEdit({ industry }: { industry: Industry }) {
                                     />
                                 </Field>
 
-                                <div className="sm:col-span-2 mt-2">
+                                <div className="mt-2 sm:col-span-2">
                                     <MapPicker
                                         latitude={lat}
                                         longitude={lng}

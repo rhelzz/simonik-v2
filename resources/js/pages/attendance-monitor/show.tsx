@@ -1,4 +1,11 @@
-import { ChevronDown, CalendarCheck, Clock, LogIn, LogOut, MapPin } from 'lucide-react';
+import {
+    ChevronDown,
+    CalendarCheck,
+    Clock,
+    LogIn,
+    LogOut,
+    MapPin,
+} from 'lucide-react';
 import { useState } from 'react';
 import { index } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { PerformanceSummary } from '@/components/performance-summary';

@@ -119,7 +119,8 @@ export default function MyIndustryShow({ industry, roster }: Props) {
                                     className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
                                 >
                                     <MapPin className="size-4" />
-                                    {industry.latitude}, {industry.longitude} ({industry.radius}m)
+                                    {industry.latitude}, {industry.longitude} (
+                                    {industry.radius}m)
                                 </a>
                             ) : (
                                 '—'

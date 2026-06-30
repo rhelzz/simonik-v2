@@ -10,13 +10,15 @@ interface MapViewerProps {
 export function MapViewer({ latitude, longitude, radius }: MapViewerProps) {
     const mapContainerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<any>(null);
-    const [leafletLoaded, setLeafletLoaded] = useState(() => typeof window !== 'undefined' && !!(window as any).L);
+    const [leafletLoaded, setLeafletLoaded] = useState(
+        () => typeof window !== 'undefined' && !!(window as any).L,
+    );
     const [loadingError, setLoadingError] = useState(false);
 
     useEffect(() => {
         if (leafletLoaded) {
-return;
-}
+            return;
+        }
 
         // Load leaflet CSS dynamically
         const cssId = 'leaflet-css';
@@ -54,21 +56,21 @@ return;
 
     useEffect(() => {
         if (!leafletLoaded || !mapContainerRef.current) {
-return;
-}
+            return;
+        }
 
         const L = (window as any).L;
 
         if (!L) {
-return;
-}
+            return;
+        }
 
         const lat = parseFloat(latitude?.toString());
         const lng = parseFloat(longitude?.toString());
 
         if (isNaN(lat) || isNaN(lng)) {
-return;
-}
+            return;
+        }
 
         // Initialize map (scroll wheel zoom disabled to prevent page scroll hijack)
         const map = L.map(mapContainerRef.current, {
@@ -101,7 +103,6 @@ return;
                 mapRef.current = null;
             }
         };
-         
     }, [leafletLoaded, latitude, longitude, radius]);
 
     if (loadingError) {
@@ -131,7 +132,7 @@ return;
     return (
         <div
             ref={mapContainerRef}
-            className="h-48 w-full rounded-2xl border border-line shadow-sm overflow-hidden z-10"
+            className="z-10 h-48 w-full overflow-hidden rounded-2xl border border-line shadow-sm"
         />
     );
 }

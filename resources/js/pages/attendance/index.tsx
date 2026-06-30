@@ -84,7 +84,11 @@ export default function AttendanceIndex({
         <AppLayout title="Absen Foto + Geo">
             <div className="grid gap-5 lg:grid-cols-5">
                 <div className="lg:col-span-2">
-                    <TodayCard today={today} todayLabel={todayLabel} industry={industry} />
+                    <TodayCard
+                        today={today}
+                        todayLabel={todayLabel}
+                        industry={industry}
+                    />
                 </div>
                 <section className="rounded-3xl bg-surface p-5 sm:p-6 lg:col-span-3">
                     <h2 className="text-base font-bold text-ink">
@@ -144,15 +148,20 @@ export default function AttendanceIndex({
                                                 </span>
                                             </td>
                                             <td className="py-3 text-ink/80">
-                                                <div className="flex items-center gap-1.5 flex-wrap">
-                                                    <span>{row.arrivalTime ?? '—'}</span>
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    <span>
+                                                        {row.arrivalTime ?? '—'}
+                                                    </span>
                                                     {row.isLate && (
                                                         <span className="inline-flex rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
                                                             Terlambat
                                                         </span>
                                                     )}
                                                     {row.isSuspect && (
-                                                        <span className="inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-800 dark:bg-rose-950/30 dark:text-rose-400" title="Koordinat atau akurasi GPS mencurigakan">
+                                                        <span
+                                                            className="inline-flex rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
+                                                            title="Koordinat atau akurasi GPS mencurigakan"
+                                                        >
                                                             Mencurigakan
                                                         </span>
                                                     )}
@@ -205,7 +214,7 @@ function TodayCard({
 
     return (
         <section className="rounded-3xl bg-surface p-5 sm:p-6">
-            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-3 mb-4">
+            <div className="mb-4 flex flex-col gap-1.5 border-b border-line pb-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted">
                     <CalendarCheck className="size-4" />
                     {todayLabel}
@@ -213,7 +222,10 @@ function TodayCard({
                 {hasJam && (
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
                         <Clock className="size-3.5" />
-                        <span>Jam Kerja: {industry.jam_masuk} - {industry.jam_pulang}</span>
+                        <span>
+                            Jam Kerja: {industry.jam_masuk} -{' '}
+                            {industry.jam_pulang}
+                        </span>
                     </div>
                 )}
             </div>
@@ -248,8 +260,10 @@ function PresentState({ today }: { today: AttendanceRecord }) {
             </div>
 
             {today.mode === 'wfa' && today.approval && (
-                <div className="rounded-2xl border border-line p-4 space-y-2 bg-canvas/30">
-                    <p className="text-xs font-semibold tracking-wider text-muted uppercase">Persetujuan Mode WFA</p>
+                <div className="space-y-2 rounded-2xl border border-line bg-canvas/30 p-4">
+                    <p className="text-xs font-semibold tracking-wider text-muted uppercase">
+                        Persetujuan Mode WFA
+                    </p>
                     <ApprovalStatus approval={today.approval} canAct={false} />
                 </div>
             )}
@@ -438,7 +452,8 @@ function CheckOutPanel() {
                     <p className="text-center text-xs text-muted">
                         {Number(form.data.latitude).toFixed(5)},{' '}
                         {Number(form.data.longitude).toFixed(5)}
-                        {form.data.gps_accuracy && ` (±${Math.round(Number(form.data.gps_accuracy))}m)`}
+                        {form.data.gps_accuracy &&
+                            ` (±${Math.round(Number(form.data.gps_accuracy))}m)`}
                     </p>
                 )}
                 {(geoError ||
@@ -552,15 +567,15 @@ function CheckInPanel() {
                 Belum absen hari ini
             </p>
 
-            <div className="flex rounded-xl bg-canvas p-1 border border-line">
+            <div className="flex rounded-xl border border-line bg-canvas p-1">
                 <button
                     type="button"
                     onClick={() => form.setData('mode', 'wfo')}
                     className={cn(
                         'flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all',
                         form.data.mode === 'wfo'
-                            ? 'bg-surface shadow text-primary'
-                            : 'text-muted hover:text-ink'
+                            ? 'bg-surface text-primary shadow'
+                            : 'text-muted hover:text-ink',
                     )}
                 >
                     Kerja dari Kantor (WFO)
@@ -571,8 +586,8 @@ function CheckInPanel() {
                     className={cn(
                         'flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all',
                         form.data.mode === 'wfa'
-                            ? 'bg-surface shadow text-primary'
-                            : 'text-muted hover:text-ink'
+                            ? 'bg-surface text-primary shadow'
+                            : 'text-muted hover:text-ink',
                     )}
                 >
                     Kerja dari Mana Saja (WFA)
@@ -580,10 +595,12 @@ function CheckInPanel() {
             </div>
 
             {form.data.mode === 'wfa' && (
-                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-primary space-y-1">
+                <div className="space-y-1 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-primary">
                     <p className="font-bold">Mode Kerja dari Mana Saja (WFA)</p>
-                    <p className="text-muted leading-relaxed">
-                        Geofencing dibebaskan. Absensi WFA Anda memerlukan persetujuan dari Pembimbing Industri atau Guru Pembimbing sebelum sah.
+                    <p className="leading-relaxed text-muted">
+                        Geofencing dibebaskan. Absensi WFA Anda memerlukan
+                        persetujuan dari Pembimbing Industri atau Guru
+                        Pembimbing sebelum sah.
                     </p>
                 </div>
             )}
@@ -624,7 +641,8 @@ function CheckInPanel() {
                     <p className="text-center text-xs text-muted">
                         {Number(form.data.latitude).toFixed(5)},{' '}
                         {Number(form.data.longitude).toFixed(5)}
-                        {form.data.gps_accuracy && ` (±${Math.round(Number(form.data.gps_accuracy))}m)`}
+                        {form.data.gps_accuracy &&
+                            ` (±${Math.round(Number(form.data.gps_accuracy))}m)`}
                     </p>
                 )}
                 {(geoError ||

@@ -47,10 +47,9 @@ function loadFaceApi(): Promise<FaceApiModule> {
     if (!faceApiPromise) {
         // fetch() uses the document origin (Laravel), bypassing Vite's server.
         // createObjectURL → import(blobUrl) avoids Vite interception entirely.
-        const importBlob = new Function(
-            'url',
-            'return import(url)',
-        ) as (url: string) => Promise<FaceApiModule>;
+        const importBlob = new Function('url', 'return import(url)') as (
+            url: string,
+        ) => Promise<FaceApiModule>;
 
         const origin = window.location.origin;
 

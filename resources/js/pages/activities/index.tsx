@@ -1,5 +1,13 @@
 import { Link, router } from '@inertiajs/react';
-import { Clock, Eye, NotebookPen, Pencil, Plus, Trash2, Wrench } from 'lucide-react';
+import {
+    Clock,
+    Eye,
+    NotebookPen,
+    Pencil,
+    Plus,
+    Trash2,
+    Wrench,
+} from 'lucide-react';
 import { useState } from 'react';
 import {
     create,
@@ -30,7 +38,9 @@ export default function ActivitiesIndex({
 }: {
     activities: Paginated<Activity>;
 }) {
-    const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+    const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
+        null,
+    );
 
     function remove(activity: Activity) {
         if (confirm(`Hapus jurnal "${activity.judul}"?`)) {
@@ -102,7 +112,9 @@ export default function ActivitiesIndex({
                                 <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
                                     <button
                                         type="button"
-                                        onClick={() => setSelectedActivity(activity)}
+                                        onClick={() =>
+                                            setSelectedActivity(activity)
+                                        }
                                         className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-ink/75 transition-colors hover:bg-canvas"
                                     >
                                         <Eye className="size-4" />
@@ -143,15 +155,16 @@ export default function ActivitiesIndex({
                             <h3 className="text-base font-bold text-ink">
                                 {selectedActivity.judul}
                             </h3>
-                            <p className="text-xs text-muted mt-1">
+                            <p className="mt-1 text-xs text-muted">
                                 {selectedActivity.dateLabel}
                             </p>
                         </div>
 
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted border-y border-line py-2">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 border-y border-line py-2 text-xs text-muted">
                             <span className="inline-flex items-center gap-1.5">
                                 <Clock className="size-3.5" />
-                                {selectedActivity.start_time} – {selectedActivity.end_time}
+                                {selectedActivity.start_time} –{' '}
+                                {selectedActivity.end_time}
                             </span>
                             <span className="inline-flex items-center gap-1.5">
                                 <Wrench className="size-3.5" />

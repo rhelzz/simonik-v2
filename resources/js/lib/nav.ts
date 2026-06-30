@@ -40,6 +40,7 @@ import { index as departemensIndex } from '@/actions/App/Http/Controllers/Depart
 import { index as guidesIndex } from '@/actions/App/Http/Controllers/GuideController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
+import { index as leaveRequestsIndex } from '@/actions/App/Http/Controllers/LeaveRequestController';
 import { show as myIndustryShow } from '@/actions/App/Http/Controllers/MyIndustryController';
 import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentController';
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
@@ -87,7 +88,7 @@ export const navSections: NavSection[] = [
             {
                 label: 'Pengajuan Libur',
                 icon: CalendarOff,
-                // M2.1 — belum tersedia
+                href: leaveRequestsIndex.url(),
                 roles: ['siswa'],
             },
             {

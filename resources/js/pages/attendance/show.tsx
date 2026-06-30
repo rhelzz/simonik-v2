@@ -120,7 +120,11 @@ export default function AttendanceShow({ attendance }: AttendanceShowProps) {
                         )}
                         <DetailItem
                             label="Mode Presensi"
-                            value={attendance.mode ? attendance.mode.toUpperCase() : 'WFO'}
+                            value={
+                                attendance.mode
+                                    ? attendance.mode.toUpperCase()
+                                    : 'WFO'
+                            }
                         />
                     </div>
 
@@ -149,7 +153,10 @@ export default function AttendanceShow({ attendance }: AttendanceShowProps) {
                         <h2 className="mb-4 text-base font-bold text-ink">
                             Persetujuan Mode WFA
                         </h2>
-                        <ApprovalStatus approval={attendance.approval} canAct={false} />
+                        <ApprovalStatus
+                            approval={attendance.approval}
+                            canAct={false}
+                        />
                     </section>
                 )}
 

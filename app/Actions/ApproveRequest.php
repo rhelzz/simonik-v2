@@ -3,6 +3,8 @@
 namespace App\Actions;
 
 use App\Models\Approval;
+use App\Models\Attendance;
+use App\Models\LeaveRequest;
 use App\Models\User;
 
 /**
@@ -24,6 +26,21 @@ class ApproveRequest
             'approver_id' => $approver->id,
             'note' => $note,
         ]);
+
+        if ($decision === Approval::STATUS_APPROVED && $approval->approvable instanceof LeaveRequest) {
+            $leaveRequest = $approval->approvable;
+            Attendance::updateOrCreate(
+                [
+                    'user_id' => $leaveRequest->user_id,
+                    'date' => $leaveRequest->date->format('Y-m-d'),
+                ],
+                [
+                    'status' => 'libur',
+                    'absenceReason' => $leaveRequest->reason,
+                    'description' => 'Libur disetujui oleh '.$approver->name.' ('.$approver->getRoleNames()->first().')',
+                ]
+            );
+        }
     }
 
     /**

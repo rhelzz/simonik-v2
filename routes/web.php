@@ -15,6 +15,7 @@ use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\JournalMonitorController;
+use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\MyIndustryController;
 use App\Http\Controllers\ParentController;
 use App\Http\Controllers\PasswordController;
@@ -116,6 +117,10 @@ Route::middleware('auth')->group(function () {
             ->parameters(['jurnal' => 'activity'])
             ->except('show')
             ->names('activities');
+
+        // Pengajuan Libur milik siswa.
+        Route::get('libur', [LeaveRequestController::class, 'index'])->name('leave-requests.index');
+        Route::post('libur', [LeaveRequestController::class, 'store'])->name('leave-requests.store');
     });
 
     // Approval engine — approve/reject (pembimbing, guru, kaprog).

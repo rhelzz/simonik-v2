@@ -330,19 +330,38 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
     - `test_student_check_out_wfa_mode_bypasses_geofencing`: Memverifikasi siswa dengan mode check-in `wfa` dapat melakukan check-out dari mana saja melewati geofencing.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 208/208 passed + 675 assertions**. `npm run lint` + `npm run types:check` lolos.
 
+### 33. M2.1 — Pengajuan Libur (Blueprint Modul)
+
+- **Backend:**
+  - Membuat model `LeaveRequest` dengan atribut `user_id`, `date`, dan `reason` (fillables dan casts terkonfigurasi).
+  - Menambahkan relasi polymorphic `approval` pada model `LeaveRequest` dan relasi `user` untuk mengidentifikasi siswa pengaju libur.
+  - Membuat database migration `2026_06_30_213853_create_leave_requests_table` dengan constraint `unique(['user_id', 'date'])` untuk mencegah duplikasi pengajuan di tanggal yang sama.
+  - Memperbarui class action `ApproveRequest` sehingga saat persetujuan pengajuan libur (`LeaveRequest`) disetujui (`approved`), sistem otomatis membuat atau memperbarui record `Attendance` pada tanggal tersebut dengan status `libur` (sah dan tercatat di riwayat presensi).
+  - Membuat `LeaveRequestController` dengan metode `index` (mengembalikan data pengajuan terpaginasi beserta status approval) dan `store` (menyimpan pengajuan libur baru dan otomatis menginisiasi alur `Approval::initiate()`).
+  - Menambahkan Form Request `StoreLeaveRequest` dengan custom `after()` validation hook untuk mengecek duplikasi tanggal di SQLite/MySQL secara andal.
+  - Mendaftarkan rute `/libur` di `routes/web.php` dalam middleware group `role:siswa`.
+- **Frontend:**
+  - Membuat halaman React `resources/js/pages/leave-requests/index.tsx` yang terdiri dari form pengajuan libur (pilihan tanggal & textarea alasan) dan daftar riwayat pengajuan libur terpaginasi dengan detail status persetujuan menggunakan komponen reusable `ApprovalStatus`.
+  - Mengintegrasikan navigasi sidebar di `resources/js/lib/nav.ts` untuk mengarahkan menu "Pengajuan Libur" ke rute yang baru dibuat.
+  - Memperbarui helper `resources/js/lib/attendance.ts` agar memetakan status `libur` dengan label "Libur" dan style badge `bg-cyan-500/10 text-cyan-500` yang premium.
+- **Tests:**
+  - Membuat test suite `LeaveRequestTest` (6 test, 17 assertions) untuk memverifikasi happy path pengajuan libur, penanganan error duplikasi tanggal, pembatasan akses non-siswa, pembuatan record kehadiran berstatus `libur` saat disetujui, dan tidak adanya efek samping kehadiran saat ditolak.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 214/214 passed + 692 assertions**. `npm run lint` + `npm run types:check` lolos.
+
 ---
 
 ## 📍 Current step
-**M1.4 Mode WFO/WFA + Approval WFA selesai.** Siswa sekarang dapat memilih mode presensi (WFO atau WFA). Mode WFA membebaskan batasan geofencing pada saat masuk dan pulang, namun secara otomatis memicu alur persetujuan baru via Approval Engine yang reusable. Status persetujuan ini terintegrasi secara visual pada dasbor presensi dan halaman detail siswa.
+**M2.1 Pengajuan Libur selesai.** Siswa sekarang dapat mengajukan libur magang via form mandiri. Pengajuan tersebut melewati Approval Engine (First-to-Approve Industri/Guru, fallback Kaprog). Jika disetujui, record kehadiran pada tanggal terkait otomatis dibuat/diperbarui dengan status `libur` dan tampil di riwayat presensi.
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M2.1** (Pengajuan Libur) — prasyarat M0.3 ✅ terpenuhi
+- **M2.2** (Sakit/Izin Multi-step) — prasyarat M0.3 ✅ terpenuhi
+- **M2.3** (Inbox Approval) — prasyarat M1.4, M2.1 ✅ terpenuhi
 - **M3.1** (Streak Engine) — prasyarat M0.2 ✅ terpenuhi
-- Fase 3 (Gamifikasi Jurnal) — independen, bisa langsung
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M2.1 Pengajuan Libur** — siswa mengajukan hari libur (magang libur) dengan persetujuan pembimbing/guru (Approval Engine).
-2. **M3.1 Streak Engine** — kalkulasi streak kehadiran berturut-turut untuk gamifikasi siswa.
+1. **M2.2 Sakit/Izin Multi-step** — alur persetujuan bertahap (Ortu -> Industri) untuk sakit/izin siswa.
+2. **M2.3 Inbox Approval** — satu inbox terpusat bagi pembimbing/guru/kaprog/ortu untuk memproses WFA, Libur, Sakit/Izin.
+3. **M3.1 Streak Engine** — kalkulasi streak kehadiran berturut-turut untuk gamifikasi siswa.

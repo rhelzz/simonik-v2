@@ -18,13 +18,15 @@ export function MapPicker({
     const mapRef = useRef<any>(null);
     const markerRef = useRef<any>(null);
     const circleRef = useRef<any>(null);
-    const [leafletLoaded, setLeafletLoaded] = useState(() => typeof window !== 'undefined' && !!(window as any).L);
+    const [leafletLoaded, setLeafletLoaded] = useState(
+        () => typeof window !== 'undefined' && !!(window as any).L,
+    );
     const [loadingError, setLoadingError] = useState(false);
 
     useEffect(() => {
         if (leafletLoaded) {
-return;
-}
+            return;
+        }
 
         // Load leaflet CSS dynamically
         const cssId = 'leaflet-css';
@@ -63,20 +65,23 @@ return;
     // Initialize Map
     useEffect(() => {
         if (!leafletLoaded || !mapContainerRef.current) {
-return;
-}
+            return;
+        }
 
         const L = (window as any).L;
 
         if (!L) {
-return;
-}
+            return;
+        }
 
         const defaultLat = parseFloat(latitude?.toString()) || -6.914744;
-        const defaultLng = parseFloat(longitude?.toString()) || 107.609810;
+        const defaultLng = parseFloat(longitude?.toString()) || 107.60981;
 
         // Initialize map
-        const map = L.map(mapContainerRef.current).setView([defaultLat, defaultLng], 16);
+        const map = L.map(mapContainerRef.current).setView(
+            [defaultLat, defaultLng],
+            16,
+        );
         mapRef.current = map;
 
         // Add Tile Layer
@@ -131,8 +136,8 @@ return;
     // Handle updates from inputs to map
     useEffect(() => {
         if (!leafletLoaded || !mapRef.current) {
-return;
-}
+            return;
+        }
 
         const lat = parseFloat(latitude?.toString());
         const lng = parseFloat(longitude?.toString());
@@ -160,8 +165,8 @@ return;
     // Handle radius updates
     useEffect(() => {
         if (!leafletLoaded || !circleRef.current) {
-return;
-}
+            return;
+        }
 
         circleRef.current.setRadius(radius);
     }, [radius, leafletLoaded]);
@@ -175,9 +180,11 @@ return;
                     onLocationChange(lat, lng);
                 },
                 (error) => {
-                    alert('Gagal mendeteksi lokasi perangkat: ' + error.message);
+                    alert(
+                        'Gagal mendeteksi lokasi perangkat: ' + error.message,
+                    );
                 },
-                { enableHighAccuracy: true }
+                { enableHighAccuracy: true },
             );
         } else {
             alert('Browser tidak mendukung pendeteksian lokasi.');
@@ -187,7 +194,8 @@ return;
     if (loadingError) {
         return (
             <div className="flex h-64 items-center justify-center rounded-2xl border border-line bg-canvas/30 text-sm text-red-500">
-                Gagal memuat pustaka peta Leaflet. Pastikan koneksi internet aktif.
+                Gagal memuat pustaka peta Leaflet. Pastikan koneksi internet
+                aktif.
             </div>
         );
     }
@@ -204,7 +212,9 @@ return;
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-muted uppercase">Pilih lokasi di peta</span>
+                <span className="text-xs font-semibold text-muted uppercase">
+                    Pilih lokasi di peta
+                </span>
                 <button
                     type="button"
                     onClick={handleGetCurrentLocation}
@@ -216,10 +226,11 @@ return;
             </div>
             <div
                 ref={mapContainerRef}
-                className="h-64 w-full rounded-2xl border border-line shadow-sm overflow-hidden z-10"
+                className="z-10 h-64 w-full overflow-hidden rounded-2xl border border-line shadow-sm"
             />
             <p className="text-xs text-muted">
-                Klik peta atau seret marker biru untuk memperbarui koordinat secara presisi.
+                Klik peta atau seret marker biru untuk memperbarui koordinat
+                secara presisi.
             </p>
         </div>
     );
