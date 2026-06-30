@@ -94,6 +94,7 @@ These are distilled from the Laravel Boost guidelines bundled with this project 
 - **Commit all changes together** when instructed. Don't automatically commit — wait for explicit instruction to stage all modified files and commit together in a single commit. When user says "commit and push", stage everything and create one commit with a descriptive message.
 - **Do not add a `Co-Authored-By` trailer** to commit messages.
 - Push to `main`.
-- **Keep two docs in sync** (both live in `docs/`):
+- **Keep three docs in sync** (all live in `docs/`):
   - **[`docs/PROGRESS.md`](docs/PROGRESS.md)** — living log of what's DONE. **Update after every commit/push**: append/adjust the current step and the next step(s) as a few best options. Single source of "where we are" in the migration from the legacy `backend/` + `frontend/` apps to this Inertia monolith.
   - **[`docs/ROADMAP.md`](docs/ROADMAP.md)** — project CONTEXT + future plan (key decisions, sidebar map, per-feature specs for "Soon" items). **Update when scope/plan/decisions change** (not every commit). When you finish a roadmap feature, move its detail from ROADMAP into PROGRESS.
+  - **[`docs/BLUEPRINT-MODULES.md`](docs/BLUEPRINT-MODULES.md)** — execution map for the advanced PKL blueprint features (Fase 0–6, 19 modules). **Whenever a blueprint module (M0.x–M6.x) is finished, tick its checkbox from `[ ]` to `[x]` in the "Checklist Status" section at the bottom of this file.** Do this as part of the same commit that closes the module — never leave the checklist stale.
