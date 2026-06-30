@@ -25,6 +25,7 @@ class UpdateMyIndustryRequest extends FormRequest
             'alamat' => ['required', 'string'],
             'longitude' => ['required', 'string', 'max:255'],
             'latitude' => ['required', 'string', 'max:255'],
+            'radius' => ['required', 'integer', 'min:10', 'max:10000'],
             'duration' => ['nullable', 'string', 'max:255'],
         ];
     }

@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { edit, index } from '@/actions/App/Http/Controllers/IndustryController';
+import { MapViewer } from '@/components/map-viewer';
 import { AppLayout } from '@/layouts/app-layout';
 
 type IndustryShowProps = {
@@ -11,6 +12,7 @@ type IndustryShowProps = {
         alamat: string;
         longitude: string;
         latitude: string;
+        radius: number;
         duration: string | null;
         guru: string | null;
         pembimbing: string | null;
@@ -99,11 +101,20 @@ export default function IndustryShow({
                             label="Koordinat"
                             value={
                                 industry.latitude && industry.longitude
-                                    ? `${industry.latitude}, ${industry.longitude}`
+                                    ? `${industry.latitude}, ${industry.longitude} (${industry.radius}m)`
                                     : null
                             }
                         />
                     </div>
+                    {industry.latitude && industry.longitude && (
+                        <div className="mt-6">
+                            <MapViewer
+                                latitude={industry.latitude}
+                                longitude={industry.longitude}
+                                radius={industry.radius}
+                            />
+                        </div>
+                    )}
                 </section>
 
                 {/* Pembimbing */}

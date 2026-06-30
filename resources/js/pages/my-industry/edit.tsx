@@ -1,10 +1,12 @@
 import { Form, Link } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import {
     show,
     update,
 } from '@/actions/App/Http/Controllers/MyIndustryController';
+import { MapPicker } from '@/components/map-picker';
 import { AppLayout } from '@/layouts/app-layout';
 
 type Industry = {
@@ -14,6 +16,7 @@ type Industry = {
     alamat: string;
     longitude: string;
     latitude: string;
+    radius: number;
     duration: string | null;
 };
 
@@ -21,6 +24,10 @@ const inputClass =
     'w-full rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none';
 
 export default function MyIndustryEdit({ industry }: { industry: Industry }) {
+    const [lat, setLat] = useState(industry.latitude || '-6.914744');
+    const [lng, setLng] = useState(industry.longitude || '107.609810');
+    const [rad, setRad] = useState(industry.radius || 100);
+
     return (
         <AppLayout title="Edit Industri Saya">
             <Form action={update.url()} method="put" className="space-y-8">
@@ -87,6 +94,23 @@ export default function MyIndustryEdit({ industry }: { industry: Industry }) {
                                     />
                                 </Field>
                                 <Field
+                                    label="Radius Jangkauan Presensi (meter)"
+                                    htmlFor="radius"
+                                    error={errors.radius}
+                                >
+                                    <input
+                                        type="number"
+                                        id="radius"
+                                        name="radius"
+                                        value={rad}
+                                        onChange={(e) => setRad(parseInt(e.target.value) || 0)}
+                                        placeholder="100"
+                                        className={inputClass}
+                                        required
+                                        min="10"
+                                    />
+                                </Field>
+                                <Field
                                     label="Latitude"
                                     htmlFor="latitude"
                                     error={errors.latitude}
@@ -94,7 +118,8 @@ export default function MyIndustryEdit({ industry }: { industry: Industry }) {
                                     <input
                                         id="latitude"
                                         name="latitude"
-                                        defaultValue={industry.latitude}
+                                        value={lat}
+                                        onChange={(e) => setLat(e.target.value)}
                                         placeholder="-6.914744"
                                         className={inputClass}
                                         required
@@ -108,12 +133,25 @@ export default function MyIndustryEdit({ industry }: { industry: Industry }) {
                                     <input
                                         id="longitude"
                                         name="longitude"
-                                        defaultValue={industry.longitude}
+                                        value={lng}
+                                        onChange={(e) => setLng(e.target.value)}
                                         placeholder="107.609810"
                                         className={inputClass}
                                         required
                                     />
                                 </Field>
+
+                                <div className="sm:col-span-2 mt-2">
+                                    <MapPicker
+                                        latitude={lat}
+                                        longitude={lng}
+                                        radius={rad}
+                                        onLocationChange={(newLat, newLng) => {
+                                            setLat(newLat.toFixed(6));
+                                            setLng(newLng.toFixed(6));
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </section>
 

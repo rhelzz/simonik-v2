@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreIndustryRequest;
+use App\Http\Requests\UpdateIndustryCoordinatesRequest;
 use App\Http\Requests\UpdateIndustryRequest;
 use App\Models\Industry;
 use App\Models\Pembimbing;
 use App\Models\Teacher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -92,6 +94,7 @@ class IndustryController extends Controller
                 'alamat' => $industry->alamat,
                 'longitude' => $industry->longitude,
                 'latitude' => $industry->latitude,
+                'radius' => $industry->radius,
                 'duration' => $industry->duration,
                 'guru' => $industry->teachers?->name,
                 'pembimbing' => $industry->pembimbingNormatif?->name,
@@ -120,6 +123,7 @@ class IndustryController extends Controller
                 'alamat' => $industry->alamat,
                 'longitude' => $industry->longitude,
                 'latitude' => $industry->latitude,
+                'radius' => $industry->radius,
                 'duration' => $industry->duration,
                 'pembimbing_id' => $industry->pembimbing_id,
                 'teacher_id' => $industry->teacher_id,
@@ -171,10 +175,23 @@ class IndustryController extends Controller
             'alamat' => $data['alamat'],
             'longitude' => $data['longitude'],
             'latitude' => $data['latitude'],
+            'radius' => $data['radius'] ?? 100,
             'duration' => $data['duration'] ?? null,
             'pembimbing_id' => $data['pembimbing_id'] ?? null,
             'teacher_id' => $data['teacher_id'] ?? null,
         ];
+    }
+
+    /**
+     * Perbarui koordinat & radius industri saja (multi-peran: admin, kaprog, guru, pembimbing).
+     */
+    public function updateCoordinates(UpdateIndustryCoordinatesRequest $request, Industry $industry): RedirectResponse
+    {
+        Gate::authorize('updateCoordinates', $industry);
+
+        $industry->update($request->validated());
+
+        return back()->with('success', 'Koordinat dan radius industri berhasil diperbarui.');
     }
 
     /**

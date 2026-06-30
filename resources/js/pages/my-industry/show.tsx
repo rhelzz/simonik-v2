@@ -15,6 +15,7 @@ import { show as journalShow } from '@/actions/App/Http/Controllers/JournalMonit
 import { edit } from '@/actions/App/Http/Controllers/MyIndustryController';
 import { statusLabels, statusStyles } from '@/components/dashboard/widgets';
 import type { StatusPkl } from '@/components/dashboard/widgets';
+import { MapViewer } from '@/components/map-viewer';
 import type { Performance } from '@/components/performance-summary';
 import { AppLayout } from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ type Industry = {
     alamat: string;
     longitude: string;
     latitude: string;
+    radius: number;
     duration: string | null;
     guru: string | null;
 };
@@ -110,13 +112,22 @@ export default function MyIndustryShow({ industry, roster }: Props) {
                                     className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
                                 >
                                     <MapPin className="size-4" />
-                                    Lihat di peta
+                                    {industry.latitude}, {industry.longitude} ({industry.radius}m)
                                 </a>
                             ) : (
                                 '—'
                             )}
                         </Detail>
                     </dl>
+                    {hasGeo && (
+                        <div className="mt-6">
+                            <MapViewer
+                                latitude={industry.latitude}
+                                longitude={industry.longitude}
+                                radius={industry.radius}
+                            />
+                        </div>
+                    )}
                 </section>
 
                 <section className="rounded-3xl bg-surface p-5 sm:p-6">

@@ -124,6 +124,11 @@ Route::middleware('auth')->group(function () {
         Route::post('approvals/{approval}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     });
 
+    // Update koordinat/radius industri (admin, kaprog, guru, pembimbing).
+    Route::patch('industries/{industry}/coordinates', [IndustryController::class, 'updateCoordinates'])
+        ->middleware('role:admin|kaprog|guru|pembimbing')
+        ->name('industries.update-coordinates');
+
     // Monitoring drill-down (Jurusan -> Kelas -> Murid -> rekap performa).
     Route::middleware('role:admin|kaprog|wakasek|guru|pembimbing|orangtua')->group(function () {
         // Data Absen.

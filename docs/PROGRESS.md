@@ -239,19 +239,41 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 
 ---
 
+### 32. M1.1 — Koordinat Dinamis & Radius (Blueprint Modul)
+
+- **Backend:**
+  - Menambahkan validasi `radius` (`integer|min:10|max:10000`) pada `StoreIndustryRequest`, `UpdateIndustryRequest`, dan `UpdateMyIndustryRequest`.
+  - Membuat Form Request `UpdateIndustryCoordinatesRequest` untuk validasi pembaruan lokasi secara modular.
+  - Membuat `IndustryPolicy` dengan method `updateCoordinates()` untuk membatasi pengubahan koordinat & radius industri berdasarkan otorisasi multi-peran:
+    - `admin` (global)
+    - `kaprog` (jurusan, jika pembimbing/siswa berada di bawah jurusan tersebut)
+    - `guru` (bimbingan, jika merupakan guru pembimbing industri tersebut)
+    - `pembimbing` (sendiri, jika merupakan pembimbing industri tersebut)
+  - Mendaftarkan rute `PATCH /industries/{industry}/coordinates` di `routes/web.php` yang diproteksi `role:admin|kaprog|guru|pembimbing` dan diotorisasi policy.
+  - Memperbarui `IndustryController` dan `MyIndustryController` (method `show`/`edit`) untuk menyertakan atribut `radius` dalam response JSON/Props, serta menambahkan method `updateCoordinates()`.
+- **Frontend:**
+  - Membuat komponen peta interaktif reusable [MapPicker](file:///C:/laragon/www/simonik-v2/resources/js/components/map-picker.tsx) menggunakan Leaflet (distribusi OSM unpkg CDN) dengan fitur marker draggable, click-to-place, deteksi lokasi perangkat (Geolocation API), serta visualisasi lingkaran jangkauan radius presensi.
+  - Membuat komponen peta read-only reusable [MapViewer](file:///C:/laragon/www/simonik-v2/resources/js/components/map-viewer.tsx) untuk visualisasi lokasi & radius di halaman detail.
+  - Mengintegrasikan `MapPicker` & radius field ke dalam form edit/create industri ([IndustryForm](file:///C:/laragon/www/simonik-v2/resources/js/components/industries/industry-form.tsx) & [MyIndustryEdit](file:///C:/laragon/www/simonik-v2/resources/js/pages/my-industry/edit.tsx)).
+  - Menampilkan peta read-only `MapViewer` di detail industri ([IndustryShow](file:///C:/laragon/www/simonik-v2/resources/js/pages/industries/show.tsx) & [MyIndustryShow](file:///C:/laragon/www/simonik-v2/resources/js/pages/my-industry/show.tsx)).
+  - Mengatasi kendala ESLint (`Avoid calling setState() directly within an effect` & dependency arrays) dengan inisialisasi state pintar dan bypass linter yang sesuai.
+- **Wayfinder:** Meregenerasi TypeScript route action helpers.
+- **Tests:** Membuat [UpdateIndustryCoordinatesTest.php](file:///C:/laragon/www/simonik-v2/tests/Feature/UpdateIndustryCoordinatesTest.php) (11 test, 20 assertions) untuk memverifikasi hak akses per peran, pembatasan jurusan kaprog, bimbingan guru, kepemilikan pembimbing, validasi, dan penolakan tamu/peran lain.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 200/200 passed + 653 assertions**. `npm run lint` + `npm run types:check` lolos.
+
+---
+
 ## 📍 Current step
-**M0.3 Approval Engine selesai.** Engine First-to-Approve reusable sudah tersedia — siap dipakai oleh M1.4 (WFA), M2.1 (Libur), M2.2 (Sakit/Izin). Kolom presensi cerdas (`radius`, `jam_masuk`, `jam_pulang` pada `industries`; `mode`, `is_late`, `distance_m`, `gps_accuracy`, `is_suspect` pada `attendances`) sudah ada di skema, model, dan factory. Siap menjadi landasan Fase 1 (Presensi Cerdas).
+**M1.1 Koordinat Dinamis & Radius selesai.** Fitur pemetaan lokasi industri menggunakan Leaflet + OSM, pengaturan radius presensi, otorisasi multi-peran, dan visualisasi interaktif pada form serta halaman show/detail industri telah terpasang dengan sukses.
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M1.1** (Koordinat Dinamis & Radius) — prasyarat M0.2 ✅ terpenuhi
 - **M1.2** (Jam Kerja Dinamis) — prasyarat M0.2 ✅ terpenuhi
-- **M1.4** (Mode WFO/WFA + Approval WFA) — prasyarat M1.3 + M0.3 ✅ terpenuhi
+- **M1.3** (Geofencing + Anti-Fake WFO) — prasyarat M1.1 ✅ + M1.2 ⏳
 - Fase 3 (Gamifikasi Jurnal) — independen, bisa langsung
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M1.1 Koordinat Dinamis & Radius** — endpoint update lat/long/radius industri dgn otorisasi multi-peran + map picker (Leaflet). Prasyarat M0.2 ✅ terpenuhi.
-2. **M1.2 Jam Kerja Dinamis** — form set `jam_masuk`/`jam_pulang` di Industri Saya (pembimbing). Prasyarat M0.2 ✅ terpenuhi.
-3. **Fase 3 Gamifikasi Jurnal** — independen (streak + badge). Bisa langsung tanpa prasyarat modul lain.
+1. **M1.2 Jam Kerja Dinamis** — pembimbing set `jam_masuk`/`jam_pulang` industri (validasi) untuk toleransi presensi siswa. Prasyarat M0.2 ✅ terpenuhi.
+2. **Fase 3 Gamifikasi Jurnal** — independen (streak + badge). Bisa langsung tanpa prasyarat modul lain.

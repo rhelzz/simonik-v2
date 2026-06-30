@@ -37,6 +37,7 @@ class MyIndustryController extends Controller
                 'alamat' => $industry->alamat,
                 'longitude' => $industry->longitude,
                 'latitude' => $industry->latitude,
+                'radius' => $industry->radius,
                 'duration' => $industry->duration,
                 'guru' => $industry->teachers?->name,
             ],
@@ -62,6 +63,7 @@ class MyIndustryController extends Controller
                 'alamat' => $industry->alamat,
                 'longitude' => $industry->longitude,
                 'latitude' => $industry->latitude,
+                'radius' => $industry->radius,
                 'duration' => $industry->duration,
             ],
         ]);

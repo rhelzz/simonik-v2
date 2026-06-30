@@ -1,7 +1,9 @@
 import { Form, Link } from '@inertiajs/react';
 import { LoaderCircle } from 'lucide-react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/IndustryController';
+import { MapPicker } from '@/components/map-picker';
 
 export type IndustryOptions = {
     teachers: { id: number; name: string }[];
@@ -14,6 +16,7 @@ export type IndustryDefaults = {
     alamat?: string;
     longitude?: string;
     latitude?: string;
+    radius?: number;
     duration?: string | null;
     teacher_id?: number | null;
     pembimbing_id?: number | null;
@@ -69,6 +72,10 @@ export function IndustryForm({
     industry?: IndustryDefaults;
     submitLabel: string;
 }) {
+    const [lat, setLat] = useState(industry?.latitude ?? '-6.914744');
+    const [lng, setLng] = useState(industry?.longitude ?? '107.609810');
+    const [rad, setRad] = useState(industry?.radius ?? 100);
+
     return (
         <Form action={action} method={method} className="space-y-8">
             {({ processing, errors }) => (
@@ -133,6 +140,23 @@ export function IndustryForm({
                                 />
                             </Field>
                             <Field
+                                label="Radius Jangkauan Presensi (meter)"
+                                htmlFor="radius"
+                                error={errors.radius}
+                            >
+                                <input
+                                    type="number"
+                                    id="radius"
+                                    name="radius"
+                                    value={rad}
+                                    onChange={(e) => setRad(parseInt(e.target.value) || 0)}
+                                    placeholder="100"
+                                    className={inputClass}
+                                    required
+                                    min="10"
+                                />
+                            </Field>
+                            <Field
                                 label="Latitude"
                                 htmlFor="latitude"
                                 error={errors.latitude}
@@ -140,7 +164,8 @@ export function IndustryForm({
                                 <input
                                     id="latitude"
                                     name="latitude"
-                                    defaultValue={industry?.latitude}
+                                    value={lat}
+                                    onChange={(e) => setLat(e.target.value)}
                                     placeholder="-6.914744"
                                     className={inputClass}
                                     required
@@ -154,12 +179,25 @@ export function IndustryForm({
                                 <input
                                     id="longitude"
                                     name="longitude"
-                                    defaultValue={industry?.longitude}
+                                    value={lng}
+                                    onChange={(e) => setLng(e.target.value)}
                                     placeholder="107.609810"
                                     className={inputClass}
                                     required
                                 />
                             </Field>
+
+                            <div className="sm:col-span-2 mt-2">
+                                <MapPicker
+                                    latitude={lat}
+                                    longitude={lng}
+                                    radius={rad}
+                                    onLocationChange={(newLat, newLng) => {
+                                        setLat(newLat.toFixed(6));
+                                        setLng(newLng.toFixed(6));
+                                    }}
+                                />
+                            </div>
                         </div>
                     </section>
 

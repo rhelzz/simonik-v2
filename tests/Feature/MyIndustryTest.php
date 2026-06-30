@@ -104,6 +104,7 @@ class MyIndustryTest extends TestCase
                 'alamat' => 'Jl. Baru No. 9',
                 'longitude' => '110.0',
                 'latitude' => '-7.0',
+                'radius' => 150,
                 'duration' => '3 Bulan',
             ])
             ->assertRedirect(route('my-industry.show'));
