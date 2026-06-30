@@ -57,10 +57,7 @@ function DetailItem({
     );
 }
 
-export default function StudentShow({
-    student,
-    relations,
-}: StudentShowProps) {
+export default function StudentShow({ student, relations }: StudentShowProps) {
     return (
         <AppLayout title={`Detail Siswa - ${student.name}`}>
             <div className="space-y-5">
@@ -94,17 +91,16 @@ export default function StudentShow({
                         <DetailItem
                             label="Jenis Kelamin"
                             value={
-                                student.gender === 'L' ? 'Laki-laki' : 'Perempuan'
+                                student.gender === 'L'
+                                    ? 'Laki-laki'
+                                    : 'Perempuan'
                             }
                         />
                         <DetailItem
                             label="Golongan Darah"
                             value={student.bloodType}
                         />
-                        <DetailItem
-                            label="Alamat"
-                            value={student.alamat}
-                        />
+                        <DetailItem label="Alamat" value={student.alamat} />
                     </div>
                 </section>
 
@@ -129,10 +125,7 @@ export default function StudentShow({
                             label="Jurusan"
                             value={relations.departemen}
                         />
-                        <DetailItem
-                            label="Kelas"
-                            value={relations.class}
-                        />
+                        <DetailItem label="Kelas" value={relations.class} />
                         <DetailItem
                             label="Industri"
                             value={relations.industri}

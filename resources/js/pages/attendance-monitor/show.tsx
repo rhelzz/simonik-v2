@@ -1,4 +1,5 @@
-import { CalendarCheck, Clock, LogIn, LogOut, MapPin } from 'lucide-react';
+import { ChevronDown, CalendarCheck, Clock, LogIn, LogOut, MapPin } from 'lucide-react';
+import { useState } from 'react';
 import { index } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { PerformanceSummary } from '@/components/performance-summary';
 import type { Performance } from '@/components/performance-summary';
@@ -96,6 +97,7 @@ export default function AttendanceMonitorShow({
 }
 
 function RecordCard({ record }: { record: AttendanceRecord }) {
+    const [expanded, setExpanded] = useState(false);
     const hasGeo = record.latitude !== null && record.longitude !== null;
     const hasPhoto = record.image !== null || record.departureImage !== null;
 
@@ -146,45 +148,62 @@ function RecordCard({ record }: { record: AttendanceRecord }) {
             )}
 
             {hasPhoto && (
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                        <p className="text-xs font-semibold tracking-widest text-muted uppercase">
-                            Foto Masuk
-                        </p>
-                        {record.image ? (
-                            <img
-                                src={record.image}
-                                alt="Foto absen masuk"
-                                className="aspect-4/3 w-full rounded-xl border border-line object-cover"
-                            />
-                        ) : (
-                            <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line text-muted">
-                                <CalendarCheck className="size-5" />
-                                <p className="text-xs font-medium">
-                                    Tidak ada foto
+                <div className="mt-3 space-y-3">
+                    <button
+                        onClick={() => setExpanded(!expanded)}
+                        className="inline-flex w-full items-center justify-between rounded-lg border border-line bg-canvas/50 px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-canvas"
+                    >
+                        <span>Lihat foto</span>
+                        <ChevronDown
+                            className={cn(
+                                'size-4 transition-transform',
+                                expanded && 'rotate-180',
+                            )}
+                        />
+                    </button>
+
+                    {expanded && (
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <p className="text-xs font-semibold tracking-widest text-muted uppercase">
+                                    Foto Masuk
                                 </p>
+                                {record.image ? (
+                                    <img
+                                        src={record.image}
+                                        alt="Foto absen masuk"
+                                        className="aspect-4/3 w-full rounded-xl border border-line object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line text-muted">
+                                        <CalendarCheck className="size-5" />
+                                        <p className="text-xs font-medium">
+                                            Tidak ada foto
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                    <div className="space-y-1.5">
-                        <p className="text-xs font-semibold tracking-widest text-muted uppercase">
-                            Foto Pulang
-                        </p>
-                        {record.departureImage ? (
-                            <img
-                                src={record.departureImage}
-                                alt="Foto absen pulang"
-                                className="aspect-4/3 w-full rounded-xl border border-line object-cover"
-                            />
-                        ) : (
-                            <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line text-muted">
-                                <Clock className="size-5" />
-                                <p className="text-xs font-medium">
-                                    Belum absen pulang
+                            <div className="space-y-1.5">
+                                <p className="text-xs font-semibold tracking-widest text-muted uppercase">
+                                    Foto Pulang
                                 </p>
+                                {record.departureImage ? (
+                                    <img
+                                        src={record.departureImage}
+                                        alt="Foto absen pulang"
+                                        className="aspect-4/3 w-full rounded-xl border border-line object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line text-muted">
+                                        <Clock className="size-5" />
+                                        <p className="text-xs font-medium">
+                                            Belum absen pulang
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

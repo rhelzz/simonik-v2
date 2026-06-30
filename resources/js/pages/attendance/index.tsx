@@ -17,7 +17,8 @@ import {
     checkOut,
     show as showUrl,
 } from '@/actions/App/Http/Controllers/AttendanceController';
-import { PhotoCapture } from '@/components/photo-capture';
+import type { EmotionKey } from '@/components/photo-capture';
+import { EMOTION_INFO, PhotoCapture } from '@/components/photo-capture';
 import { Modal } from '@/components/ui/modal';
 import { Pagination } from '@/components/ui/pagination';
 import { AppLayout } from '@/layouts/app-layout';
@@ -34,7 +35,9 @@ type AttendanceRecord = {
     departureTime: string | null;
     absenceReason: string | null;
     image: string | null;
+    emotion: EmotionKey | null;
     departureImage: string | null;
+    departureEmotion: EmotionKey | null;
     latitude: string | null;
     longitude: string | null;
 };
@@ -44,6 +47,17 @@ type AttendanceIndexProps = {
     history: Paginated<AttendanceRecord>;
     todayLabel: string;
 };
+
+function EmotionBadge({ emotion }: { emotion: EmotionKey }) {
+    const info = EMOTION_INFO[emotion];
+
+    return (
+        <div className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+            <span aria-hidden>{info.emoji}</span>
+            <span>{info.label}</span>
+        </div>
+    );
+}
 
 export default function AttendanceIndex({
     today,
@@ -195,22 +209,34 @@ function PresentState({ today }: { today: AttendanceRecord }) {
                         <p className="text-xs font-semibold tracking-widest text-muted uppercase">
                             Foto Masuk
                         </p>
-                        <img
-                            src={today.image}
-                            alt="Foto absen masuk"
-                            className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
-                        />
+                        <div className="relative">
+                            <img
+                                src={today.image}
+                                alt="Foto absen masuk"
+                                className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
+                            />
+                            {today.emotion && (
+                                <EmotionBadge emotion={today.emotion} />
+                            )}
+                        </div>
                     </div>
                     <div className="space-y-1.5">
                         <p className="text-xs font-semibold tracking-widest text-muted uppercase">
                             Foto Pulang
                         </p>
                         {today.departureImage ? (
-                            <img
-                                src={today.departureImage}
-                                alt="Foto absen pulang"
-                                className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
-                            />
+                            <div className="relative">
+                                <img
+                                    src={today.departureImage}
+                                    alt="Foto absen pulang"
+                                    className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
+                                />
+                                {today.departureEmotion && (
+                                    <EmotionBadge
+                                        emotion={today.departureEmotion}
+                                    />
+                                )}
+                            </div>
                         ) : (
                             <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-muted">
                                 <LogOut className="size-5" />
@@ -250,7 +276,10 @@ function AbsenceState({ today }: { today: AttendanceRecord }) {
 }
 
 function CheckOutPanel() {
-    const form = useForm<{ image: File | null }>({ image: null });
+    const form = useForm<{ image: File | null; emotion: string }>({
+        image: null,
+        emotion: '',
+    });
 
     function submit(event: FormEvent) {
         event.preventDefault();
@@ -265,7 +294,10 @@ function CheckOutPanel() {
         <form onSubmit={submit} className="space-y-3">
             <p className="text-sm font-semibold text-ink">Absen pulang</p>
             <PhotoCapture
-                onCapture={(file) => form.setData('image', file)}
+                onCapture={(file, emotion) => {
+                    form.setData('image', file);
+                    form.setData('emotion', emotion ?? '');
+                }}
                 disabled={form.processing}
             />
             {form.errors.image && (
@@ -299,7 +331,14 @@ function CheckInPanel() {
         latitude: string;
         longitude: string;
         description: string;
-    }>({ image: null, latitude: '', longitude: '', description: '' });
+        emotion: string;
+    }>({
+        image: null,
+        latitude: '',
+        longitude: '',
+        description: '',
+        emotion: '',
+    });
 
     const hasLocation = form.data.latitude !== '' && form.data.longitude !== '';
 
@@ -359,7 +398,10 @@ function CheckInPanel() {
             </p>
 
             <PhotoCapture
-                onCapture={(file) => form.setData('image', file)}
+                onCapture={(file, emotion) => {
+                    form.setData('image', file);
+                    form.setData('emotion', emotion ?? '');
+                }}
                 disabled={form.processing}
             />
             {form.errors.image && (

@@ -47,7 +47,9 @@ export default function DepartemenShow({
                             <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
                                 Slug
                             </p>
-                            <p className="text-sm text-ink">{departemen.slug}</p>
+                            <p className="text-sm text-ink">
+                                {departemen.slug}
+                            </p>
                         </div>
                         <div className="space-y-1.5">
                             <p className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">

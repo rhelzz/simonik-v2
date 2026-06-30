@@ -178,7 +178,9 @@ export default function DepartemensIndex({
                                         <td className="py-3">
                                             <div className="flex items-center justify-end gap-1">
                                                 <Link
-                                                    href={show.url(departemen.id)}
+                                                    href={show.url(
+                                                        departemen.id,
+                                                    )}
                                                     className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
                                                     aria-label={`Lihat ${departemen.name}`}
                                                 >

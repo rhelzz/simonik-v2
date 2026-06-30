@@ -1,6 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeft, Clock, MapPin } from 'lucide-react';
 import { index } from '@/actions/App/Http/Controllers/AttendanceController';
+import type { EmotionKey } from '@/components/photo-capture';
+import { EMOTION_INFO } from '@/components/photo-capture';
 import { AppLayout } from '@/layouts/app-layout';
 import { attendanceLabel, attendanceStyle } from '@/lib/attendance';
 import { cn } from '@/lib/utils';
@@ -15,12 +17,25 @@ type AttendanceShowProps = {
         departureTime: string | null;
         absenceReason: string | null;
         image: string | null;
+        emotion: EmotionKey | null;
         departureImage: string | null;
+        departureEmotion: EmotionKey | null;
         latitude: string | null;
         longitude: string | null;
         description: string | null;
     };
 };
+
+function EmotionBadge({ emotion }: { emotion: EmotionKey }) {
+    const info = EMOTION_INFO[emotion];
+
+    return (
+        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm">
+            <span aria-hidden>{info.emoji}</span>
+            <span>{info.label}</span>
+        </div>
+    );
+}
 
 function DetailItem({
     label,
@@ -127,22 +142,38 @@ export default function AttendanceShow({ attendance }: AttendanceShowProps) {
                                 <p className="text-xs font-semibold tracking-widest text-muted uppercase">
                                     Foto Masuk
                                 </p>
-                                <img
-                                    src={attendance.image}
-                                    alt="Foto absen masuk"
-                                    className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
-                                />
+                                <div className="relative">
+                                    <img
+                                        src={attendance.image}
+                                        alt="Foto absen masuk"
+                                        className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
+                                    />
+                                    {attendance.emotion && (
+                                        <EmotionBadge
+                                            emotion={attendance.emotion}
+                                        />
+                                    )}
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <p className="text-xs font-semibold tracking-widest text-muted uppercase">
                                     Foto Pulang
                                 </p>
                                 {attendance.departureImage ? (
-                                    <img
-                                        src={attendance.departureImage}
-                                        alt="Foto absen pulang"
-                                        className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
-                                    />
+                                    <div className="relative">
+                                        <img
+                                            src={attendance.departureImage}
+                                            alt="Foto absen pulang"
+                                            className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
+                                        />
+                                        {attendance.departureEmotion && (
+                                            <EmotionBadge
+                                                emotion={
+                                                    attendance.departureEmotion
+                                                }
+                                            />
+                                        )}
+                                    </div>
                                 ) : (
                                     <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-muted">
                                         <Clock className="size-5" />

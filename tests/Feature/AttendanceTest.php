@@ -102,6 +102,8 @@ class AttendanceTest extends TestCase
 
     public function test_student_can_check_out(): void
     {
+        Storage::fake('public');
+
         $siswa = $this->siswa();
         $attendance = Attendance::factory()->create([
             'user_id' => $siswa->id,
@@ -111,7 +113,9 @@ class AttendanceTest extends TestCase
         ]);
 
         $this->actingAs($siswa)
-            ->post('/absen/pulang')
+            ->post('/absen/pulang', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+            ])
             ->assertSessionHas('success');
 
         $this->assertNotNull($attendance->fresh()->departureTime);
@@ -119,8 +123,12 @@ class AttendanceTest extends TestCase
 
     public function test_check_out_requires_prior_check_in(): void
     {
+        Storage::fake('public');
+
         $this->actingAs($this->siswa())
-            ->post('/absen/pulang')
+            ->post('/absen/pulang', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+            ])
             ->assertSessionHas('error');
     }
 

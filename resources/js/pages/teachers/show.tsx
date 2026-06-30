@@ -88,7 +88,10 @@ export default function TeacherShow({
                             ) : (
                                 <ul className="space-y-2">
                                     {industries.map((industry) => (
-                                        <li key={industry.id} className="text-sm text-ink">
+                                        <li
+                                            key={industry.id}
+                                            className="text-sm text-ink"
+                                        >
                                             • {industry.name}
                                         </li>
                                     ))}

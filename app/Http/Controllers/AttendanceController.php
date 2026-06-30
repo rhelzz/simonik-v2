@@ -56,6 +56,7 @@ class AttendanceController extends Controller
             'arrivalTime' => Carbon::now()->format('H:i:s'),
             'status' => 'hadir',
             'image' => $path,
+            'emotion' => $validated['emotion'] ?? null,
             'latitude' => $validated['latitude'],
             'longitude' => $validated['longitude'],
             'description' => $validated['description'] ?? null,
@@ -96,9 +97,12 @@ class AttendanceController extends Controller
 
         $path = $request->file('image')->store('attendances', 'public');
 
+        $validated = $request->validated();
+
         $today->update([
             'departureTime' => Carbon::now()->format('H:i:s'),
             'departure_image' => $path,
+            'departure_emotion' => $validated['emotion'] ?? null,
         ]);
 
         return back()->with('success', 'Absen pulang berhasil direkam.');
@@ -158,7 +162,9 @@ class AttendanceController extends Controller
             'departureTime' => $attendance->departureTime ? mb_substr($attendance->departureTime, 0, 5) : null,
             'absenceReason' => $attendance->absenceReason,
             'image' => $attendance->image,
+            'emotion' => $attendance->emotion,
             'departureImage' => $attendance->departure_image,
+            'departureEmotion' => $attendance->departure_emotion,
             'latitude' => $attendance->latitude,
             'longitude' => $attendance->longitude,
             'description' => $attendance->description,

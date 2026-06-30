@@ -20,6 +20,7 @@ class CheckOutRequest extends FormRequest
     {
         return [
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'emotion' => ['nullable', 'string', 'in:neutral,happy,sad,angry,fearful,disgusted,surprised'],
         ];
     }
 

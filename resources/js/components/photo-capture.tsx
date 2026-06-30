@@ -1,23 +1,146 @@
 import { Camera, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-/**
- * Pengambilan foto absen via kamera langsung (getUserMedia) sebagai bukti
- * kehadiran — preview & hasil di-mirror agar sesuai pandangan pengguna.
- * Hasil selalu berupa `File` yang dikirim ke parent lewat `onCapture`.
- */
+export type EmotionKey =
+    | 'neutral'
+    | 'happy'
+    | 'sad'
+    | 'angry'
+    | 'fearful'
+    | 'disgusted'
+    | 'surprised';
+
+export const EMOTION_INFO: Record<
+    EmotionKey,
+    { emoji: string; label: string; color: string }
+> = {
+    happy: { emoji: '😊', label: 'Senang', color: '#16a34a' },
+    sad: { emoji: '😢', label: 'Sedih', color: '#2563eb' },
+    angry: { emoji: '😠', label: 'Marah', color: '#dc2626' },
+    fearful: { emoji: '😨', label: 'Takut', color: '#7c3aed' },
+    disgusted: { emoji: '🤢', label: 'Jijik', color: '#ea580c' },
+    surprised: { emoji: '😮', label: 'Kaget', color: '#ca8a04' },
+    neutral: { emoji: '😐', label: 'Netral', color: '#4b5563' },
+};
+
+/** Minimal typing for the subset of face-api.js we use at runtime. */
+interface FaceNet {
+    loadFromUri(uri: string): Promise<void>;
+}
+interface FaceApiModule {
+    nets: { tinyFaceDetector: FaceNet; faceExpressionNet: FaceNet };
+    TinyFaceDetectorOptions: new (opts: { inputSize: number }) => unknown;
+    detectSingleFace(
+        input: HTMLVideoElement,
+        options: unknown,
+    ): {
+        withFaceExpressions(): Promise<
+            { expressions: Record<EmotionKey, number> } | undefined
+        >;
+    };
+}
+
+/** Loaded once per page lifecycle, reused across camera opens. */
+let faceApiPromise: Promise<FaceApiModule> | null = null;
+
+function loadFaceApi(): Promise<FaceApiModule> {
+    if (!faceApiPromise) {
+        // fetch() uses the document origin (Laravel), bypassing Vite's server.
+        // createObjectURL → import(blobUrl) avoids Vite interception entirely.
+        const importBlob = new Function(
+            'url',
+            'return import(url)',
+        ) as (url: string) => Promise<FaceApiModule>;
+
+        const origin = window.location.origin;
+
+        faceApiPromise = fetch('/libs/face-api.esm.js')
+            .then((r) => {
+                if (!r.ok) {
+                    throw new Error(`HTTP ${r.status}`);
+                }
+
+                return r.blob();
+            })
+            .then((blob) => {
+                const blobUrl = URL.createObjectURL(blob);
+
+                return importBlob(blobUrl);
+            })
+            .then(async (faceapi) => {
+                await Promise.all([
+                    faceapi.nets.tinyFaceDetector.loadFromUri(
+                        `${origin}/models`,
+                    ),
+                    faceapi.nets.faceExpressionNet.loadFromUri(
+                        `${origin}/models`,
+                    ),
+                ]);
+
+                return faceapi;
+            });
+    }
+
+    return faceApiPromise;
+}
+
+function drawEmotionBadge(
+    ctx: CanvasRenderingContext2D,
+    canvasWidth: number,
+    emotion: EmotionKey,
+): void {
+    const info = EMOTION_INFO[emotion];
+    const text = `${info.emoji} ${info.label}`;
+    const fontSize = Math.max(18, Math.round(canvasWidth * 0.042));
+    const padH = Math.round(fontSize * 0.75);
+    const padV = Math.round(fontSize * 0.5);
+    const margin = Math.round(canvasWidth * 0.025);
+
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.textBaseline = 'middle';
+
+    const tw = ctx.measureText(text).width;
+    const bw = tw + padH * 2;
+    const bh = fontSize + padV * 2;
+    const x = canvasWidth - bw - margin;
+    const y = margin;
+    const r = bh / 2;
+
+    // Pill background (semi-transparent)
+    ctx.fillStyle = info.color + 'dd';
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + bw, y, x + bw, y + bh, r);
+    ctx.arcTo(x + bw, y + bh, x, y + bh, r);
+    ctx.arcTo(x, y + bh, x, y, r);
+    ctx.arcTo(x, y, x + bw, y, r);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(text, x + padH, y + bh / 2);
+}
+
 export function PhotoCapture({
     onCapture,
     disabled = false,
 }: {
-    onCapture: (file: File | null) => void;
+    onCapture: (file: File | null, emotion?: EmotionKey | null) => void;
     disabled?: boolean;
 }) {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const emotionRef = useRef<EmotionKey | null>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [detectedEmotion, setDetectedEmotion] = useState<EmotionKey | null>(
+        null,
+    );
+    const [modelsLoading, setModelsLoading] = useState(false);
 
+    // Attach stream to video element
     useEffect(() => {
         if (stream && videoRef.current) {
             videoRef.current.srcObject = stream;
@@ -25,12 +148,97 @@ export function PhotoCapture({
         }
 
         return () => {
-            stream?.getTracks().forEach((track) => track.stop());
+            stream?.getTracks().forEach((t) => t.stop());
+        };
+    }, [stream]);
+
+    // Start emotion detection while camera is live
+    useEffect(() => {
+        if (!stream) {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setDetectedEmotion(null);
+            emotionRef.current = null;
+
+            return;
+        }
+
+        setModelsLoading(true);
+        let alive = true;
+
+        loadFaceApi()
+            .then((faceapi) => {
+                if (!alive) {
+                    return;
+                }
+
+                setModelsLoading(false);
+                console.log('[emotion] face-api loaded, starting detection');
+
+                intervalRef.current = setInterval(async () => {
+                    const vid = videoRef.current;
+
+                    if (!vid || !alive || vid.videoWidth === 0) {
+                        console.log('[emotion] skip', {
+                            hasVid: !!vid,
+                            alive,
+                            vw: vid?.videoWidth,
+                        });
+
+                        return;
+                    }
+
+                    try {
+                        const result = await faceapi
+                            .detectSingleFace(
+                                vid,
+                                new faceapi.TinyFaceDetectorOptions({
+                                    inputSize: 224,
+                                }),
+                            )
+                            .withFaceExpressions();
+
+                        console.log('[emotion] result', result);
+
+                        if (result && alive) {
+                            const entries = Object.entries(
+                                result.expressions,
+                            ) as [EmotionKey, number][];
+                            const dominant = entries.reduce((a, b) =>
+                                a[1] >= b[1] ? a : b,
+                            )[0];
+                            setDetectedEmotion(dominant);
+                            emotionRef.current = dominant;
+                        }
+                    } catch (e) {
+                        console.error('[emotion] detect error', e);
+                    }
+                }, 600);
+            })
+            .catch((err: unknown) => {
+                if (!alive) {
+                    return;
+                }
+
+                setModelsLoading(false);
+                const detail = err instanceof Error ? err.message : String(err);
+                setError(`Gagal memuat detektor emosi: ${detail}`);
+            });
+
+        return () => {
+            alive = false;
+
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
         };
     }, [stream]);
 
     function stopStream() {
-        stream?.getTracks().forEach((track) => track.stop());
+        stream?.getTracks().forEach((t) => t.stop());
         setStream(null);
     }
 
@@ -116,10 +324,22 @@ export function PhotoCapture({
         canvas.height = video.videoHeight;
         const ctx = canvas.getContext('2d');
 
-        if (ctx) {
-            ctx.translate(canvas.width, 0);
-            ctx.scale(-1, 1);
-            ctx.drawImage(video, 0, 0);
+        if (!ctx) {
+            return;
+        }
+
+        // Mirror horizontally to match the live preview
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0);
+
+        // Reset transform before drawing the badge
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        const emotion = emotionRef.current;
+
+        if (emotion) {
+            drawEmotionBadge(ctx, canvas.width, emotion);
         }
 
         canvas.toBlob(
@@ -132,7 +352,7 @@ export function PhotoCapture({
                     type: 'image/jpeg',
                 });
                 setPreview(URL.createObjectURL(file));
-                onCapture(file);
+                onCapture(file, emotion);
                 stopStream();
             },
             'image/jpeg',
@@ -142,7 +362,8 @@ export function PhotoCapture({
 
     function reset() {
         setPreview(null);
-        onCapture(null);
+        emotionRef.current = null;
+        onCapture(null, null);
     }
 
     return (
@@ -155,12 +376,33 @@ export function PhotoCapture({
                         className="size-full object-cover"
                     />
                 ) : stream ? (
-                    <video
-                        ref={videoRef}
-                        playsInline
-                        muted
-                        className="size-full scale-x-[-1] object-cover"
-                    />
+                    <>
+                        <video
+                            ref={videoRef}
+                            playsInline
+                            muted
+                            className="size-full scale-x-[-1] object-cover"
+                        />
+
+                        {/* Live emotion badge overlay */}
+                        {detectedEmotion && (
+                            <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm">
+                                <span aria-hidden>
+                                    {EMOTION_INFO[detectedEmotion].emoji}
+                                </span>
+                                <span>
+                                    {EMOTION_INFO[detectedEmotion].label}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Model loading indicator */}
+                        {modelsLoading && (
+                            <div className="absolute bottom-2.5 left-2.5 rounded-full bg-black/50 px-2.5 py-1 text-xs text-white/80">
+                                Memuat detektor emosi…
+                            </div>
+                        )}
+                    </>
                 ) : (
                     <div className="grid size-full place-items-center text-center">
                         <div className="flex flex-col items-center gap-1 text-muted">

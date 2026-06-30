@@ -18,7 +18,9 @@ use Illuminate\Support\Carbon;
  * @property string|null $arrivalTime
  * @property string|null $absenceReason
  * @property string|null $image
+ * @property string|null $emotion
  * @property string|null $departure_image
+ * @property string|null $departure_emotion
  * @property string|null $longitude
  * @property string|null $latitude
  * @property string|null $status
@@ -34,7 +36,9 @@ use Illuminate\Support\Carbon;
     'arrivalTime',
     'absenceReason',
     'image',
+    'emotion',
     'departure_image',
+    'departure_emotion',
     'longitude',
     'latitude',
     'status',

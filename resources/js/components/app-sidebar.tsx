@@ -28,6 +28,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
     useEffect(() => {
         const saved = sessionStorage.getItem(NAV_SCROLL_KEY);
+
         if (saved && navRef.current) {
             navRef.current.scrollTop = Number(saved);
         }
@@ -35,7 +36,10 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
     function saveScroll() {
         if (navRef.current) {
-            sessionStorage.setItem(NAV_SCROLL_KEY, String(navRef.current.scrollTop));
+            sessionStorage.setItem(
+                NAV_SCROLL_KEY,
+                String(navRef.current.scrollTop),
+            );
         }
     }
 
@@ -61,7 +65,11 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
             </Link>
 
             {/* Navigation */}
-            <nav ref={navRef} onScroll={saveScroll} className="mt-4 scrollbar-slim min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-3 pb-2">
+            <nav
+                ref={navRef}
+                onScroll={saveScroll}
+                className="mt-4 scrollbar-slim min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-3 pb-2"
+            >
                 {sections.map((section) => (
                     <div key={section.title} className="space-y-1">
                         <p className="px-3 pb-1 text-[0.65rem] font-semibold tracking-[0.12em] text-muted uppercase">

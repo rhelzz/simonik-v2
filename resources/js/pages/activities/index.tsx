@@ -1,12 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import {
-    Clock,
-    NotebookPen,
-    Pencil,
-    Plus,
-    Trash2,
-    Wrench,
-} from 'lucide-react';
+import { Clock, NotebookPen, Pencil, Plus, Trash2, Wrench } from 'lucide-react';
 import {
     create,
     destroy,

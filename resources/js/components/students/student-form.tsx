@@ -91,10 +91,14 @@ export function StudentForm({
     const [showPassword, setShowPassword] = useState(false);
 
     const passwordMatch =
-        password && passwordConfirmation ? password === passwordConfirmation : null;
+        password && passwordConfirmation
+            ? password === passwordConfirmation
+            : null;
 
     const filteredClasses = selectedDepartemen
-        ? options.classes.filter((cls) => cls.departemen_id === selectedDepartemen)
+        ? options.classes.filter(
+              (cls) => cls.departemen_id === selectedDepartemen,
+          )
         : options.classes;
 
     return (
@@ -211,7 +215,7 @@ export function StudentForm({
                                                             !showPassword,
                                                         )
                                                     }
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted transition-colors hover:text-ink"
+                                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted transition-colors hover:text-ink"
                                                 >
                                                     {showPassword ? (
                                                         <X className="size-4" />

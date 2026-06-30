@@ -1,9 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeft, Pencil } from 'lucide-react';
-import {
-    edit,
-    index,
-} from '@/actions/App/Http/Controllers/IndustryController';
+import { edit, index } from '@/actions/App/Http/Controllers/IndustryController';
 import { AppLayout } from '@/layouts/app-layout';
 
 type IndustryShowProps = {
@@ -57,7 +54,10 @@ function DetailItem({
     );
 }
 
-export default function IndustryShow({ industry, students }: IndustryShowProps) {
+export default function IndustryShow({
+    industry,
+    students,
+}: IndustryShowProps) {
     return (
         <AppLayout title={`Detail Industri - ${industry.name}`}>
             <div className="space-y-5">

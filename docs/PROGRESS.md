@@ -192,10 +192,19 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Tests**: `IndustryTest` ditulis ulang (tanpa akun/email/role); `Attendance/JournalMonitorTest` buang test verify + asersi `pending`→`total`, `summary/canVerify`→`performance`; baru **`MyIndustryTest`** (6 test: akses, roster, empty-state, update). 
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 174 test passed**. ESLint + Prettier + tsc + `vite build` lolos. `migrate:fresh --seed` sukses (7 role, `industries` tanpa `user_id`, tanpa akun industri).
 
+### 28. Deteksi emosi pada absensi foto (face-api.js)
+- **Deteksi real-time** (live badge overlay pada `<video>`): `@vladmandic/face-api` (fork terawat dari face-api.js, bundel TF.js sendiri). Library dilayani sebagai **static asset** (`public/libs/face-api.esm.js`) dan di-load via `new Function('return import("/libs/face-api.esm.js")')` agar Vite **tidak** menyentuhnya (menghindari konflik bundler dengan TensorFlow.js internal). Model `TinyFaceDetector` + `FaceExpressionNet` (~510KB total) di `public/models/`. Detection loop setiap 600ms via `setInterval`.
+- **Badge di-bake ke foto** (permanen): `drawEmotionBadge()` menggambar pill berwarna (emoji + label) ke Canvas sebelum `canvas.toBlob()` → JPEG final sudah mengandung badge.
+- **Skema**: migration baru `add_emotion_to_attendances_table` → `emotion` (after `image`) + `departure_emotion` (after `departure_image`), keduanya `string nullable`.
+- **Backend**: `CheckInRequest`/`CheckOutRequest` + validasi `emotion` (nullable, in: 7 nilai enum); `AttendanceController::checkIn` simpan `emotion`, `checkOut` simpan `departure_emotion`; `present()` kirim kedua field ke Inertia.
+- **Frontend**: `components/photo-capture.tsx` — ekspor `EmotionKey` + `EMOTION_INFO` (emoji/label/warna per 7 emosi); prop `onCapture(file, emotion?)`. `pages/attendance/index.tsx` + `show.tsx` tampilkan `EmotionBadge` overlay pada foto (absolute positioned pill), dikirim saat form submit.
+- **Fix kritis Vite HMR**: mengganti `type FaceApiModule = typeof import('@vladmandic/face-api')` dengan inline interface — bahkan type-only import dari paket ini membuat Vite gagal reload modul saat HMR. Seluruh referensi ke `@vladmandic/face-api` dihilangkan dari kode.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 174 test passed**. ESLint (termasuk `react-hooks/set-state-in-effect` suppress di 1 baris intentional) + tsc + Prettier lolos.
+
 ---
 
 ## 📍 Current step
-**Alur PKL end-to-end lengkap**: master data → absen + jurnal (input siswa) → monitoring drill-down + **rekap performa** (count/rate/nilai, tanpa verifikasi) → Rekap Penilaian → **Sertifikat** (template anchor + cetak per siswa) → Panduan PKL. **Industri = container relasi** (bukan akun); kontrol industri ada di **Pembimbing Industri** (menu Industri Saya). Dashboard analitik dengan kedua rate terisi riil. 7 role kanonik (role `industri` dihapus).
+**Alur PKL end-to-end lengkap** + **deteksi emosi absensi**: master data → absen + jurnal (input siswa, dengan deteksi emosi real-time + badge baked ke foto) → monitoring drill-down + **rekap performa** → Rekap Penilaian → **Sertifikat** → Panduan PKL. **Industri = container relasi**; kontrol industri ada di **Pembimbing Industri** (Industri Saya). Dashboard analitik riil. 7 role kanonik.
 
 Sisa "Soon": Forum PKL, Kalender (keduanya prioritas rendah).
 
