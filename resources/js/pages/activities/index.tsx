@@ -4,7 +4,6 @@ import {
     NotebookPen,
     Pencil,
     Plus,
-    ShieldCheck,
     Trash2,
     Wrench,
 } from 'lucide-react';
@@ -89,16 +88,6 @@ export default function ActivitiesIndex({
                                             {activity.dateLabel}
                                         </p>
                                     </div>
-                                    {activity.verified ? (
-                                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-positive">
-                                            <ShieldCheck className="size-3.5" />
-                                            Terverifikasi
-                                        </span>
-                                    ) : (
-                                        <span className="text-xs text-muted">
-                                            Menunggu verifikasi
-                                        </span>
-                                    )}
                                 </div>
 
                                 <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
@@ -118,25 +107,23 @@ export default function ActivitiesIndex({
                                     className="mt-3 line-clamp-3"
                                 />
 
-                                {!activity.verified && (
-                                    <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
-                                        <Link
-                                            href={edit.url(activity.id)}
-                                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-canvas"
-                                        >
-                                            <Pencil className="size-4" />
-                                            Edit
-                                        </Link>
-                                        <button
-                                            type="button"
-                                            onClick={() => remove(activity)}
-                                            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
-                                        >
-                                            <Trash2 className="size-4" />
-                                            Hapus
-                                        </button>
-                                    </div>
-                                )}
+                                <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
+                                    <Link
+                                        href={edit.url(activity.id)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-canvas"
+                                    >
+                                        <Pencil className="size-4" />
+                                        Edit
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={() => remove(activity)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                                    >
+                                        <Trash2 className="size-4" />
+                                        Hapus
+                                    </button>
+                                </div>
                             </article>
                         ))}
                     </div>

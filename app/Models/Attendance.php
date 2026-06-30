@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $arrivalTime
  * @property string|null $absenceReason
  * @property string|null $image
+ * @property string|null $departure_image
  * @property string|null $longitude
  * @property string|null $latitude
  * @property string|null $status
@@ -33,6 +34,7 @@ use Illuminate\Support\Carbon;
     'arrivalTime',
     'absenceReason',
     'image',
+    'departure_image',
     'longitude',
     'latitude',
     'status',
@@ -68,6 +70,18 @@ class Attendance extends Model
      * @return Attribute<string|null, never>
      */
     protected function image(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => $value ? asset("/storage/{$value}") : null,
+        );
+    }
+
+    /**
+     * Akses URL publik foto absen pulang.
+     *
+     * @return Attribute<string|null, never>
+     */
+    protected function departureImage(): Attribute
     {
         return Attribute::make(
             get: fn (?string $value): ?string => $value ? asset("/storage/{$value}") : null,

@@ -1,6 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { ChevronDown, GraduationCap, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { destroy as logout } from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import { edit as profile } from '@/actions/App/Http/Controllers/ProfileController';
 import { navForRoles } from '@/lib/nav';
@@ -16,12 +16,28 @@ function initials(name: string): string {
         .toUpperCase();
 }
 
+const NAV_SCROLL_KEY = 'sidebar-nav-scroll';
+
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const current = page.url;
     const sections = navForRoles(auth.roles);
     const primaryRole = auth.roles[0];
+    const navRef = useRef<HTMLElement>(null);
+
+    useEffect(() => {
+        const saved = sessionStorage.getItem(NAV_SCROLL_KEY);
+        if (saved && navRef.current) {
+            navRef.current.scrollTop = Number(saved);
+        }
+    }, []);
+
+    function saveScroll() {
+        if (navRef.current) {
+            sessionStorage.setItem(NAV_SCROLL_KEY, String(navRef.current.scrollTop));
+        }
+    }
 
     return (
         <div className="flex h-full min-h-0 flex-col bg-surface">
@@ -45,7 +61,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
             </Link>
 
             {/* Navigation */}
-            <nav className="mt-4 scrollbar-slim min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-3 pb-2">
+            <nav ref={navRef} onScroll={saveScroll} className="mt-4 scrollbar-slim min-h-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto px-3 pb-2">
                 {sections.map((section) => (
                     <div key={section.title} className="space-y-1">
                         <p className="px-3 pb-1 text-[0.65rem] font-semibold tracking-[0.12em] text-muted uppercase">

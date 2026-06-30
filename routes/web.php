@@ -105,6 +105,7 @@ Route::middleware('auth')->group(function () {
     // Absen siswa (foto + geolokasi via web).
     Route::middleware('role:siswa')->group(function () {
         Route::get('absen', [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::get('absen/{attendance}', [AttendanceController::class, 'show'])->name('attendance.show');
         Route::post('absen/masuk', [AttendanceController::class, 'checkIn'])->name('attendance.check-in');
         Route::post('absen/pulang', [AttendanceController::class, 'checkOut'])->name('attendance.check-out');
         Route::post('absen/izin', [AttendanceController::class, 'absence'])->name('attendance.absence');

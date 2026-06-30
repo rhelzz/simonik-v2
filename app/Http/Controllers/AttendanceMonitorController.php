@@ -172,6 +172,7 @@ class AttendanceMonitorController extends Controller
             'departureTime' => $attendance->departureTime ? mb_substr($attendance->departureTime, 0, 5) : null,
             'absenceReason' => $attendance->absenceReason,
             'image' => $attendance->image,
+            'departureImage' => $attendance->departure_image,
             'latitude' => $attendance->latitude,
             'longitude' => $attendance->longitude,
         ];

@@ -1,4 +1,4 @@
-import { CalendarCheck, LogIn, LogOut, MapPin } from 'lucide-react';
+import { CalendarCheck, Clock, LogIn, LogOut, MapPin } from 'lucide-react';
 import { index } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { PerformanceSummary } from '@/components/performance-summary';
 import type { Performance } from '@/components/performance-summary';
@@ -18,6 +18,7 @@ type AttendanceRecord = {
     departureTime: string | null;
     absenceReason: string | null;
     image: string | null;
+    departureImage: string | null;
     latitude: string | null;
     longitude: string | null;
 };
@@ -96,66 +97,96 @@ export default function AttendanceMonitorShow({
 
 function RecordCard({ record }: { record: AttendanceRecord }) {
     const hasGeo = record.latitude !== null && record.longitude !== null;
+    const hasPhoto = record.image !== null || record.departureImage !== null;
 
     return (
-        <div className="flex flex-col gap-4 rounded-2xl border border-line bg-canvas/30 p-4 sm:flex-row">
-            {record.image ? (
-                <img
-                    src={record.image}
-                    alt={`Foto absen ${record.dateLabel}`}
-                    className="aspect-4/3 w-full rounded-xl border border-line object-cover sm:w-40"
-                />
-            ) : (
-                <div className="grid aspect-4/3 w-full place-items-center rounded-xl border border-dashed border-line text-muted sm:w-40">
-                    <CalendarCheck className="size-7" />
-                </div>
-            )}
+        <div className="rounded-2xl border border-line bg-canvas/30 p-4">
+            <div className="flex items-center justify-between gap-2">
+                <p className="font-semibold text-ink">{record.dateLabel}</p>
+                <span
+                    className={cn(
+                        'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
+                        attendanceStyle(record.status),
+                    )}
+                >
+                    {attendanceLabel(record.status)}
+                </span>
+            </div>
 
-            <div className="flex flex-1 flex-col gap-2">
-                <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-ink">{record.dateLabel}</p>
-                    <span
-                        className={cn(
-                            'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
-                            attendanceStyle(record.status),
-                        )}
-                    >
-                        {attendanceLabel(record.status)}
+            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink/80">
+                {record.arrivalTime && (
+                    <span className="inline-flex items-center gap-1.5">
+                        <LogIn className="size-4 text-muted" />
+                        Masuk {record.arrivalTime}
                     </span>
-                </div>
-
-                <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink/80">
-                    {record.arrivalTime && (
-                        <span className="inline-flex items-center gap-1.5">
-                            <LogIn className="size-4 text-muted" />
-                            Masuk {record.arrivalTime}
-                        </span>
-                    )}
-                    {record.departureTime && (
-                        <span className="inline-flex items-center gap-1.5">
-                            <LogOut className="size-4 text-muted" />
-                            Pulang {record.departureTime}
-                        </span>
-                    )}
-                    {hasGeo && (
-                        <a
-                            href={`https://www.google.com/maps?q=${record.latitude},${record.longitude}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
-                        >
-                            <MapPin className="size-4" />
-                            Lihat lokasi
-                        </a>
-                    )}
-                </div>
-
-                {record.absenceReason && (
-                    <p className="text-sm text-ink/70">
-                        Alasan: {record.absenceReason}
-                    </p>
+                )}
+                {record.departureTime && (
+                    <span className="inline-flex items-center gap-1.5">
+                        <LogOut className="size-4 text-muted" />
+                        Pulang {record.departureTime}
+                    </span>
+                )}
+                {hasGeo && (
+                    <a
+                        href={`https://www.google.com/maps?q=${record.latitude},${record.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+                    >
+                        <MapPin className="size-4" />
+                        Lihat lokasi
+                    </a>
                 )}
             </div>
+
+            {record.absenceReason && (
+                <p className="mt-1 text-sm text-ink/70">
+                    Alasan: {record.absenceReason}
+                </p>
+            )}
+
+            {hasPhoto && (
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                        <p className="text-xs font-semibold tracking-widest text-muted uppercase">
+                            Foto Masuk
+                        </p>
+                        {record.image ? (
+                            <img
+                                src={record.image}
+                                alt="Foto absen masuk"
+                                className="aspect-4/3 w-full rounded-xl border border-line object-cover"
+                            />
+                        ) : (
+                            <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line text-muted">
+                                <CalendarCheck className="size-5" />
+                                <p className="text-xs font-medium">
+                                    Tidak ada foto
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                    <div className="space-y-1.5">
+                        <p className="text-xs font-semibold tracking-widest text-muted uppercase">
+                            Foto Pulang
+                        </p>
+                        {record.departureImage ? (
+                            <img
+                                src={record.departureImage}
+                                alt="Foto absen pulang"
+                                className="aspect-4/3 w-full rounded-xl border border-line object-cover"
+                            />
+                        ) : (
+                            <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-line text-muted">
+                                <Clock className="size-5" />
+                                <p className="text-xs font-medium">
+                                    Belum absen pulang
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,13 +1,13 @@
-import { router, useForm } from '@inertiajs/react';
+import { Link, useForm } from '@inertiajs/react';
 import {
     CalendarCheck,
     CheckCircle2,
     Clock,
+    Eye,
     FileText,
     LoaderCircle,
     LogOut,
     MapPin,
-    ShieldCheck,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
@@ -15,6 +15,7 @@ import {
     absence,
     checkIn,
     checkOut,
+    show as showUrl,
 } from '@/actions/App/Http/Controllers/AttendanceController';
 import { PhotoCapture } from '@/components/photo-capture';
 import { Modal } from '@/components/ui/modal';
@@ -33,9 +34,9 @@ type AttendanceRecord = {
     departureTime: string | null;
     absenceReason: string | null;
     image: string | null;
+    departureImage: string | null;
     latitude: string | null;
     longitude: string | null;
-    verified: boolean;
 };
 
 type AttendanceIndexProps = {
@@ -72,7 +73,7 @@ export default function AttendanceIndex({
                         </div>
                     ) : (
                         <div className="mt-4 overflow-x-auto">
-                            <table className="w-full min-w-128 border-collapse text-left text-sm">
+                            <table className="w-full min-w-lg border-collapse text-left text-sm">
                                 <thead>
                                     <tr className="text-xs font-semibold tracking-wide text-muted uppercase">
                                         <th className="pb-3 font-semibold">
@@ -87,8 +88,8 @@ export default function AttendanceIndex({
                                         <th className="pb-3 font-semibold">
                                             Pulang
                                         </th>
-                                        <th className="pb-3 font-semibold">
-                                            Verifikasi
+                                        <th className="pb-3 text-right font-semibold">
+                                            Detail
                                         </th>
                                     </tr>
                                 </thead>
@@ -118,17 +119,14 @@ export default function AttendanceIndex({
                                             <td className="py-3 text-ink/80">
                                                 {row.departureTime ?? '—'}
                                             </td>
-                                            <td className="py-3">
-                                                {row.verified ? (
-                                                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-positive">
-                                                        <ShieldCheck className="size-3.5" />
-                                                        Terverifikasi
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-xs text-muted">
-                                                        Menunggu
-                                                    </span>
-                                                )}
+                                            <td className="py-3 text-right">
+                                                <Link
+                                                    href={showUrl.url(row.id)}
+                                                    className="inline-grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    aria-label="Lihat detail"
+                                                >
+                                                    <Eye className="size-4" />
+                                                </Link>
                                             </td>
                                         </tr>
                                     ))}
@@ -192,14 +190,40 @@ function PresentState({ today }: { today: AttendanceRecord }) {
             </div>
 
             {today.image && (
-                <img
-                    src={today.image}
-                    alt="Foto absen"
-                    className="aspect-[4/3] w-full rounded-2xl border border-line object-cover"
-                />
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                        <p className="text-xs font-semibold tracking-widest text-muted uppercase">
+                            Foto Masuk
+                        </p>
+                        <img
+                            src={today.image}
+                            alt="Foto absen masuk"
+                            className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <p className="text-xs font-semibold tracking-widest text-muted uppercase">
+                            Foto Pulang
+                        </p>
+                        {today.departureImage ? (
+                            <img
+                                src={today.departureImage}
+                                alt="Foto absen pulang"
+                                className="aspect-4/3 w-full rounded-2xl border border-line object-cover"
+                            />
+                        ) : (
+                            <div className="flex aspect-4/3 w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-line text-muted">
+                                <LogOut className="size-5" />
+                                <p className="text-xs font-medium">
+                                    Belum absen pulang
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
             )}
 
-            {!done && <CheckOutButton />}
+            {!done && <CheckOutPanel />}
         </div>
     );
 }
@@ -225,35 +249,43 @@ function AbsenceState({ today }: { today: AttendanceRecord }) {
     );
 }
 
-function CheckOutButton() {
-    const [processing, setProcessing] = useState(false);
+function CheckOutPanel() {
+    const form = useForm<{ image: File | null }>({ image: null });
 
-    function submit() {
-        router.post(
-            checkOut.url(),
-            {},
-            {
-                preserveScroll: true,
-                onStart: () => setProcessing(true),
-                onFinish: () => setProcessing(false),
-            },
-        );
+    function submit(event: FormEvent) {
+        event.preventDefault();
+        form.post(checkOut.url(), {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => form.reset(),
+        });
     }
 
     return (
-        <button
-            type="button"
-            onClick={submit}
-            disabled={processing}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-        >
-            {processing ? (
-                <LoaderCircle className="size-4 animate-spin" />
-            ) : (
-                <LogOut className="size-4" />
+        <form onSubmit={submit} className="space-y-3">
+            <p className="text-sm font-semibold text-ink">Absen pulang</p>
+            <PhotoCapture
+                onCapture={(file) => form.setData('image', file)}
+                disabled={form.processing}
+            />
+            {form.errors.image && (
+                <p className="text-xs font-medium text-red-500">
+                    {form.errors.image}
+                </p>
             )}
-            Absen pulang
-        </button>
+            <button
+                type="submit"
+                disabled={form.processing || !form.data.image}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+            >
+                {form.processing ? (
+                    <LoaderCircle className="size-4 animate-spin" />
+                ) : (
+                    <LogOut className="size-4" />
+                )}
+                Absen pulang
+            </button>
+        </form>
     );
 }
 

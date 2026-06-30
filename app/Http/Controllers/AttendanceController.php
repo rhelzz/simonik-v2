@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\AbsenceRequest;
 use App\Http\Requests\CheckInRequest;
+use App\Http\Requests\CheckOutRequest;
 use App\Models\Attendance;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,9 +65,23 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Absen pulang: melengkapi jam pulang pada record hari ini.
+     * Detail satu record absen milik siswa yang sedang login.
      */
-    public function checkOut(Request $request): RedirectResponse
+    public function show(Request $request, Attendance $attendance): Response
+    {
+        if ($attendance->user_id !== (int) $request->user()->id) {
+            abort(403);
+        }
+
+        return Inertia::render('attendance/show', [
+            'attendance' => $this->present($attendance),
+        ]);
+    }
+
+    /**
+     * Absen pulang: melengkapi jam pulang + foto selfie.
+     */
+    public function checkOut(CheckOutRequest $request): RedirectResponse
     {
         $userId = (int) $request->user()->id;
         $today = $this->todayRecord($userId);
@@ -79,7 +94,12 @@ class AttendanceController extends Controller
             return back()->with('error', 'Anda sudah absen pulang hari ini.');
         }
 
-        $today->update(['departureTime' => Carbon::now()->format('H:i:s')]);
+        $path = $request->file('image')->store('attendances', 'public');
+
+        $today->update([
+            'departureTime' => Carbon::now()->format('H:i:s'),
+            'departure_image' => $path,
+        ]);
 
         return back()->with('success', 'Absen pulang berhasil direkam.');
     }
@@ -132,15 +152,16 @@ class AttendanceController extends Controller
         return [
             'id' => $attendance->id,
             'date' => $attendance->date->format('Y-m-d'),
-            'dateLabel' => $attendance->date->translatedFormat('d M Y'),
+            'dateLabel' => $attendance->date->translatedFormat('l, d F Y'),
             'status' => $attendance->status,
             'arrivalTime' => $attendance->arrivalTime ? mb_substr($attendance->arrivalTime, 0, 5) : null,
             'departureTime' => $attendance->departureTime ? mb_substr($attendance->departureTime, 0, 5) : null,
             'absenceReason' => $attendance->absenceReason,
             'image' => $attendance->image,
+            'departureImage' => $attendance->departure_image,
             'latitude' => $attendance->latitude,
             'longitude' => $attendance->longitude,
-            'verified' => $attendance->verified === '1',
+            'description' => $attendance->description,
         ];
     }
 }
