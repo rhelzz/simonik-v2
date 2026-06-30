@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AspectController;
 use App\Http\Controllers\AssessmentController;
 use App\Http\Controllers\AttendanceController;
@@ -115,6 +116,12 @@ Route::middleware('auth')->group(function () {
             ->parameters(['jurnal' => 'activity'])
             ->except('show')
             ->names('activities');
+    });
+
+    // Approval engine — approve/reject (pembimbing, guru, kaprog).
+    Route::middleware('role:pembimbing|guru|kaprog')->group(function () {
+        Route::post('approvals/{approval}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
+        Route::post('approvals/{approval}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     });
 
     // Monitoring drill-down (Jurusan -> Kelas -> Murid -> rekap performa).

@@ -260,7 +260,7 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 
 - [x] M0.1 Refactor Peran & Kerangka Navigasi
 - [x] M0.2 Fondasi Skema Presensi
-- [ ] M0.3 Approval Engine
+- [x] M0.3 Approval Engine
 - [ ] M1.1 Koordinat Dinamis & Radius
 - [ ] M1.2 Jam Kerja Dinamis
 - [ ] M1.3 Geofencing + Anti-Fake (WFO)

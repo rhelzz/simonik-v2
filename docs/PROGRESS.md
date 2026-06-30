@@ -223,21 +223,35 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Fix PHPStan pre-existing**: `StudentController::show` — nullsafe `?->` tidak perlu pada `industries->name`; ternary untuk `parents` menggantikan nullsafe-concat + `??` yang tidak bisa null.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 174/174 passed + 603 assertions**. `php artisan migrate` sukses.
 
+### 31. M0.3 — Approval Engine / Cross-Approval Bersama (Blueprint Modul)
+
+- **Migration** `2026_06_30_144039_create_approvals_table`: tabel polimorfik `approvals` — `morphs('approvable')` (approvable_type/id), `status` (pending|approved|rejected, default pending), `approver_role` (string nullable), `approver_id` (FK users nullable + nullOnDelete), `note` (text nullable).
+- **Model `Approval`**: `HasFactory`, `morphTo approvable()`, `belongsTo approver(User)`, konstanta `STATUS_*` + `PRIMARY_ROLES`/`FALLBACK_ROLE`/`ELIGIBLE_ROLES`, method `isPending()` + static `initiate(Model)`.
+- **Factory `ApprovalFactory`**: state `approved()` / `rejected()`.
+- **Action `ApproveRequest`** (`app/Actions/`): engine First-to-Approve reusable — `handle(Approval, User, decision, ?note)` memperbarui status + approver_id + approver_role; `canAct(Approval, User)` → pending AND hasAnyRole(eligible). Primary: `pembimbing`, `guru`; fallback: `kaprog`.
+- **Policy `ApprovalPolicy`**: method `act()` mendelegasikan ke `ApproveRequest::canAct()` (auto-discovered oleh Laravel).
+- **Controller `ApprovalController`**: `approve()` dan `reject()` — gate via `Gate::authorize('act', $approval)`, lalu delegasi ke action.
+- **Routes**: `POST /approvals/{approval}/approve` + `POST /approvals/{approval}/reject`, middleware `role:pembimbing|guru|kaprog`.
+- **Wayfinder**: regenerasi — `resources/js/actions/App/Http/Controllers/ApprovalController.ts` tergenerate.
+- **Komponen frontend `components/approval-status.tsx`**: badge status (Menunggu/Disetujui/Ditolak dengan warna palette SIMONIK) + info approver + catatan + tombol **Setujui/Tolak** (muncul hanya saat `canAct && pending`, menggunakan Wayfinder actions).
+- **Tests `ApproveRequestTest`** (16 test, 41 assertions): unit `canAct()` (pembimbing/guru/kaprog bisa, siswa/orangtua/admin/wakasek tidak bisa, resolved tidak bisa); unit `handle()` (pembimbing approve, guru approve, kaprog fallback, reject + note, first-approver-wins); HTTP (approve/reject via endpoint, siswa 403, kaprog via HTTP, resolved kembali 403, guest redirect login).
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 190/190 passed + 635 assertions**. `npm run types:check` + `npm run lint` + `npm run build` lolos.
+
 ---
 
 ## 📍 Current step
-**M0.2 Fondasi Skema Presensi selesai.** Kolom presensi cerdas (`radius`, `jam_masuk`, `jam_pulang` pada `industries`; `mode`, `is_late`, `distance_m`, `gps_accuracy`, `is_suspect` pada `attendances`) sudah ada di skema, model, dan factory. Siap menjadi landasan Fase 1 (Presensi Cerdas).
+**M0.3 Approval Engine selesai.** Engine First-to-Approve reusable sudah tersedia — siap dipakai oleh M1.4 (WFA), M2.1 (Libur), M2.2 (Sakit/Izin). Kolom presensi cerdas (`radius`, `jam_masuk`, `jam_pulang` pada `industries`; `mode`, `is_late`, `distance_m`, `gps_accuracy`, `is_suspect` pada `attendances`) sudah ada di skema, model, dan factory. Siap menjadi landasan Fase 1 (Presensi Cerdas).
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M0.3** (Approval Engine) — prasyarat untuk WFA, Libur, Sakit/Izin
 - **M1.1** (Koordinat Dinamis & Radius) — prasyarat M0.2 ✅ terpenuhi
 - **M1.2** (Jam Kerja Dinamis) — prasyarat M0.2 ✅ terpenuhi
+- **M1.4** (Mode WFO/WFA + Approval WFA) — prasyarat M1.3 + M0.3 ✅ terpenuhi
 - Fase 3 (Gamifikasi Jurnal) — independen, bisa langsung
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M0.3 Approval Engine** — model `approvals` polimorfik + service First-to-Approve + fallback Kaprog. Prasyarat WFA & Libur & Sakit/Izin.
-2. **M1.1 Koordinat Dinamis & Radius** — endpoint update lat/long/radius industri dgn otorisasi multi-peran + map picker (Leaflet). Prasyarat M0.2 ✅ terpenuhi.
-3. **M1.2 Jam Kerja Dinamis** — form set `jam_masuk`/`jam_pulang` di Industri Saya (pembimbing). Prasyarat M0.2 ✅ terpenuhi.
+1. **M1.1 Koordinat Dinamis & Radius** — endpoint update lat/long/radius industri dgn otorisasi multi-peran + map picker (Leaflet). Prasyarat M0.2 ✅ terpenuhi.
+2. **M1.2 Jam Kerja Dinamis** — form set `jam_masuk`/`jam_pulang` di Industri Saya (pembimbing). Prasyarat M0.2 ✅ terpenuhi.
+3. **Fase 3 Gamifikasi Jurnal** — independen (streak + badge). Bisa langsung tanpa prasyarat modul lain.
