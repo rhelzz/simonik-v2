@@ -212,20 +212,32 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 - **Tests:** DashboardTest — `test_kepala_sekolah` → `test_wakasek_sees_wakasek_dashboard` (assert component dashboard-wakasek + 4 stat props). AssessmentTest — `test_roles_outside_scope_are_forbidden` → `test_wakasek_can_view_assessments`. AttendanceMonitorTest + JournalMonitorTest — forbidden kepala_sekolah → positive test wakasek bisa akses.
 - ✅ **`composer test` penuh: 174/174 passed + 603 assertions**. `npm run types:check` + `npm run lint` + `npm run build` lolos. Migration applied ke dev DB.
 
+### 30. M0.2 — Fondasi Skema Presensi (Blueprint Modul)
+
+- **Migration forward-only** `2026_06_30_142650_add_smart_attendance_columns_to_industries_and_attendances`:
+  - `industries` + `radius` (unsignedInteger, default 100, meter), `jam_masuk` (time nullable), `jam_pulang` (time nullable).
+  - `attendances` + `mode` (string nullable: `wfo|wfa`), `is_late` (boolean, default false), `distance_m` (unsignedInteger nullable, meter), `gps_accuracy` (float nullable), `is_suspect` (boolean, default false).
+- **Model `Industry`**: `radius`, `jam_masuk`, `jam_pulang` ditambah ke `#[Fillable]` + `@property` PHPDoc; `casts()` baru (`radius` => integer).
+- **Model `Attendance`**: `mode`, `is_late`, `distance_m`, `gps_accuracy`, `is_suspect` ditambah ke `#[Fillable]` + `@property` PHPDoc; `casts()` diperbarui (`is_late`/`is_suspect` => boolean, `distance_m` => integer, `gps_accuracy` => float).
+- **Factories**: `IndustryFactory` + `radius`/`jam_masuk`/`jam_pulang`; `AttendanceFactory` + `mode`/`is_late`/`distance_m`/`gps_accuracy`/`is_suspect`.
+- **Fix PHPStan pre-existing**: `StudentController::show` — nullsafe `?->` tidak perlu pada `industries->name`; ternary untuk `parents` menggantikan nullsafe-concat + `??` yang tidak bisa null.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 174/174 passed + 603 assertions**. `php artisan migrate` sukses.
+
 ---
 
 ## 📍 Current step
-**Alur PKL end-to-end lengkap** + **deteksi emosi absensi** + **kerangka navigasi blueprint selesai (M0.1)**. 7 role kanonik final: admin, wakasek, kaprog, guru, pembimbing, siswa, orangtua. Semua item modul blueprint (M0.2–M6.1) sudah terpasang sebagai placeholder "Soon" di sidebar.
+**M0.2 Fondasi Skema Presensi selesai.** Kolom presensi cerdas (`radius`, `jam_masuk`, `jam_pulang` pada `industries`; `mode`, `is_late`, `distance_m`, `gps_accuracy`, `is_suspect` pada `attendances`) sudah ada di skema, model, dan factory. Siap menjadi landasan Fase 1 (Presensi Cerdas).
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M0.2** (Fondasi Skema Presensi) — prasyarat untuk semua Fase 1
 - **M0.3** (Approval Engine) — prasyarat untuk WFA, Libur, Sakit/Izin
+- **M1.1** (Koordinat Dinamis & Radius) — prasyarat M0.2 ✅ terpenuhi
+- **M1.2** (Jam Kerja Dinamis) — prasyarat M0.2 ✅ terpenuhi
 - Fase 3 (Gamifikasi Jurnal) — independen, bisa langsung
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M0.2 Fondasi Skema Presensi** — migrasi tambah radius/jam kerja ke industries, mode/is_late/gps_accuracy ke attendances. Prasyarat utama Fase 1.
-2. **M0.3 Approval Engine** — model approvals polimorfik + service First-to-Approve. Prasyarat WFA & Libur & Sakit/Izin.
-3. **Fase 3 Gamifikasi Jurnal** — independen (streak + badge). Bisa langsung tanpa M0.2/M0.3.
+1. **M0.3 Approval Engine** — model `approvals` polimorfik + service First-to-Approve + fallback Kaprog. Prasyarat WFA & Libur & Sakit/Izin.
+2. **M1.1 Koordinat Dinamis & Radius** — endpoint update lat/long/radius industri dgn otorisasi multi-peran + map picker (Leaflet). Prasyarat M0.2 ✅ terpenuhi.
+3. **M1.2 Jam Kerja Dinamis** — form set `jam_masuk`/`jam_pulang` di Industri Saya (pembimbing). Prasyarat M0.2 ✅ terpenuhi.

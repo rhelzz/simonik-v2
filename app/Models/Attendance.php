@@ -24,6 +24,11 @@ use Illuminate\Support\Carbon;
  * @property string|null $longitude
  * @property string|null $latitude
  * @property string|null $status
+ * @property string|null $mode
+ * @property bool $is_late
+ * @property int|null $distance_m
+ * @property float|null $gps_accuracy
+ * @property bool $is_suspect
  * @property string|null $description
  * @property string|null $verified
  * @property Carbon|null $created_at
@@ -42,6 +47,11 @@ use Illuminate\Support\Carbon;
     'longitude',
     'latitude',
     'status',
+    'mode',
+    'is_late',
+    'distance_m',
+    'gps_accuracy',
+    'is_suspect',
     'description',
     'verified',
 ])]
@@ -59,6 +69,10 @@ class Attendance extends Model
     {
         return [
             'date' => 'date',
+            'is_late' => 'boolean',
+            'is_suspect' => 'boolean',
+            'distance_m' => 'integer',
+            'gps_accuracy' => 'float',
         ];
     }
 

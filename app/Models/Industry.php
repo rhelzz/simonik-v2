@@ -17,6 +17,9 @@ use Illuminate\Support\Carbon;
  * @property string $alamat
  * @property string $longitude
  * @property string $latitude
+ * @property int $radius
+ * @property string|null $jam_masuk
+ * @property string|null $jam_pulang
  * @property string|null $duration
  * @property int|null $pembimbing_id
  * @property int|null $teacher_id
@@ -29,6 +32,9 @@ use Illuminate\Support\Carbon;
     'alamat',
     'longitude',
     'latitude',
+    'radius',
+    'jam_masuk',
+    'jam_pulang',
     'duration',
     'pembimbing_id',
     'teacher_id',
@@ -37,6 +43,16 @@ class Industry extends Model
 {
     /** @use HasFactory<IndustryFactory> */
     use HasFactory;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'radius' => 'integer',
+        ];
+    }
 
     /** @return HasMany<Student, $this> */
     public function students(): HasMany

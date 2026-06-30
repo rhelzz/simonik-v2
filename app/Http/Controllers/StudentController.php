@@ -205,10 +205,10 @@ class StudentController extends Controller
             'relations' => [
                 'class' => $student->classes?->name,
                 'departemen' => $student->departements?->name,
-                'industri' => $student->industries?->name ?? '—',
+                'industri' => $student->industries->name ?? '—',
                 'guru_pembimbing' => $teacher ? $teacher->name.' ('.$teacher->no_hp.')' : '—',
                 'pembimbing_industri' => $pembimbing ? $pembimbing->name.' ('.$pembimbing->no_hp.')' : '—',
-                'orang_tua' => $student->parents?->nama.' ('.$student->parents?->phoneNumber.')' ?? '—',
+                'orang_tua' => $student->parents ? $student->parents->nama.' ('.$student->parents->phoneNumber.')' : '—',
             ],
         ]);
     }

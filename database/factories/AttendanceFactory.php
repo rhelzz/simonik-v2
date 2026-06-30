@@ -28,6 +28,11 @@ class AttendanceFactory extends Factory
             'longitude' => (string) fake()->longitude(),
             'latitude' => (string) fake()->latitude(),
             'status' => fake()->randomElement(['hadir', 'izin', 'sakit', 'alpha']),
+            'mode' => 'wfo',
+            'is_late' => false,
+            'distance_m' => null,
+            'gps_accuracy' => null,
+            'is_suspect' => false,
             'description' => fake()->optional()->sentence(),
             'verified' => fake()->randomElement(['0', '1']),
         ];

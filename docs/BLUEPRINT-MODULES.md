@@ -259,7 +259,7 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 ## 8. Checklist Status (sinkronkan dengan PROGRESS.md saat modul rampung)
 
 - [x] M0.1 Refactor Peran & Kerangka Navigasi
-- [ ] M0.2 Fondasi Skema Presensi
+- [x] M0.2 Fondasi Skema Presensi
 - [ ] M0.3 Approval Engine
 - [ ] M1.1 Koordinat Dinamis & Radius
 - [ ] M1.2 Jam Kerja Dinamis
