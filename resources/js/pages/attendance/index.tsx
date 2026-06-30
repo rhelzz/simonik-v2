@@ -17,6 +17,7 @@ import {
     checkOut,
     show as showUrl,
 } from '@/actions/App/Http/Controllers/AttendanceController';
+import { ApprovalStatus } from '@/components/approval-status';
 import type { EmotionKey } from '@/components/photo-capture';
 import { EMOTION_INFO, PhotoCapture } from '@/components/photo-capture';
 import { Modal } from '@/components/ui/modal';
@@ -35,6 +36,13 @@ type AttendanceRecord = {
     departureTime: string | null;
     isLate: boolean;
     isSuspect: boolean;
+    mode: string | null;
+    approval: {
+        id: number;
+        status: 'pending' | 'approved' | 'rejected';
+        approver_role: string | null;
+        note: string | null;
+    } | null;
     absenceReason: string | null;
     image: string | null;
     emotion: EmotionKey | null;
@@ -238,6 +246,13 @@ function PresentState({ today }: { today: AttendanceRecord }) {
                     </p>
                 </div>
             </div>
+
+            {today.mode === 'wfa' && today.approval && (
+                <div className="rounded-2xl border border-line p-4 space-y-2 bg-canvas/30">
+                    <p className="text-xs font-semibold tracking-wider text-muted uppercase">Persetujuan Mode WFA</p>
+                    <ApprovalStatus approval={today.approval} canAct={false} />
+                </div>
+            )}
 
             {today.image && (
                 <div className="grid grid-cols-2 gap-3">
@@ -463,6 +478,7 @@ function CheckInPanel() {
         latitude: string;
         longitude: string;
         gps_accuracy: string;
+        mode: 'wfo' | 'wfa';
         description: string;
         emotion: string;
     }>({
@@ -470,6 +486,7 @@ function CheckInPanel() {
         latitude: '',
         longitude: '',
         gps_accuracy: '',
+        mode: 'wfo',
         description: '',
         emotion: '',
     });
@@ -534,6 +551,42 @@ function CheckInPanel() {
             <p className="text-sm font-semibold text-ink">
                 Belum absen hari ini
             </p>
+
+            <div className="flex rounded-xl bg-canvas p-1 border border-line">
+                <button
+                    type="button"
+                    onClick={() => form.setData('mode', 'wfo')}
+                    className={cn(
+                        'flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all',
+                        form.data.mode === 'wfo'
+                            ? 'bg-surface shadow text-primary'
+                            : 'text-muted hover:text-ink'
+                    )}
+                >
+                    Kerja dari Kantor (WFO)
+                </button>
+                <button
+                    type="button"
+                    onClick={() => form.setData('mode', 'wfa')}
+                    className={cn(
+                        'flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all',
+                        form.data.mode === 'wfa'
+                            ? 'bg-surface shadow text-primary'
+                            : 'text-muted hover:text-ink'
+                    )}
+                >
+                    Kerja dari Mana Saja (WFA)
+                </button>
+            </div>
+
+            {form.data.mode === 'wfa' && (
+                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-primary space-y-1">
+                    <p className="font-bold">Mode Kerja dari Mana Saja (WFA)</p>
+                    <p className="text-muted leading-relaxed">
+                        Geofencing dibebaskan. Absensi WFA Anda memerlukan persetujuan dari Pembimbing Industri atau Guru Pembimbing sebelum sah.
+                    </p>
+                </div>
+            )}
 
             <PhotoCapture
                 onCapture={(file, emotion) => {

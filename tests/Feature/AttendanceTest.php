@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Approval;
 use App\Models\Attendance;
 use App\Models\Industry;
 use App\Models\Student;
@@ -369,5 +370,83 @@ class AttendanceTest extends TestCase
         // Harus masuk dengan status is_suspect = true karena lompatan jarak ekstrim dalam waktu singkat
         $attendance = Attendance::orderByDesc('id')->first();
         $this->assertTrue($attendance->is_suspect);
+    }
+
+    public function test_student_check_in_wfa_mode_bypasses_geofencing_and_creates_approval(): void
+    {
+        Storage::fake('public');
+        $siswa = $this->siswa();
+
+        $industry = Industry::factory()->create([
+            'radius' => 100,
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
+        ]);
+        Student::factory()->create([
+            'user_id' => $siswa->id,
+            'industri_id' => $industry->id,
+        ]);
+
+        // Absen di Bandung (jauh di luar radius) dengan mode WFA
+        $this->actingAs($siswa)
+            ->post('/absen/masuk', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.914744',
+                'longitude' => '107.609810',
+                'gps_accuracy' => 10.0,
+                'mode' => 'wfa',
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $siswa->id,
+            'mode' => 'wfa',
+        ]);
+
+        $attendance = Attendance::orderByDesc('id')->first();
+
+        // Memastikan record approval terbuat secara otomatis dan berstatus pending
+        $this->assertDatabaseHas('approvals', [
+            'approvable_type' => Attendance::class,
+            'approvable_id' => $attendance->id,
+            'status' => Approval::STATUS_PENDING,
+        ]);
+    }
+
+    public function test_student_check_out_wfa_mode_bypasses_geofencing(): void
+    {
+        Storage::fake('public');
+        $siswa = $this->siswa();
+
+        $industry = Industry::factory()->create([
+            'radius' => 100,
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
+        ]);
+        Student::factory()->create([
+            'user_id' => $siswa->id,
+            'industri_id' => $industry->id,
+        ]);
+
+        // Sudah absen masuk WFA
+        $attendance = Attendance::factory()->create([
+            'user_id' => $siswa->id,
+            'date' => Carbon::today()->toDateString(),
+            'status' => 'hadir',
+            'mode' => 'wfa',
+            'departureTime' => null,
+        ]);
+
+        // Absen pulang dari Bandung (jauh di luar radius)
+        $this->actingAs($siswa)
+            ->post('/absen/pulang', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.914744',
+                'longitude' => '107.609810',
+                'gps_accuracy' => 10.0,
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertNotNull($attendance->fresh()->departureTime);
     }
 }

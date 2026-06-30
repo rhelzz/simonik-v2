@@ -23,6 +23,7 @@ class CheckInRequest extends FormRequest
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'gps_accuracy' => ['required', 'numeric'],
+            'mode' => ['nullable', 'string', 'in:wfo,wfa'],
             'description' => ['nullable', 'string', 'max:255'],
             'emotion' => ['nullable', 'string', 'in:neutral,happy,sad,angry,fearful,disgusted,surprised'],
         ];

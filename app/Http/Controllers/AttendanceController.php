@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AbsenceRequest;
 use App\Http\Requests\CheckInRequest;
 use App\Http\Requests\CheckOutRequest;
+use App\Models\Approval;
 use App\Models\Attendance;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class AttendanceController extends Controller
         $today = $this->todayRecord($userId);
 
         $history = Attendance::query()
+            ->with('approval')
             ->where('user_id', $userId)
             ->orderByDesc('date')
             ->orderByDesc('id')
@@ -56,6 +58,7 @@ class AttendanceController extends Controller
         }
 
         $validated = $request->validated();
+        $mode = $validated['mode'] ?? 'wfo';
 
         // Heuristic 1: Tolak gps_accuracy di atas 100 meter (ambang)
         $gpsAccuracy = (float) $validated['gps_accuracy'];
@@ -84,8 +87,8 @@ class AttendanceController extends Controller
                 (float) $validated['longitude']
             );
 
-            // Validasi Geofencing: Tolak jika di luar radius (mode WFO)
-            if ($distanceM > $industry->radius) {
+            // Validasi Geofencing: Tolak jika di luar radius (hanya jika mode WFO)
+            if ($mode === 'wfo' && $distanceM > $industry->radius) {
                 return back()->withErrors([
                     'latitude' => 'Anda berada di luar radius industri ('.$distanceM.'m dari target, radius maksimal: '.$industry->radius.'m).',
                 ])->with('error', 'Absen ditolak: Anda berada di luar radius industri.');
@@ -120,7 +123,7 @@ class AttendanceController extends Controller
 
         $path = $request->file('image')->store('attendances', 'public');
 
-        Attendance::create([
+        $attendance = Attendance::create([
             'user_id' => $userId,
             'date' => Carbon::today(),
             'arrivalTime' => Carbon::now()->format('H:i:s'),
@@ -129,13 +132,17 @@ class AttendanceController extends Controller
             'is_suspect' => $isSuspect,
             'distance_m' => $distanceM,
             'gps_accuracy' => $gpsAccuracy,
-            'mode' => 'wfo',
+            'mode' => $mode,
             'image' => $path,
             'emotion' => $validated['emotion'] ?? null,
             'latitude' => $validated['latitude'],
             'longitude' => $validated['longitude'],
             'description' => $validated['description'] ?? null,
         ]);
+
+        if ($mode === 'wfa') {
+            Approval::initiate($attendance);
+        }
 
         return back()->with('success', 'Absen masuk berhasil direkam.');
     }
@@ -148,6 +155,8 @@ class AttendanceController extends Controller
         if ($attendance->user_id !== (int) $request->user()->id) {
             abort(403);
         }
+
+        $attendance->load('approval');
 
         return Inertia::render('attendance/show', [
             'attendance' => $this->present($attendance),
@@ -198,7 +207,7 @@ class AttendanceController extends Controller
             );
 
             // Validasi Geofencing: Tolak jika di luar radius (mode WFO)
-            if ($distanceM > $industry->radius) {
+            if ($today->mode === 'wfo' && $distanceM > $industry->radius) {
                 return back()->withErrors([
                     'latitude' => 'Anda berada di luar radius industri ('.$distanceM.'m dari target, radius maksimal: '.$industry->radius.'m).',
                 ])->with('error', 'Absen pulang ditolak: Anda berada di luar radius industri.');
@@ -263,6 +272,7 @@ class AttendanceController extends Controller
     private function todayRecord(int $userId): ?Attendance
     {
         return Attendance::query()
+            ->with('approval')
             ->where('user_id', $userId)
             ->whereDate('date', Carbon::today())
             ->first();
@@ -283,6 +293,13 @@ class AttendanceController extends Controller
             'arrivalTime' => $attendance->arrivalTime ? mb_substr($attendance->arrivalTime, 0, 5) : null,
             'departureTime' => $attendance->departureTime ? mb_substr($attendance->departureTime, 0, 5) : null,
             'isLate' => $attendance->is_late,
+            'isSuspect' => $attendance->is_suspect,
+            'mode' => $attendance->mode,
+            'approval' => $attendance->approval ? [
+                'id' => $attendance->approval->id,
+                'status' => $attendance->approval->status,
+                'note' => $attendance->approval->note,
+            ] : null,
             'absenceReason' => $attendance->absenceReason,
             'image' => $attendance->image,
             'emotion' => $attendance->emotion,

@@ -311,16 +311,38 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
 
 ---
 
+### 35. M1.4 — Mode WFO/WFA + Approval WFA (Blueprint Modul)
+
+- **Backend:**
+  - Menambahkan hubungan `approval` (polimorfik `morphOne`) pada model `Attendance.php`.
+  - Memperbarui `CheckInRequest.php` untuk memvalidasi parameter `mode` (`in:wfo,wfa`).
+  - Memperbarui `checkIn` di `AttendanceController.php` untuk menerima parameter `mode` (default `wfo`). Jika mode adalah `wfa`, sistem akan melewati pemeriksaan batas radius geofencing, namun tetap memvalidasi akurasi GPS dan merekam lokasi. Setelah record absensi dibuat, sistem secara otomatis menginisiasi pengajuan persetujuan dengan memanggil `Approval::initiate($attendance)` (First-to-Approve pembimbing/guru, fallback kaprog).
+  - Memperbarui `checkOut` di `AttendanceController.php` untuk mengecek `$today->mode`. Jika hari ini tercatat sebagai mode `wfa`, pemeriksaan batas radius geofencing pada saat absen pulang juga dilewati.
+  - Memperbarui metode `todayRecord`, `index`, dan `show` di `AttendanceController.php` agar melakukan eager loading terhadap hubungan `approval`. Atribut `mode` dan `approval` (termasuk status dan catatan) diserialisasikan ke dalam response Inertia.
+- **Frontend:**
+  - Menambahkan selector mode berupa tab/segmented control yang interaktif ("Kerja dari Kantor (WFO)" dan "Kerja dari Mana Saja (WFA)") di dalam `CheckInPanel` pada dasbor presensi siswa ([AttendanceIndex](file:///C:/laragon/www/simonik-v2/resources/js/pages/attendance/index.tsx)).
+  - Jika mode WFA dipilih, detail informatif ("Geofencing dibebaskan. Absensi WFA Anda memerlukan persetujuan dari Pembimbing Industri atau Guru Pembimbing sebelum sah.") akan ditampilkan secara dinamis.
+  - Menampilkan panel status persetujuan WFA (`ApprovalStatus`) secara langsung di bawah kartu status presensi hari ini jika mode presensi hari ini adalah WFA.
+  - Memperbarui halaman detail presensi siswa ([AttendanceShow](file:///C:/laragon/www/simonik-v2/resources/js/pages/attendance/show.tsx)) untuk menampilkan detail "Mode Presensi" serta status persetujuan WFA menggunakan komponen `ApprovalStatus`.
+- **Tests:**
+  - Menambahkan test case baru di `AttendanceTest.php`:
+    - `test_student_check_in_wfa_mode_bypasses_geofencing_and_creates_approval`: Memverifikasi siswa dapat melakukan check-in di luar radius dengan mode `wfa`, dan record `approvals` yang berstatus pending terbuat secara otomatis.
+    - `test_student_check_out_wfa_mode_bypasses_geofencing`: Memverifikasi siswa dengan mode check-in `wfa` dapat melakukan check-out dari mana saja melewati geofencing.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 208/208 passed + 675 assertions**. `npm run lint` + `npm run types:check` lolos.
+
+---
+
 ## 📍 Current step
-**M1.3 Geofencing + Anti-Fake (WFO) selesai.** Sistem presensi masuk dan pulang kini dilengkapi dengan validasi geofencing instan (rumus Haversine vs radius industri) dan heuristik anti-fake (penolakan akurasi buruk, penandaan suspect jika akurasi meragukan atau terjadi lompatan koordinat tak wajar). Dasbor siswa menampilkan informasi akurasi GPS secara langsung saat merekam lokasi.
+**M1.4 Mode WFO/WFA + Approval WFA selesai.** Siswa sekarang dapat memilih mode presensi (WFO atau WFA). Mode WFA membebaskan batasan geofencing pada saat masuk dan pulang, namun secara otomatis memicu alur persetujuan baru via Approval Engine yang reusable. Status persetujuan ini terintegrasi secara visual pada dasbor presensi dan halaman detail siswa.
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M1.4** (Mode WFO/WFA + Approval WFA) — prasyarat M1.3 ✅ + M0.3 ✅ terpenuhi
+- **M2.1** (Pengajuan Libur) — prasyarat M0.3 ✅ terpenuhi
+- **M3.1** (Streak Engine) — prasyarat M0.2 ✅ terpenuhi
 - Fase 3 (Gamifikasi Jurnal) — independen, bisa langsung
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M1.4 Mode WFO/WFA + Approval WFA** — siswa mengajukan WFA (lokasi/alasan); pembimbing/guru menyetujui menggunakan Approval Engine (M0.3); jika WFA aktif, geofencing dilewati. Prasyarat M1.3 ✅ + M0.3 ✅ terpenuhi.
-2. **Fase 3 Gamifikasi Jurnal** — independen (streak + badge). Bisa langsung tanpa prasyarat modul lain.
+1. **M2.1 Pengajuan Libur** — siswa mengajukan hari libur (magang libur) dengan persetujuan pembimbing/guru (Approval Engine).
+2. **M3.1 Streak Engine** — kalkulasi streak kehadiran berturut-turut untuk gamifikasi siswa.

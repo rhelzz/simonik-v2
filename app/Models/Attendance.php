@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -104,5 +105,11 @@ class Attendance extends Model
         return Attribute::make(
             get: fn (?string $value): ?string => $value ? asset("/storage/{$value}") : null,
         );
+    }
+
+    /** @return MorphOne<Approval, $this> */
+    public function approval(): MorphOne
+    {
+        return $this->morphOne(Approval::class, 'approvable');
     }
 }

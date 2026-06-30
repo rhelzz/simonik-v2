@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ArrowLeft, Clock, MapPin } from 'lucide-react';
 import { index } from '@/actions/App/Http/Controllers/AttendanceController';
+import { ApprovalStatus } from '@/components/approval-status';
 import type { EmotionKey } from '@/components/photo-capture';
 import { EMOTION_INFO } from '@/components/photo-capture';
 import { AppLayout } from '@/layouts/app-layout';
@@ -23,6 +24,13 @@ type AttendanceShowProps = {
         latitude: string | null;
         longitude: string | null;
         description: string | null;
+        mode: string | null;
+        approval: {
+            id: number;
+            status: 'pending' | 'approved' | 'rejected';
+            approver_role: string | null;
+            note: string | null;
+        } | null;
     };
 };
 
@@ -110,6 +118,10 @@ export default function AttendanceShow({ attendance }: AttendanceShowProps) {
                                 value={attendance.description}
                             />
                         )}
+                        <DetailItem
+                            label="Mode Presensi"
+                            value={attendance.mode ? attendance.mode.toUpperCase() : 'WFO'}
+                        />
                     </div>
 
                     {mapsUrl && (
@@ -130,6 +142,16 @@ export default function AttendanceShow({ attendance }: AttendanceShowProps) {
                         </div>
                     )}
                 </section>
+
+                {/* WFA Approval */}
+                {attendance.mode === 'wfa' && attendance.approval && (
+                    <section className="rounded-3xl bg-surface p-5 sm:p-6">
+                        <h2 className="mb-4 text-base font-bold text-ink">
+                            Persetujuan Mode WFA
+                        </h2>
+                        <ApprovalStatus approval={attendance.approval} canAct={false} />
+                    </section>
+                )}
 
                 {/* Foto */}
                 {attendance.image && (
