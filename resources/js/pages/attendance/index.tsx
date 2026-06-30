@@ -33,6 +33,7 @@ type AttendanceRecord = {
     status: string | null;
     arrivalTime: string | null;
     departureTime: string | null;
+    isLate: boolean;
     absenceReason: string | null;
     image: string | null;
     emotion: EmotionKey | null;
@@ -46,6 +47,11 @@ type AttendanceIndexProps = {
     today: AttendanceRecord | null;
     history: Paginated<AttendanceRecord>;
     todayLabel: string;
+    industry: {
+        name: string;
+        jam_masuk: string | null;
+        jam_pulang: string | null;
+    } | null;
 };
 
 function EmotionBadge({ emotion }: { emotion: EmotionKey }) {
@@ -63,12 +69,13 @@ export default function AttendanceIndex({
     today,
     history,
     todayLabel,
+    industry,
 }: AttendanceIndexProps) {
     return (
         <AppLayout title="Absen Foto + Geo">
             <div className="grid gap-5 lg:grid-cols-5">
                 <div className="lg:col-span-2">
-                    <TodayCard today={today} todayLabel={todayLabel} />
+                    <TodayCard today={today} todayLabel={todayLabel} industry={industry} />
                 </div>
                 <section className="rounded-3xl bg-surface p-5 sm:p-6 lg:col-span-3">
                     <h2 className="text-base font-bold text-ink">
@@ -159,19 +166,35 @@ export default function AttendanceIndex({
 function TodayCard({
     today,
     todayLabel,
+    industry,
 }: {
     today: AttendanceRecord | null;
     todayLabel: string;
+    industry: {
+        name: string;
+        jam_masuk: string | null;
+        jam_pulang: string | null;
+    } | null;
 }) {
     const isPresent =
         today !== null &&
         ['hadir', 'masuk'].includes((today.status ?? '').toLowerCase());
 
+    const hasJam = industry?.jam_masuk && industry?.jam_pulang;
+
     return (
         <section className="rounded-3xl bg-surface p-5 sm:p-6">
-            <div className="flex items-center gap-2 text-sm text-muted">
-                <CalendarCheck className="size-4" />
-                {todayLabel}
+            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between border-b border-line pb-3 mb-4">
+                <div className="flex items-center gap-2 text-sm text-muted">
+                    <CalendarCheck className="size-4" />
+                    {todayLabel}
+                </div>
+                {hasJam && (
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-primary">
+                        <Clock className="size-3.5" />
+                        <span>Jam Kerja: {industry.jam_masuk} - {industry.jam_pulang}</span>
+                    </div>
+                )}
             </div>
 
             {today === null ? (

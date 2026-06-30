@@ -28,6 +28,8 @@ type Industry = {
     longitude: string;
     latitude: string;
     radius: number;
+    jam_masuk: string | null;
+    jam_pulang: string | null;
     duration: string | null;
     guru: string | null;
 };
@@ -102,6 +104,11 @@ export default function MyIndustryShow({ industry, roster }: Props) {
                         </Detail>
                         <Detail label="Guru pembimbing">
                             {industry.guru ?? '—'}
+                        </Detail>
+                        <Detail label="Jam kerja">
+                            {industry.jam_masuk && industry.jam_pulang
+                                ? `${industry.jam_masuk} - ${industry.jam_pulang}`
+                                : 'Belum diatur'}
                         </Detail>
                         <Detail label="Lokasi">
                             {hasGeo ? (

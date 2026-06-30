@@ -38,6 +38,8 @@ class MyIndustryController extends Controller
                 'longitude' => $industry->longitude,
                 'latitude' => $industry->latitude,
                 'radius' => $industry->radius,
+                'jam_masuk' => $industry->jam_masuk ? substr($industry->jam_masuk, 0, 5) : null,
+                'jam_pulang' => $industry->jam_pulang ? substr($industry->jam_pulang, 0, 5) : null,
                 'duration' => $industry->duration,
                 'guru' => $industry->teachers?->name,
             ],
@@ -64,6 +66,8 @@ class MyIndustryController extends Controller
                 'longitude' => $industry->longitude,
                 'latitude' => $industry->latitude,
                 'radius' => $industry->radius,
+                'jam_masuk' => $industry->jam_masuk ? substr($industry->jam_masuk, 0, 5) : null,
+                'jam_pulang' => $industry->jam_pulang ? substr($industry->jam_pulang, 0, 5) : null,
                 'duration' => $industry->duration,
             ],
         ]);

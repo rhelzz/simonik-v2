@@ -267,13 +267,34 @@ Penyempitan scope ke master-data admin + adaptasi relasi sesuai ROADMAP.
 **M1.1 Koordinat Dinamis & Radius selesai.** Fitur pemetaan lokasi industri menggunakan Leaflet + OSM, pengaturan radius presensi, otorisasi multi-peran, dan visualisasi interaktif pada form serta halaman show/detail industri telah terpasang dengan sukses.
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M1.2** (Jam Kerja Dinamis) — prasyarat M0.2 ✅ terpenuhi
-- **M1.3** (Geofencing + Anti-Fake WFO) — prasyarat M1.1 ✅ + M1.2 ⏳
+### 33. M1.2 — Jam Kerja Dinamis (Blueprint Modul)
+
+- **Backend:**
+  - Menambahkan validasi `jam_masuk` (`nullable|date_format:H:i`) dan `jam_pulang` (`nullable|date_format:H:i|after:jam_masuk`) pada `StoreIndustryRequest`, `UpdateIndustryRequest`, dan `UpdateMyIndustryRequest`.
+  - Memperbarui `IndustryController` dan `MyIndustryController` (method `show`/`edit`) untuk menyertakan atribut `jam_masuk` dan `jam_pulang` yang diformat ke `H:i` dalam response JSON/Props, serta memperbarui method `profileData` untuk menyimpan jam kerja.
+  - Memperbarui `AttendanceController` pada endpoint `checkIn()` untuk mengevaluasi status keterlambatan (`is_late`). Bila industri siswa memiliki jam masuk yang ditentukan dan waktu absen melebihi jam masuk tersebut, record absensi secara otomatis ditandai `is_late = true`.
+  - Menambahkan data `industry` (berisi nama dan jam kerja) ke response halaman absen siswa di `AttendanceController::index`.
+- **Frontend:**
+  - Mengintegrasikan kolom input jam kerja (`jam_masuk` dan `jam_pulang` menggunakan `<input type="time">`) ke dalam form pembuatan/edit industri ([IndustryForm](file:///C:/laragon/www/simonik-v2/resources/js/components/industries/industry-form.tsx) & [MyIndustryEdit](file:///C:/laragon/www/simonik-v2/resources/js/pages/my-industry/edit.tsx)).
+  - Menampilkan jam kerja industri pada halaman detail admin/kaprog ([IndustryShow](file:///C:/laragon/www/simonik-v2/resources/js/pages/industries/show.tsx)) dan pembimbing ([MyIndustryShow](file:///C:/laragon/www/simonik-v2/resources/js/pages/my-industry/show.tsx)).
+  - Menampilkan jam kerja industri yang aktif secara dinamis pada panel atas dasbor presensi siswa ([AttendanceIndex](file:///C:/laragon/www/simonik-v2/resources/js/pages/attendance/index.tsx)).
+- **Tests:**
+  - Memperbarui test payload di `IndustryTest.php` dan `MyIndustryTest.php` untuk memvalidasi penyimpanan jam kerja.
+  - Menambahkan test case `test_student_check_in_ontime_if_before_jam_masuk` and `test_student_check_in_late_if_after_jam_masuk` di [AttendanceTest.php](file:///C:/laragon/www/simonik-v2/tests/Feature/AttendanceTest.php) dengan simulasi pergeseran waktu Carbon (`Carbon::setTestNow`) untuk menguji toleransi presensi masuk siswa secara akurat.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 202/202 passed + 657 assertions**. `npm run lint` + `npm run types:check` lolos.
+
+---
+
+## 📍 Current step
+**M1.2 Jam Kerja Dinamis selesai.** Pembimbing industri (atau admin/kaprog) dapat menentukan jam masuk & jam pulang untuk industri. Waktu kerja ini secara dinamis terintegrasi sebagai toleransi presensi siswa, di mana absensi di luar waktu masuk akan otomatis ditandai terlambat (`is_late`). Dasbor siswa juga menampilkan jam kerja industri saat ini secara informatif.
+
+Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
+- **M1.3** (Geofencing + Anti-Fake WFO) — prasyarat M1.1 ✅ + M1.2 ✅ terpenuhi
 - Fase 3 (Gamifikasi Jurnal) — independen, bisa langsung
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M1.2 Jam Kerja Dinamis** — pembimbing set `jam_masuk`/`jam_pulang` industri (validasi) untuk toleransi presensi siswa. Prasyarat M0.2 ✅ terpenuhi.
+1. **M1.3 Geofencing + Anti-Fake (WFO)** — validasi presensi siswa: tolak absen jika di luar koordinat/radius industri, hitung jarak haversine, periksa akurasi GPS, dan tangkal manipulasi GPS (is_suspect). Prasyarat M1.1 ✅ + M1.2 ✅ terpenuhi.
 2. **Fase 3 Gamifikasi Jurnal** — independen (streak + badge). Bisa langsung tanpa prasyarat modul lain.

@@ -26,6 +26,8 @@ class UpdateMyIndustryRequest extends FormRequest
             'longitude' => ['required', 'string', 'max:255'],
             'latitude' => ['required', 'string', 'max:255'],
             'radius' => ['required', 'integer', 'min:10', 'max:10000'],
+            'jam_masuk' => ['nullable', 'date_format:H:i'],
+            'jam_pulang' => ['nullable', 'date_format:H:i', 'after:jam_masuk'],
             'duration' => ['nullable', 'string', 'max:255'],
         ];
     }

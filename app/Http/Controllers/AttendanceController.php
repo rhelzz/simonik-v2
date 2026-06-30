@@ -29,10 +29,18 @@ class AttendanceController extends Controller
             ->paginate(10)
             ->through(fn (Attendance $attendance): array => $this->present($attendance));
 
+        $student = $request->user()->students;
+        $industry = $student?->industries;
+
         return Inertia::render('attendance/index', [
             'today' => $today ? $this->present($today) : null,
             'history' => $history,
             'todayLabel' => Carbon::today()->translatedFormat('l, d F Y'),
+            'industry' => $industry ? [
+                'name' => $industry->name,
+                'jam_masuk' => $industry->jam_masuk ? substr($industry->jam_masuk, 0, 5) : null,
+                'jam_pulang' => $industry->jam_pulang ? substr($industry->jam_pulang, 0, 5) : null,
+            ] : null,
         ]);
     }
 
@@ -50,11 +58,23 @@ class AttendanceController extends Controller
         $validated = $request->validated();
         $path = $request->file('image')->store('attendances', 'public');
 
+        $student = $request->user()->students;
+        $industry = $student?->industries;
+        $isLate = false;
+
+        if ($industry && $industry->jam_masuk) {
+            $currentTime = Carbon::now()->format('H:i:s');
+            if ($currentTime > $industry->jam_masuk) {
+                $isLate = true;
+            }
+        }
+
         Attendance::create([
             'user_id' => $userId,
             'date' => Carbon::today(),
             'arrivalTime' => Carbon::now()->format('H:i:s'),
             'status' => 'hadir',
+            'is_late' => $isLate,
             'image' => $path,
             'emotion' => $validated['emotion'] ?? null,
             'latitude' => $validated['latitude'],
@@ -160,6 +180,7 @@ class AttendanceController extends Controller
             'status' => $attendance->status,
             'arrivalTime' => $attendance->arrivalTime ? mb_substr($attendance->arrivalTime, 0, 5) : null,
             'departureTime' => $attendance->departureTime ? mb_substr($attendance->departureTime, 0, 5) : null,
+            'isLate' => $attendance->is_late,
             'absenceReason' => $attendance->absenceReason,
             'image' => $attendance->image,
             'emotion' => $attendance->emotion,

@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Attendance;
+use App\Models\Industry;
+use App\Models\Student;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -155,5 +157,71 @@ class AttendanceTest extends TestCase
         $this->actingAs($this->siswa())
             ->post('/absen/izin', ['status' => 'izin'])
             ->assertSessionHasErrors('absenceReason');
+    }
+
+    public function test_student_check_in_ontime_if_before_jam_masuk(): void
+    {
+        Storage::fake('public');
+        $siswa = $this->siswa();
+
+        $industry = Industry::factory()->create([
+            'jam_masuk' => '08:00:00',
+            'jam_pulang' => '17:00:00',
+            'radius' => 100,
+        ]);
+        Student::factory()->create([
+            'user_id' => $siswa->id,
+            'industri_id' => $industry->id,
+        ]);
+
+        Carbon::setTestNow(Carbon::today()->setTime(7, 55, 0));
+
+        $this->actingAs($siswa)
+            ->post('/absen/masuk', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.200000',
+                'longitude' => '106.816666',
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $siswa->id,
+            'is_late' => false,
+        ]);
+
+        Carbon::setTestNow();
+    }
+
+    public function test_student_check_in_late_if_after_jam_masuk(): void
+    {
+        Storage::fake('public');
+        $siswa = $this->siswa();
+
+        $industry = Industry::factory()->create([
+            'jam_masuk' => '08:00:00',
+            'jam_pulang' => '17:00:00',
+            'radius' => 100,
+        ]);
+        Student::factory()->create([
+            'user_id' => $siswa->id,
+            'industri_id' => $industry->id,
+        ]);
+
+        Carbon::setTestNow(Carbon::today()->setTime(8, 5, 0));
+
+        $this->actingAs($siswa)
+            ->post('/absen/masuk', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.200000',
+                'longitude' => '106.816666',
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $siswa->id,
+            'is_late' => true,
+        ]);
+
+        Carbon::setTestNow();
     }
 }

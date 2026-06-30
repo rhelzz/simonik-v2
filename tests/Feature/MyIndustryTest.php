@@ -105,6 +105,8 @@ class MyIndustryTest extends TestCase
                 'longitude' => '110.0',
                 'latitude' => '-7.0',
                 'radius' => 150,
+                'jam_masuk' => '08:00',
+                'jam_pulang' => '17:00',
                 'duration' => '3 Bulan',
             ])
             ->assertRedirect(route('my-industry.show'));
@@ -113,6 +115,8 @@ class MyIndustryTest extends TestCase
             'id' => $s['industry']->id,
             'name' => 'PT Diperbarui',
             'bidang' => 'Multimedia',
+            'jam_masuk' => '08:00',
+            'jam_pulang' => '17:00',
         ]);
     }
 

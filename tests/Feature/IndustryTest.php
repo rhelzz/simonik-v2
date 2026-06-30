@@ -41,6 +41,8 @@ class IndustryTest extends TestCase
             'longitude' => '107.609810',
             'latitude' => '-6.914744',
             'radius' => 100,
+            'jam_masuk' => '08:00',
+            'jam_pulang' => '17:00',
             'duration' => '6 Bulan',
             'teacher_id' => null,
             'pembimbing_id' => null,
@@ -128,6 +130,8 @@ class IndustryTest extends TestCase
             'longitude' => $industry->longitude,
             'latitude' => $industry->latitude,
             'radius' => 120,
+            'jam_masuk' => '08:00',
+            'jam_pulang' => '17:00',
             'duration' => $industry->duration,
             'teacher_id' => null,
             'pembimbing_id' => null,
@@ -141,6 +145,8 @@ class IndustryTest extends TestCase
             'id' => $industry->id,
             'name' => 'PT Baru',
             'bidang' => 'Jaringan',
+            'jam_masuk' => '08:00',
+            'jam_pulang' => '17:00',
         ]);
     }
 

@@ -17,6 +17,8 @@ type Industry = {
     longitude: string;
     latitude: string;
     radius: number;
+    jam_masuk: string | null;
+    jam_pulang: string | null;
     duration: string | null;
 };
 
@@ -75,6 +77,32 @@ export default function MyIndustryEdit({ industry }: { industry: Industry }) {
                                         name="duration"
                                         defaultValue={industry.duration ?? ''}
                                         placeholder="mis. 6 Bulan"
+                                        className={inputClass}
+                                    />
+                                </Field>
+                                <Field
+                                    label="Jam Masuk Kerja (opsional)"
+                                    htmlFor="jam_masuk"
+                                    error={errors.jam_masuk}
+                                >
+                                    <input
+                                        type="time"
+                                        id="jam_masuk"
+                                        name="jam_masuk"
+                                        defaultValue={industry.jam_masuk ?? ''}
+                                        className={inputClass}
+                                    />
+                                </Field>
+                                <Field
+                                    label="Jam Pulang Kerja (opsional)"
+                                    htmlFor="jam_pulang"
+                                    error={errors.jam_pulang}
+                                >
+                                    <input
+                                        type="time"
+                                        id="jam_pulang"
+                                        name="jam_pulang"
+                                        defaultValue={industry.jam_pulang ?? ''}
                                         className={inputClass}
                                     />
                                 </Field>

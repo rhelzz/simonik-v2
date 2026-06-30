@@ -13,6 +13,8 @@ type IndustryShowProps = {
         longitude: string;
         latitude: string;
         radius: number;
+        jam_masuk: string | null;
+        jam_pulang: string | null;
         duration: string | null;
         guru: string | null;
         pembimbing: string | null;
@@ -103,6 +105,14 @@ export default function IndustryShow({
                                 industry.latitude && industry.longitude
                                     ? `${industry.latitude}, ${industry.longitude} (${industry.radius}m)`
                                     : null
+                            }
+                        />
+                        <DetailItem
+                            label="Jam Kerja"
+                            value={
+                                industry.jam_masuk && industry.jam_pulang
+                                    ? `${industry.jam_masuk} - ${industry.jam_pulang}`
+                                    : 'Belum diatur'
                             }
                         />
                     </div>
