@@ -22,6 +22,7 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PembimbingController;
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SakitIzinController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Auth;
@@ -121,10 +122,14 @@ Route::middleware('auth')->group(function () {
         // Pengajuan Libur milik siswa.
         Route::get('libur', [LeaveRequestController::class, 'index'])->name('leave-requests.index');
         Route::post('libur', [LeaveRequestController::class, 'store'])->name('leave-requests.store');
+
+        // Pengajuan Sakit/Izin milik siswa.
+        Route::get('sakit-izin', [SakitIzinController::class, 'index'])->name('sakit-izin.index');
+        Route::post('sakit-izin', [SakitIzinController::class, 'store'])->name('sakit-izin.store');
     });
 
-    // Approval engine — approve/reject (pembimbing, guru, kaprog).
-    Route::middleware('role:pembimbing|guru|kaprog')->group(function () {
+    // Approval engine — approve/reject (pembimbing, guru, kaprog, orangtua).
+    Route::middleware('role:pembimbing|guru|kaprog|orangtua')->group(function () {
         Route::post('approvals/{approval}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
         Route::post('approvals/{approval}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     });

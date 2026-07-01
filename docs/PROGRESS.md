@@ -348,20 +348,35 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
   - Membuat test suite `LeaveRequestTest` (6 test, 17 assertions) untuk memverifikasi happy path pengajuan libur, penanganan error duplikasi tanggal, pembatasan akses non-siswa, pembuatan record kehadiran berstatus `libur` saat disetujui, dan tidak adanya efek samping kehadiran saat ditolak.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 214/214 passed + 692 assertions**. `npm run lint` + `npm run types:check` lolos.
 
+### 34. M2.2 — Sakit/Izin Multi-step (Blueprint Modul)
+
+- **Backend:**
+  - Membuat model `SakitIzin` beserta migration `2026_07_01_070952_create_sakit_izins_table` dengan constraint `unique(['user_id', 'date'])` dan kolom `bukti` untuk lampiran surat keterangan.
+  - Memperbarui `ApproveRequest` untuk memproses persetujuan dual-stage:
+    - **Tahap 1 (Orang Tua):** Memvalidasi bahwa aktor adalah orang tua siswa yang mengajukan pengajuan (`student->parent_id === approver->parents->id`). Saat disetujui, record `Approval` Tahap 2 (Industri/Guru) otomatis diinisiasi.
+    - **Tahap 2 (Industri / Guru / Kaprog):** Memvalidasi bahwa Tahap 1 sudah disetujui dan aktor memiliki salah satu role eligible. Saat disetujui, record kehadiran (`Attendance`) pada tanggal terkait otomatis diperbarui/dibuat dengan status `sakit` atau `izin`, menyertakan file `bukti` sebagai lampiran.
+  - Memperbarui grup middleware rute approvals di `routes/web.php` menjadi `role:pembimbing|guru|kaprog|orangtua` agar orang tua dapat bertindak atas approvals.
+  - Membuat `SakitIzinController` dengan metode `index` (mengembalikan daftar pengajuan terpaginasi beserta detail dual-stage approval) dan `store` (menyimpan pengajuan dengan file upload dan menginisiasi persetujuan Tahap 1).
+  - Membuat Form Request `StoreSakitIzinRequest` untuk menangani upload file `bukti` (maksimal 2MB, format gambar) dan memvalidasi keunikan tanggal lewat `after()` validation hook.
+- **Frontend:**
+  - Membuat halaman React `resources/js/pages/sakit-izin/index.tsx` yang memfasilitasi form pengajuan (jenis sakit/izin, tanggal, keterangan, upload file) dan visualisasi riwayat dengan status dual-stage (Orang Tua -> Industri) menggunakan komponen `ApprovalStatus`.
+  - Mengintegrasikan menu sidebar "Sakit & Izin" di `resources/js/lib/nav.ts` yang terhubung ke rute `/sakit-izin`.
+- **Tests:**
+  - Membuat test suite `SakitIzinTest` (4 test, 25 assertions) yang memvalidasi keharusan siswa menautkan Orang Tua, penyerahan pengajuan, alur persetujuan bertahap (peran orang tua vs pembimbing, pembatasan orang tua lain, pembentukan presensi hanya setelah Tahap 2 disetujui), dan tidak adanya efek jika Tahap 1 ditolak.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 218/218 passed + 717 assertions**. `npm run lint` + `npm run types:check` lolos.
+
 ---
 
 ## 📍 Current step
-**M2.1 Pengajuan Libur selesai.** Siswa sekarang dapat mengajukan libur magang via form mandiri. Pengajuan tersebut melewati Approval Engine (First-to-Approve Industri/Guru, fallback Kaprog). Jika disetujui, record kehadiran pada tanggal terkait otomatis dibuat/diperbarui dengan status `libur` dan tampil di riwayat presensi.
+**M2.2 Sakit/Izin Multi-step selesai.** Siswa sekarang dapat mengajukan izin sakit/keperluan dengan melampirkan bukti. Pengajuan tersebut diproses secara bertahap: Tahap 1 (Orang Tua) -> Tahap 2 (Industri/Guru). Status presensi (`sakit` atau `izin`) baru sah dan diperbarui di monitoring setelah kedua tahap disetujui.
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M2.2** (Sakit/Izin Multi-step) — prasyarat M0.3 ✅ terpenuhi
-- **M2.3** (Inbox Approval) — prasyarat M1.4, M2.1 ✅ terpenuhi
+- **M2.3** (Inbox Approval) — prasyarat M1.4, M2.1, M2.2 ✅ terpenuhi
 - **M3.1** (Streak Engine) — prasyarat M0.2 ✅ terpenuhi
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M2.2 Sakit/Izin Multi-step** — alur persetujuan bertahap (Ortu -> Industri) untuk sakit/izin siswa.
-2. **M2.3 Inbox Approval** — satu inbox terpusat bagi pembimbing/guru/kaprog/ortu untuk memproses WFA, Libur, Sakit/Izin.
-3. **M3.1 Streak Engine** — kalkulasi streak kehadiran berturut-turut untuk gamifikasi siswa.
+1. **M2.3 Inbox Approval** — satu inbox terpusat bagi pembimbing/guru/kaprog/ortu untuk memproses WFA, Libur, Sakit/Izin.
+2. **M3.1 Streak Engine** — kalkulasi streak kehadiran berturut-turut untuk gamifikasi siswa.

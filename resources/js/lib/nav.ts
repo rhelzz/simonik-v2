@@ -15,6 +15,7 @@ import {
     GraduationCap,
     Handshake,
     HardHat,
+    HeartPulse,
     LayoutDashboard,
     ListChecks,
     MailCheck,
@@ -41,6 +42,7 @@ import { index as guidesIndex } from '@/actions/App/Http/Controllers/GuideContro
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
 import { index as leaveRequestsIndex } from '@/actions/App/Http/Controllers/LeaveRequestController';
+import { index as sakitIzinIndex } from '@/actions/App/Http/Controllers/SakitIzinController';
 import { show as myIndustryShow } from '@/actions/App/Http/Controllers/MyIndustryController';
 import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentController';
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
@@ -89,6 +91,12 @@ export const navSections: NavSection[] = [
                 label: 'Pengajuan Libur',
                 icon: CalendarOff,
                 href: leaveRequestsIndex.url(),
+                roles: ['siswa'],
+            },
+            {
+                label: 'Sakit & Izin',
+                icon: HeartPulse,
+                href: sakitIzinIndex.url(),
                 roles: ['siswa'],
             },
             {
