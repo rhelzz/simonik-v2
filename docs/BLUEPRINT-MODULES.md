@@ -81,7 +81,7 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 
 ### FASE 0 — App Readiness (WAJIB lebih dulu)
 
-#### M0.1 — Refactor Peran & Kerangka Navigasi ⏳
+#### M0.1 — Refactor Peran & Kerangka Navigasi ✅
 - **Tujuan:** peran final + skeleton nav untuk semua modul mendatang.
 - **Prasyarat:** —
 - **Backend:** seeder role (tambah `wakasek`, hapus `kepala_sekolah`); migrasi/command pembersih user & role `kepala_sekolah`; middleware route group untuk `wakasek`; `HandleInertiaRequests::share()` tetap kirim `roles`.
@@ -89,14 +89,14 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 - **Peran:** semua.
 - **DoD:** login tiap peran tampil menu benar; `wakasek` punya dashboard; tidak ada sisa referensi `kepala_sekolah`; `npm run types:check` + `composer test` hijau.
 
-#### M0.2 — Fondasi Skema Presensi ⏳
+#### M0.2 — Fondasi Skema Presensi ✅
 - **Tujuan:** satu migrasi forward-only untuk semua kebutuhan kolom presensi cerdas.
 - **Prasyarat:** —
 - **Backend:** migrasi: `industries` + `radius` (meter), `jam_masuk`, `jam_pulang`; `attendances` + `mode` (`wfo|wfa`), `is_late`, `distance_m`, `gps_accuracy`, `is_suspect`. Update `casts()` model `Industry` & `Attendance`; update factory.
 - **Frontend:** —
 - **DoD:** migrasi jalan; factory & test existing tetap hijau.
 
-#### M0.3 — Approval Engine (Cross-Approval) Bersama ⏳
+#### M0.3 — Approval Engine (Cross-Approval) Bersama ✅
 - **Tujuan:** mesin First-to-Approve reusable + fallback Kaprog.
 - **Prasyarat:** M0.1.
 - **Backend:** model + migrasi `approvals` (polimorfik: `approvable_type/id`, `status`, `approver_role`, `approver_id`, `note`); action `ApproveRequest` (First-to-Approve: sah bila salah satu approver setuju; Kaprog sebagai safety-net). Policy/gate per peran.
@@ -107,25 +107,25 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 
 ### FASE 1 — Presensi Cerdas
 
-#### M1.1 — Koordinat Dinamis & Radius ⏳
+#### M1.1 — Koordinat Dinamis & Radius ✅
 - **Prasyarat:** M0.2.
 - **Backend:** endpoint update `latitude/longitude/radius` industri dgn otorisasi multi-peran (admin global, kaprog jurusan, guru bimbingan, pembimbing sendiri).
 - **Frontend:** map picker (Leaflet/OSM) di form industri & `my-industry/edit`; input radius.
 - **DoD:** tiap peran berwenang bisa simpan koordinat & radius; tervisualisasi di peta.
 
-#### M1.2 — Jam Kerja Dinamis ⏳
+#### M1.2 — Jam Kerja Dinamis ✅
 - **Prasyarat:** M0.2.
 - **Backend:** pembimbing set `jam_masuk`/`jam_pulang` industri (validasi); jadi sumber toleransi presensi.
 - **Frontend:** form jam kerja di `my-industry/edit`.
 - **DoD:** perubahan jam tercermin sebagai batas presensi siswa industri tsb.
 
-#### M1.3 — Geofencing + Anti-Fake (WFO) ⏳
+#### M1.3 — Geofencing + Anti-Fake (WFO) ✅
 - **Prasyarat:** M1.1, M1.2.
 - **Backend:** validasi check-in/out: hitung jarak (haversine) vs `radius` → tolak jika luar radius (mode WFO); set `is_late` dari `jam_masuk`; **anti-fake heuristics**: tolak `gps_accuracy` di atas ambang, tandai `is_suspect` bila akurasi buruk/lompatan tak wajar; simpan `distance_m`, `gps_accuracy`.
 - **Frontend:** UI presensi menampilkan status dalam/luar radius + akurasi GPS + peringatan.
 - **DoD:** check-in luar radius ditolak (WFO); telat tertandai; fix akurasi rendah ditolak/ditandai.
 
-#### M1.4 — Mode WFO/WFA + Approval WFA ⏳
+#### M1.4 — Mode WFO/WFA + Approval WFA ✅
 - **Prasyarat:** M1.3, M0.3.
 - **Backend:** siswa pilih `mode`; WFA lewati geofence tapi wajib live photo + buat `approval` (First-to-Approve pembimbing/guru, fallback kaprog).
 - **Frontend:** toggle mode di halaman presensi; status approval WFA.
@@ -135,7 +135,7 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 
 ### FASE 2 — Ketidakhadiran & Libur
 
-#### M2.1 — Pengajuan Libur ⏳
+#### M2.1 — Pengajuan Libur ✅
 - **Prasyarat:** M0.3.
 - **Backend:** model `LeaveRequest` (tanggal, alasan) → approval First-to-Approve Industri/Guru, fallback Kaprog.
 - **Frontend:** form pengajuan libur (siswa) + status.
@@ -162,7 +162,7 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 - **Backend:** hitung daily streak & longest streak dari `activities` (service, bukan kolom redundan bila bisa dihitung).
 - **DoD:** streak akurat lintas tanggal (termasuk reset bila bolong).
 
-#### M3.2 — Badge / Achievement ⏳
+#### M3.2 — Badge / Achievement ✅
 - **Prasyarat:** M3.1.
 - **Backend:** model `Badge` + `student_badge` + aturan award (mis. streak 7/30 hari, N jurnal).
 - **Frontend:** komponen Atomic Design (atom badge, molekul kartu, organisme etalase).
