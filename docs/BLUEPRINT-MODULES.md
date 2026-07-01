@@ -168,7 +168,7 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 - **Frontend:** komponen Atomic Design (atom badge, molekul kartu, organisme etalase).
 - **DoD:** badge ter-award otomatis sesuai aturan.
 
-#### M3.3 — UI Gamifikasi Siswa ⏳
+#### M3.3 — UI Gamifikasi Siswa ✅
 - **Prasyarat:** M3.1, M3.2.
 - **Frontend:** widget streak + etalase badge di `dashboard-student` & halaman jurnal.
 - **DoD:** siswa melihat streak & badge; reward psikologis tampil.
@@ -270,7 +270,7 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 - [x] M2.3 Inbox Approval
 - [x] M3.1 Streak Engine
 - [x] M3.2 Badge / Achievement
-- [ ] M3.3 UI Gamifikasi Siswa
+- [x] M3.3 UI Gamifikasi Siswa
 - [ ] M4.1 QR Keaslian Sertifikat
 - [ ] M4.2 Rapor Digital
 - [ ] M5.1 Akuntabilitas Dana

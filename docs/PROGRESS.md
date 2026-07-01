@@ -418,17 +418,30 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
   - User tanpa profil siswa (role guru) tidak error.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 234/234 passed + 794 assertions** (+8 BadgeAwarderTest). `npm run lint` + `npm run types:check` lolos.
 
+### 38. M3.3 — UI Gamifikasi Siswa (Blueprint Modul)
+
+- **Backend:**
+  - Menginjeksikan `StreakCalculator` ke dalam `ActivityController` (constructor property promotion, berdampingan dengan `BadgeAwarder` yang sudah ada).
+  - Menambahkan `Badge` model import ke `ActivityController`.
+  - Memperbarui `ActivityController::index()`: menghitung streaks via `StreakCalculator::calculate()`, mengambil seluruh badge + pivot rows (`student_badge`) dengan pola yang identik dengan `DashboardController`, lalu mengirimkan prop tambahan `streak` dan `badges` ke halaman `activities/index`.
+- **Frontend:**
+  - Memperbarui `resources/js/pages/activities/index.tsx`:
+    - Menambahkan props type `streak: { current: number; longest: number }` dan `badges: BadgeData[]`.
+    - Menambahkan **streak motivational banner** di atas daftar jurnal:
+      - Jika streak > 0: banner oranye 🔥 "N hari berturut-turut!" + info rekor terpanjang (atau pesan "Ini rekor terbaikmu!" bila sama).
+      - Jika streak = 0: banner abu 📝 "Tulis jurnal hari ini untuk memulai streak harianmu!".
+    - Menambahkan **`BadgeShowcase`** (komponen organisme M3.2) sebagai section terpisah di bawah daftar jurnal — hanya muncul bila ada badge tersedia.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 234/234 passed + 794 assertions**. `npm run lint` + `npm run types:check` lolos.
+
 ---
 
 ## 📍 Current step
-**M3.2 Badge / Achievement selesai.** Sistem badge otomatis aktif: 7 badge default (streak 7/30 hari, total jurnal 10/50/100, hadir 5/20 kali) ter-award setelah siswa menyimpan jurnal atau check-in absen. Dashboard siswa kini menampilkan widget streak (current + longest) dan etalase badge bergaya Atomic Design (earned + locked).
-
-Modul blueprint yang bisa dikerjakan selanjutnya:
-- **M3.3** (UI Gamifikasi Siswa) — prasyarat M3.1 + M3.2 ✅ terpenuhi
+**M3.3 UI Gamifikasi Siswa selesai.** Halaman jurnal siswa kini menampilkan banner streak motivasional (🔥 N hari berturut-turut, atau prompt memulai streak bila 0) dan etalase badge penuh di bawah daftar jurnal. Reward psikologis gamifikasi kini hadir di dua titik: dashboard siswa (M3.2) dan halaman jurnal (M3.3). **Fase 3 Gamifikasi Jurnal sepenuhnya selesai.**
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M3.3 UI Gamifikasi Siswa** — widget streak + etalase badge diperluas ke halaman jurnal; dedicated `/badges` page.
-2. **M4.1 QR Keaslian Sertifikat** — generate QR signed-URL + halaman verifikasi publik.
+1. **M4.1 QR Keaslian Sertifikat** — generate QR signed-URL + halaman verifikasi publik (independen).
+2. **M4.2 Rapor Digital** — kompilasi nilai + rekap absen/jurnal → print-to-PDF ber-QR (prasyarat M4.1 ideal).
+3. **M5.1 Akuntabilitas Dana** — modul keuangan Wakasek (penerimaan + pengeluaran).

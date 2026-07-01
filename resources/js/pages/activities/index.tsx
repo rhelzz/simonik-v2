@@ -7,6 +7,7 @@ import {
     Plus,
     Trash2,
     Wrench,
+    Zap,
 } from 'lucide-react';
 import { useState } from 'react';
 import {
@@ -14,10 +15,13 @@ import {
     destroy,
     edit,
 } from '@/actions/App/Http/Controllers/ActivityController';
+import type { BadgeData } from '@/components/badges/badge-atom';
+import { BadgeShowcase } from '@/components/badges/badge-showcase';
 import { Modal } from '@/components/ui/modal';
 import { Pagination } from '@/components/ui/pagination';
 import { RichText } from '@/components/ui/rich-text';
 import { AppLayout } from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types';
 
 type Activity = {
@@ -35,8 +39,12 @@ type Activity = {
 
 export default function ActivitiesIndex({
     activities,
+    streak,
+    badges,
 }: {
     activities: Paginated<Activity>;
+    streak: { current: number; longest: number };
+    badges: BadgeData[];
 }) {
     const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
         null,
@@ -67,6 +75,48 @@ export default function ActivitiesIndex({
                         <Plus className="size-4" />
                         Tulis jurnal
                     </Link>
+                </div>
+
+                {/* Streak motivational banner */}
+                <div
+                    className={cn(
+                        'mt-4 flex items-center gap-3 rounded-2xl px-4 py-3',
+                        streak.current > 0
+                            ? 'bg-orange-500/10'
+                            : 'bg-muted/10',
+                    )}
+                >
+                    <span className="text-2xl leading-none">
+                        {streak.current > 0 ? '🔥' : '📝'}
+                    </span>
+                    {streak.current > 0 ? (
+                        <div>
+                            <p className="text-sm font-bold text-orange-700 dark:text-orange-400">
+                                {streak.current} hari berturut-turut!
+                            </p>
+                            <p className="text-xs text-orange-600/70 dark:text-orange-500/70">
+                                {streak.longest > streak.current ? (
+                                    <>
+                                        Rekor terbaikmu:{' '}
+                                        <span className="font-semibold">
+                                            {streak.longest} hari
+                                        </span>
+                                        . Terus pertahankan!
+                                    </>
+                                ) : (
+                                    <>
+                                        Ini adalah rekor streak terbaikmu!{' '}
+                                        <Zap className="inline size-3" />
+                                    </>
+                                )}
+                            </p>
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted">
+                            Tulis jurnal hari ini untuk memulai streak
+                            harianmu!
+                        </p>
+                    )}
                 </div>
 
                 {activities.data.length === 0 ? (
@@ -143,6 +193,12 @@ export default function ActivitiesIndex({
 
                 <Pagination meta={activities} />
             </section>
+
+            {badges.length > 0 && (
+                <section className="mt-5">
+                    <BadgeShowcase badges={badges} />
+                </section>
+            )}
 
             <Modal
                 open={!!selectedActivity}

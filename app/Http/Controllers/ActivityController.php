@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreActivityRequest;
 use App\Http\Requests\UpdateActivityRequest;
 use App\Models\Activity;
+use App\Models\Badge;
 use App\Models\User;
 use App\Services\BadgeAwarder;
+use App\Services\StreakCalculator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,15 +22,18 @@ use Inertia\Response;
 class ActivityController extends Controller
 {
     public function __construct(
-        private readonly BadgeAwarder $badgeAwarder
+        private readonly BadgeAwarder $badgeAwarder,
+        private readonly StreakCalculator $streakCalculator,
     ) {}
 
     /**
-     * Daftar jurnal milik siswa.
+     * Daftar jurnal milik siswa + streak & badge untuk widget gamifikasi.
      */
     public function index(Request $request): Response
     {
-        $userId = (int) $request->user()->id;
+        /** @var User $user */
+        $user = $request->user();
+        $userId = (int) $user->id;
 
         $activities = Activity::query()
             ->where('user_id', $userId)
@@ -37,8 +42,40 @@ class ActivityController extends Controller
             ->paginate(10)
             ->through(fn (Activity $activity): array => $this->present($activity));
 
+        $streaks = $this->streakCalculator->calculate($user);
+
+        $student = $user->students;
+        $allBadges = Badge::all();
+
+        $pivotRows = $student !== null
+            ? \DB::table('student_badge')
+                ->where('student_id', $student->id)
+                ->get(['badge_id', 'awarded_at'])
+                ->keyBy('badge_id')
+            : collect();
+
+        $badges = $allBadges->map(fn (Badge $b) => [
+            'id' => $b->id,
+            'key' => $b->key,
+            'name' => $b->name,
+            'description' => $b->description,
+            'icon' => $b->icon,
+            'color' => $b->color,
+            'rule_type' => $b->rule_type,
+            'rule_value' => $b->rule_value,
+            'earned' => $pivotRows->has($b->id),
+            'awarded_at' => $pivotRows->has($b->id)
+                ? (string) $pivotRows->get($b->id)->awarded_at
+                : null,
+        ])->values()->all();
+
         return Inertia::render('activities/index', [
             'activities' => $activities,
+            'streak' => [
+                'current' => $streaks['current_streak'],
+                'longest' => $streaks['longest_streak'],
+            ],
+            'badges' => $badges,
         ]);
     }
 
