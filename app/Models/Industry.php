@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $duration
  * @property int|null $pembimbing_id
  * @property int|null $teacher_id
+ * @property int|null $kuota
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -38,6 +39,7 @@ use Illuminate\Support\Carbon;
     'duration',
     'pembimbing_id',
     'teacher_id',
+    'kuota',
 ])]
 class Industry extends Model
 {
@@ -51,6 +53,7 @@ class Industry extends Model
     {
         return [
             'radius' => 'integer',
+            'kuota' => 'integer',
         ];
     }
 

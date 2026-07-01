@@ -12,18 +12,21 @@ use App\Http\Controllers\CertificateTemplateController;
 use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartemenController;
+use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\JournalMonitorController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\MyIndustryController;
 use App\Http\Controllers\ParentController;
+use App\Http\Controllers\PartnershipController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PembimbingController;
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RaporController;
 use App\Http\Controllers\SakitIzinController;
+use App\Http\Controllers\StatistikController;
 use App\Http\Controllers\StreakController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
@@ -166,5 +169,22 @@ Route::middleware('auth')->group(function () {
         Route::get('monitoring/jurnal/jurusan/{departemen}', [JournalMonitorController::class, 'classes'])->name('journal-monitor.classes');
         Route::get('monitoring/jurnal/kelas/{class}', [JournalMonitorController::class, 'students'])->name('journal-monitor.students');
         Route::get('monitoring/jurnal/murid/{student}', [JournalMonitorController::class, 'show'])->name('journal-monitor.show');
+    });
+
+    // M5.1 Akuntabilitas Dana — Wakasek catat penerimaan & pengeluaran.
+    Route::middleware('role:wakasek')->group(function () {
+        Route::get('keuangan', [FinanceController::class, 'index'])->name('finance.index');
+        Route::post('keuangan/penerimaan', [FinanceController::class, 'storeReceipt'])->name('finance.receipts.store');
+        Route::delete('keuangan/penerimaan/{budgetReceipt}', [FinanceController::class, 'destroyReceipt'])->name('finance.receipts.destroy');
+        Route::post('keuangan/pengeluaran', [FinanceController::class, 'storeExpense'])->name('finance.expenses.store');
+        Route::delete('keuangan/pengeluaran/{expense}', [FinanceController::class, 'destroyExpense'])->name('finance.expenses.destroy');
+    });
+
+    // M5.2 Kemitraan + Kuota & M5.3 Statistik Global (admin/wakasek).
+    Route::middleware('role:admin|wakasek')->group(function () {
+        Route::get('kemitraan', [PartnershipController::class, 'index'])->name('partnerships.index');
+        Route::patch('kemitraan/{industry}/kuota', [PartnershipController::class, 'updateKuota'])->name('partnerships.update-kuota');
+
+        Route::get('statistik', [StatistikController::class, 'index'])->name('statistik.index');
     });
 });

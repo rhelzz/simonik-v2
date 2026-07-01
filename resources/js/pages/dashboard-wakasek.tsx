@@ -1,4 +1,6 @@
+import { Link } from '@inertiajs/react';
 import {
+    ArrowRight,
     BarChart3,
     Building2,
     GraduationCap,
@@ -7,6 +9,9 @@ import {
     Wallet,
     Workflow,
 } from 'lucide-react';
+import { index as financeIndex } from '@/actions/App/Http/Controllers/FinanceController';
+import { index as partnershipsIndex } from '@/actions/App/Http/Controllers/PartnershipController';
+import { index as statistikIndex } from '@/actions/App/Http/Controllers/StatistikController';
 import { HeroGreeting, StatCard } from '@/components/dashboard/widgets';
 import { AppLayout } from '@/layouts/app-layout';
 
@@ -61,56 +66,55 @@ export default function DashboardWakasek({
             </section>
 
             <section className="mt-6 grid gap-4 lg:grid-cols-3">
-                <ComingSoonCard
+                <QuickLinkCard
                     icon={Wallet}
                     title="Akuntabilitas Dana"
-                    description="Rekap penerimaan anggaran komite & realisasi pengeluaran operasional PKL."
-                    module="M5.1"
+                    description="Catat penerimaan anggaran komite & realisasi pengeluaran operasional PKL."
+                    href={financeIndex.url()}
                 />
-                <ComingSoonCard
+                <QuickLinkCard
                     icon={Handshake}
                     title="Kemitraan & Kuota"
                     description="Kelola daftar mitra industri dan tetapkan kuota penerimaan siswa PKL."
-                    module="M5.2"
+                    href={partnershipsIndex.url()}
                 />
-                <ComingSoonCard
+                <QuickLinkCard
                     icon={BarChart3}
                     title="Statistik Global"
-                    description="Statistik keaktifan guru, presensi per jurusan, dan dokumentasi monitoring."
-                    module="M5.3"
+                    description="Statistik keaktifan guru, presensi & jurnal per jurusan."
+                    href={statistikIndex.url()}
                 />
             </section>
         </AppLayout>
     );
 }
 
-function ComingSoonCard({
+function QuickLinkCard({
     icon: Icon,
     title,
     description,
-    module,
+    href,
 }: {
     icon: React.ComponentType<{ className?: string }>;
     title: string;
     description: string;
-    module: string;
+    href: string;
 }) {
     return (
-        <div className="rounded-xl border border-dashed bg-canvas p-5 opacity-60">
-            <div className="mb-3 flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                    <Icon className="h-5 w-5" />
+        <Link
+            href={href}
+            className="group rounded-2xl bg-surface p-5 transition-colors hover:bg-primary-soft"
+        >
+            <div className="mb-3 flex items-center justify-between">
+                <span className="flex size-10 items-center justify-center rounded-xl bg-primary-soft text-primary">
+                    <Icon className="size-5" />
                 </span>
-                <div>
-                    <p className="text-sm font-semibold">{title}</p>
-                    <span className="text-muted-foreground rounded bg-muted px-1.5 py-0.5 text-xs font-medium">
-                        {module} · Segera hadir
-                    </span>
-                </div>
+                <ArrowRight className="size-4 text-muted transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
             </div>
-            <p className="text-muted-foreground text-sm leading-relaxed">
+            <p className="text-sm font-bold text-ink">{title}</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
                 {description}
             </p>
-        </div>
+        </Link>
     );
 }

@@ -193,19 +193,19 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 
 ### FASE 5 — Modul Wakasek/Hubin
 
-#### M5.1 — Akuntabilitas Dana ⏳
+#### M5.1 — Akuntabilitas Dana ✅
 - **Prasyarat:** M0.1.
 - **Backend:** model `BudgetReceipt` (penerimaan komite) + `Expense` (realisasi pengeluaran); CRUD (akses `wakasek`).
 - **Frontend:** halaman keuangan: rekap penerimaan + pencatatan pengeluaran + ringkasan saldo.
 - **DoD:** wakasek catat penerimaan & pengeluaran; rekap akurat.
 
-#### M5.2 — Manajemen Kemitraan + Kuota ⏳
+#### M5.2 — Manajemen Kemitraan + Kuota ✅
 - **Prasyarat:** M0.1.
 - **Backend:** field `kuota` pada `industries`; logika sisa kuota vs siswa ditempatkan.
 - **Frontend:** kelola mitra + penetapan kuota (admin/wakasek); indikator kuota terisi.
 - **DoD:** kuota tampil & membatasi/menandai penempatan berlebih.
 
-#### M5.3 — Supervisi Global & Statistik ⏳
+#### M5.3 — Supervisi Global & Statistik ✅
 - **Prasyarat:** M0.1.
 - **Backend:** statistik: guru aktif melihat jurnal, presensi per jurusan (general), rekap dokumentasi monitoring.
 - **Frontend:** dashboard `wakasek` dengan kartu/grafik statistik global.
@@ -273,7 +273,7 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 - [x] M3.3 UI Gamifikasi Siswa
 - [x] M4.1 QR Keaslian Sertifikat
 - [x] M4.2 Rapor Digital
-- [ ] M5.1 Akuntabilitas Dana
-- [ ] M5.2 Manajemen Kemitraan + Kuota
-- [ ] M5.3 Supervisi Global & Statistik
+- [x] M5.1 Akuntabilitas Dana
+- [x] M5.2 Manajemen Kemitraan + Kuota
+- [x] M5.3 Supervisi Global & Statistik
 - [ ] M6.1 PWA Setup

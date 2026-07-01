@@ -39,17 +39,20 @@ import { index as certificatesIndex } from '@/actions/App/Http/Controllers/Certi
 import { index as certificateTemplatesIndex } from '@/actions/App/Http/Controllers/CertificateTemplateController';
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
+import { index as financeIndex } from '@/actions/App/Http/Controllers/FinanceController';
 import { index as guidesIndex } from '@/actions/App/Http/Controllers/GuideController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
 import { index as leaveRequestsIndex } from '@/actions/App/Http/Controllers/LeaveRequestController';
 import { show as myIndustryShow } from '@/actions/App/Http/Controllers/MyIndustryController';
 import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentController';
+import { index as partnershipsIndex } from '@/actions/App/Http/Controllers/PartnershipController';
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
 import { index as periodsIndex } from '@/actions/App/Http/Controllers/PeriodController';
 import { edit as profileEdit } from '@/actions/App/Http/Controllers/ProfileController';
 import { index as raporIndex } from '@/actions/App/Http/Controllers/RaporController';
 import { index as sakitIzinIndex } from '@/actions/App/Http/Controllers/SakitIzinController';
+import { index as statistikIndex } from '@/actions/App/Http/Controllers/StatistikController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
 import { dashboard, streak } from '@/routes';
@@ -212,20 +215,20 @@ export const navSections: NavSection[] = [
             {
                 label: 'Akuntabilitas Dana',
                 icon: Wallet,
-                // M5.1 — belum tersedia
+                href: financeIndex.url(),
                 roles: ['wakasek'],
             },
             {
                 label: 'Kemitraan & Kuota',
                 icon: Handshake,
-                // M5.2 — belum tersedia
+                href: partnershipsIndex.url(),
                 roles: ['admin', 'wakasek'],
             },
             {
                 label: 'Statistik Global',
                 icon: BarChart3,
-                // M5.3 — belum tersedia
-                roles: ['wakasek'],
+                href: statistikIndex.url(),
+                roles: ['admin', 'wakasek'],
             },
         ],
     },

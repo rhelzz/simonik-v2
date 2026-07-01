@@ -452,15 +452,30 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
   - `CertificateTest`: tambah assert prop `qr` terkirim.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 246/246 passed + 898 assertions** (+12 tests). `npm run lint` + `npm run format:check` + `npm run types:check` lolos.
 
+### 40. M5.1 + M5.2 + M5.3 — Modul Wakasek/Hubin (Blueprint Modul, Fase 5)
+
+- **M5.1 — Akuntabilitas Dana:**
+  - Migrasi `budget_receipts` (source, description, amount decimal(15,2), received_on) + `expenses` (category, description, amount, spent_on). Model `BudgetReceipt` & `Expense` (casts `amount` decimal:2 + tanggal) + factory.
+  - `FinanceController` (gate `role:wakasek`): `index` (daftar penerimaan + pengeluaran + ringkasan total & saldo), `storeReceipt`/`destroyReceipt`, `storeExpense`/`destroyExpense`. Form Request `StoreBudgetReceiptRequest` & `StoreExpenseRequest`.
+  - Halaman `finance/index.tsx`: 3 kartu ringkasan (penerimaan/pengeluaran/saldo, format Rupiah `Intl.NumberFormat`), dua kolom form + daftar (catat & hapus).
+- **M5.2 — Manajemen Kemitraan + Kuota:**
+  - Migrasi tambah kolom `kuota` (unsignedInteger nullable) di `industries`; update fillable + cast di model `Industry`.
+  - `PartnershipController` (gate `role:admin|wakasek`): `index` (daftar industri + `students_count` ditempatkan, sisa kuota, flag `over`/`full`, ringkasan daya tampung) + `updateKuota`. Form Request `UpdateKuotaRequest` (nullable = tanpa batas).
+  - Halaman `partnerships/index.tsx`: kartu ringkasan + baris industri dengan editor kuota inline (progress bar + badge Tersedia/Penuh/Kelebihan) via `router.patch`.
+- **M5.3 — Supervisi Global & Statistik:**
+  - `StatistikController` (gate `role:admin|wakasek`): rekap per jurusan (siswa, PKL aktif, jurnal & kehadiran bulan ini) + cakupan bimbingan guru (industri diampu + siswa bimbingan) + total lintas jurusan.
+  - Halaman `statistik/index.tsx` (kartu total + tabel per-jurusan + tabel guru). `dashboard-wakasek.tsx` kini menampilkan kartu tautan aktif (Akuntabilitas Dana / Kemitraan / Statistik) menggantikan placeholder "Segera hadir".
+- **Nav:** mengaktifkan 3 menu Humas & Keuangan (`finance.index`, `partnerships.index`, `statistik.index`); "Statistik Global" kini untuk admin+wakasek.
+- **Tests:** `FinanceTest` (7), `PartnershipTest` (6), `StatistikTest` (3) — proteksi role, rekap saldo, CRUD penerimaan/pengeluaran, flag kelebihan kuota, update/kosongkan kuota, statistik per jurusan & guru.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 262/262 passed + 987 assertions** (+16 tests). `npm run lint` + `npm run format:check` + `npm run types:check` lolos.
+
 ---
 
 ## 📍 Current step
-**M4.1 + M4.2 selesai — Fase 4 (Rapor & Sertifikat ber-QR) sepenuhnya selesai.** Sertifikat kini ber-QR keaslian; scan QR membuka halaman verifikasi publik ber-signature yang menampilkan data PKL resmi (atau menolak tautan yang diubah). Rapor Digital mengompilasi nilai teknis/non-teknis + sidang + rekap absen/jurnal menjadi dokumen A4 siap cetak ber-QR.
+**Fase 5 (Modul Wakasek/Hubin) sepenuhnya selesai.** Wakasek kini punya modul Akuntabilitas Dana (catat penerimaan & pengeluaran + saldo berjalan), Manajemen Kemitraan + Kuota (tetapkan kuota per industri dengan indikator penempatan berlebih), dan Statistik Global (rekap lintas jurusan + cakupan bimbingan guru). Dashboard wakasek kini menautkan ketiganya.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M5.1 Akuntabilitas Dana** — modul keuangan Wakasek (`BudgetReceipt` + `Expense`, CRUD, rekap saldo).
-2. **M5.2 Manajemen Kemitraan + Kuota** — field `kuota` industri + indikator penempatan.
-3. **M6.1 PWA Setup** — installable + offline shell (`vite-plugin-pwa`).
+1. **M6.1 PWA Setup** — installable + offline shell (`vite-plugin-pwa`, manifest, service worker, install prompt). Modul blueprint terakhir yang tersisa.
