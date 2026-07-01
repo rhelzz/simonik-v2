@@ -469,13 +469,21 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
 - **Tests:** `FinanceTest` (7), `PartnershipTest` (6), `StatistikTest` (3) — proteksi role, rekap saldo, CRUD penerimaan/pengeluaran, flag kelebihan kuota, update/kosongkan kuota, statistik per jurusan & guru.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 262/262 passed + 987 assertions** (+16 tests). `npm run lint` + `npm run format:check` + `npm run types:check` lolos.
 
+### 41. M6.1 — PWA Setup (Blueprint Modul, Fase 6)
+
+- **Build:** menambah `vite-plugin-pwa` di `vite.config.ts` (`registerType: 'prompt'`, `injectRegister: null` karena SW didaftarkan manual dari root, `buildBase: '/build/'`). Manifest inline (nama/short_name SIMONIK, `theme_color #4F5BD5`, `background_color #ECECFB`, `display standalone`, `orientation portrait`, `scope '/'`, `start_url '/dashboard'`, ikon 192/512 + maskable). Workbox: `globPatterns` hanya `build/assets/**` + `inlineWorkboxRuntime: true` (SW self-contained tanpa importScripts sibling) + `maximumFileSizeToCacheInBytes 4MB` (**meng-exclude** model face-api ~50MB & lib besar di `public/`), `runtimeCaching` untuk aset build (StaleWhileRevalidate), font (CacheFirst), ubin peta OSM (CacheFirst).
+- **Scope fix (penting):** SW ter-emit ke `public/build/sw.js` → scope default `/build/` yang **tidak** mengontrol `/dashboard` (gagal installable). Diperbaiki dengan route Laravel `GET /sw.js` (`pwa.sw`) yang menyajikan file build dengan header **`Service-Worker-Allowed: /`** + `Cache-Control: no-cache`; SW didaftarkan manual `navigator.serviceWorker.register('/sw.js', { scope: '/' })`.
+- **Ikon:** generate `public/pwa-192x192.png` & `pwa-512x512.png` (indigo rounded-square + motif target monitoring) via script Node pure-zlib (tanpa dependency image).
+- **Blade:** `app.blade.php` tautkan `<link rel="manifest" href="/build/manifest.webmanifest">` + meta `theme-color`, `mobile-web-app-capable`, `apple-mobile-web-app-*`; viewport `viewport-fit=cover`.
+- **Frontend:** komponen `components/pwa/pwa-prompt.tsx` — registrasi SW (skip di `import.meta.env.DEV`), toast "Versi baru tersedia" (kirim `SKIP_WAITING` ke waiting worker + reload via `controllerchange`), dan tombol "Pasang SIMONIK" via `beforeinstallprompt`. Dirender di `app-layout.tsx`. Tipe `vite-plugin-pwa/client` ditambah di `types/vite-env.d.ts`.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 262/262 passed + 987 assertions**. `npm run build` sukses (SW 135 entri precache, hanya aset build), `npm run types:check` + `npm run lint` + `npm run format:check` lolos.
+
 ---
 
 ## 📍 Current step
-**Fase 5 (Modul Wakasek/Hubin) sepenuhnya selesai.** Wakasek kini punya modul Akuntabilitas Dana (catat penerimaan & pengeluaran + saldo berjalan), Manajemen Kemitraan + Kuota (tetapkan kuota per industri dengan indikator penempatan berlebih), dan Statistik Global (rekap lintas jurusan + cakupan bimbingan guru). Dashboard wakasek kini menautkan ketiganya.
+**Fase 6 (PWA) selesai — seluruh 19 modul blueprint (M0.1–M6.1) rampung.** SIMONIK kini installable ke homescreen (manifest + ikon + service worker scope `/`), dengan runtime-caching aset/font/peta dan prompt update + install. Model face-api besar sengaja tidak di-precache agar SW ringan.
 
 ---
 
-## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
-
-1. **M6.1 PWA Setup** — installable + offline shell (`vite-plugin-pwa`, manifest, service worker, install prompt). Modul blueprint terakhir yang tersisa.
+## ⏭️ Next step
+Seluruh modul blueprint PKL lanjutan telah selesai. Opsi berikutnya bersifat penyempurnaan (mis. offline fallback page, uji audit Lighthouse PWA di perangkat, atau iterasi fitur non-blueprint sesuai kebutuhan pengguna).

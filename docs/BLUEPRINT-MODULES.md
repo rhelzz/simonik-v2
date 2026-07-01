@@ -215,7 +215,7 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 
 ### FASE 6 — PWA (independen, disarankan paling akhir)
 
-#### M6.1 — PWA Setup ⏳
+#### M6.1 — PWA Setup ✅
 - **Prasyarat:** —
 - **Build:** tambah `vite-plugin-pwa` (`vite.config.ts`), manifest, service worker, ikon, install prompt, offline shell; tautkan manifest di `app.blade.php`.
 - **DoD:** app bisa di-install ke homescreen; lulus audit PWA dasar; tetap mobile-responsive.
@@ -276,4 +276,4 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 - [x] M5.1 Akuntabilitas Dana
 - [x] M5.2 Manajemen Kemitraan + Kuota
 - [x] M5.3 Supervisi Global & Statistik
-- [ ] M6.1 PWA Setup
+- [x] M6.1 PWA Setup

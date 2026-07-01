@@ -44,6 +44,19 @@ Route::get('/', function () {
 // Verifikasi publik keaslian dokumen PKL (sertifikat & rapor) via QR ber-signature.
 Route::get('verifikasi/{student}', VerificationController::class)->name('verification.show');
 
+// PWA (M6.1): sajikan service worker dari root agar scope-nya '/' (mengontrol seluruh app).
+// File fisik di-build ke public/build/sw.js; header Service-Worker-Allowed melonggarkan scope.
+Route::get('sw.js', function () {
+    $path = public_path('build/sw.js');
+    abort_unless(file_exists($path), 404);
+
+    return response()->file($path, [
+        'Content-Type' => 'application/javascript',
+        'Service-Worker-Allowed' => '/',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+    ]);
+})->name('pwa.sw');
+
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppTopbar } from '@/components/app-topbar';
+import { PwaPrompt } from '@/components/pwa/pwa-prompt';
 import { cn } from '@/lib/utils';
 import type { SharedData } from '@/types';
 
@@ -80,6 +81,8 @@ export function AppLayout({
                     <main>{children}</main>
                 </div>
             </div>
+
+            <PwaPrompt />
         </div>
     );
 }
