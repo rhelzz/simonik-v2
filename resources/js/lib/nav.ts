@@ -103,7 +103,7 @@ export const navSections: NavSection[] = [
             {
                 label: 'Streak & Badge',
                 icon: Flame,
-                // M3.3 — belum tersedia
+                href: dashboard().url,
                 roles: ['siswa'],
             },
         ],

@@ -269,7 +269,7 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 - [x] M2.2 Sakit/Izin Multi-step
 - [x] M2.3 Inbox Approval
 - [x] M3.1 Streak Engine
-- [ ] M3.2 Badge / Achievement
+- [x] M3.2 Badge / Achievement
 - [ ] M3.3 UI Gamifikasi Siswa
 - [ ] M4.1 QR Keaslian Sertifikat
 - [ ] M4.2 Rapor Digital

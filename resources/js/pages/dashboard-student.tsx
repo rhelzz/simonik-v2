@@ -5,12 +5,15 @@ import {
     Camera,
     ClipboardCheck,
     NotebookPen,
+    Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { index as activitiesIndex } from '@/actions/App/Http/Controllers/ActivityController';
 import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
 import { index as attendanceIndex } from '@/actions/App/Http/Controllers/AttendanceController';
 import { index as certificatesIndex } from '@/actions/App/Http/Controllers/CertificateController';
+import type { BadgeData } from '@/components/badges/badge-atom';
+import { BadgeShowcase } from '@/components/badges/badge-showcase';
 import {
     HeroGreeting,
     StatCard,
@@ -37,7 +40,10 @@ type DashboardStudentProps = {
         journalTotal: number;
         avg: number | null;
         grade: Grade | null;
+        current_streak: number;
+        longest_streak: number;
     };
+    badges: BadgeData[];
     today: string;
 };
 
@@ -56,6 +62,7 @@ export default function DashboardStudent({
     profile,
     todayStatus,
     stats,
+    badges,
     today,
 }: DashboardStudentProps) {
     return (
@@ -163,6 +170,45 @@ export default function DashboardStudent({
                     tint="bg-positive/15 text-positive"
                 />
             </section>
+
+            {/* Streak */}
+            <section className="mt-5 grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-4 rounded-3xl bg-surface p-5 sm:p-6">
+                    <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-orange-500/10 text-2xl">
+                        🔥
+                    </span>
+                    <div>
+                        <p className="text-sm text-muted">Streak sekarang</p>
+                        <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-ink">
+                            {stats.current_streak}
+                            <span className="ml-1 text-sm font-medium text-muted">
+                                hari
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4 rounded-3xl bg-surface p-5 sm:p-6">
+                    <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-violet-500/10 text-2xl">
+                        <Zap className="size-6 text-violet-600" />
+                    </span>
+                    <div>
+                        <p className="text-sm text-muted">Streak terpanjang</p>
+                        <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-ink">
+                            {stats.longest_streak}
+                            <span className="ml-1 text-sm font-medium text-muted">
+                                hari
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* Badge showcase */}
+            {badges.length > 0 && (
+                <section className="mt-5">
+                    <BadgeShowcase badges={badges} />
+                </section>
+            )}
 
             {/* PKL info */}
             <section className="mt-5 rounded-3xl bg-surface p-5 sm:p-6">

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreActivityRequest;
 use App\Http\Requests\UpdateActivityRequest;
 use App\Models\Activity;
+use App\Models\User;
+use App\Services\BadgeAwarder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +19,10 @@ use Inertia\Response;
  */
 class ActivityController extends Controller
 {
+    public function __construct(
+        private readonly BadgeAwarder $badgeAwarder
+    ) {}
+
     /**
      * Daftar jurnal milik siswa.
      */
@@ -51,11 +57,16 @@ class ActivityController extends Controller
     {
         $data = $request->validated();
 
+        /** @var User $user */
+        $user = $request->user();
+
         Activity::create([
             ...$this->fields($data),
-            'user_id' => (int) $request->user()->id,
+            'user_id' => (int) $user->id,
             'image' => $request->file('image')?->store('activities', 'public'),
         ]);
+
+        $this->badgeAwarder->checkAndAward($user);
 
         return redirect()
             ->route('activities.index')
@@ -79,6 +90,8 @@ class ActivityController extends Controller
      */
     public function update(UpdateActivityRequest $request, Activity $activity): RedirectResponse
     {
+        /** @var User $user */
+        $user = $request->user();
         $this->ensureOwner($request, $activity);
 
         $fields = $this->fields($request->validated());
@@ -89,6 +102,8 @@ class ActivityController extends Controller
         }
 
         $activity->update($fields);
+
+        $this->badgeAwarder->checkAndAward($user);
 
         return redirect()
             ->route('activities.index')

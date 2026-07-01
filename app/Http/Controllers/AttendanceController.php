@@ -7,6 +7,8 @@ use App\Http\Requests\CheckInRequest;
 use App\Http\Requests\CheckOutRequest;
 use App\Models\Approval;
 use App\Models\Attendance;
+use App\Models\User;
+use App\Services\BadgeAwarder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,6 +17,10 @@ use Inertia\Response;
 
 class AttendanceController extends Controller
 {
+    public function __construct(
+        private readonly BadgeAwarder $badgeAwarder
+    ) {}
+
     /**
      * Halaman absen siswa: status hari ini + riwayat. Semua dibatasi ke akun siswa.
      */
@@ -143,6 +149,10 @@ class AttendanceController extends Controller
         if ($mode === 'wfa') {
             Approval::initiate($attendance);
         }
+
+        /** @var User $user */
+        $user = $request->user();
+        $this->badgeAwarder->checkAndAward($user);
 
         return back()->with('success', 'Absen masuk berhasil direkam.');
     }

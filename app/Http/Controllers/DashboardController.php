@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
 use App\Models\Activity;
 use App\Models\Attendance;
+use App\Models\Badge;
 use App\Models\Evaluation;
 use App\Models\Industry;
 use App\Models\Pembimbing;
@@ -23,7 +24,7 @@ class DashboardController extends Controller
     use ScopesStudentsByRole;
 
     public function __construct(
-        private readonly StreakCalculator $streakCalculator
+        private readonly StreakCalculator $streakCalculator,
     ) {}
 
     /**
@@ -157,6 +158,31 @@ class DashboardController extends Controller
 
         $streaks = $this->streakCalculator->calculate($user);
 
+        $allBadges = Badge::all();
+
+        // Keyed by badge_id for O(1) lookups without pivot magic access.
+        $pivotRows = $student !== null
+            ? \DB::table('student_badge')
+                ->where('student_id', $student->id)
+                ->get(['badge_id', 'awarded_at'])
+                ->keyBy('badge_id')
+            : collect();
+
+        $badges = $allBadges->map(fn (Badge $b) => [
+            'id' => $b->id,
+            'key' => $b->key,
+            'name' => $b->name,
+            'description' => $b->description,
+            'icon' => $b->icon,
+            'color' => $b->color,
+            'rule_type' => $b->rule_type,
+            'rule_value' => $b->rule_value,
+            'earned' => $pivotRows->has($b->id),
+            'awarded_at' => $pivotRows->has($b->id)
+                ? (string) $pivotRows->get($b->id)->awarded_at
+                : null,
+        ])->values()->all();
+
         return Inertia::render('dashboard-student', [
             'profile' => [
                 'industry' => $student?->industries?->name,
@@ -181,6 +207,7 @@ class DashboardController extends Controller
                 'current_streak' => $streaks['current_streak'],
                 'longest_streak' => $streaks['longest_streak'],
             ],
+            'badges' => $badges,
             'today' => Carbon::now()->translatedFormat('l, d F Y'),
         ]);
     }

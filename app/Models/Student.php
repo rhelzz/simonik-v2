@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -145,6 +146,14 @@ class Student extends Model
     public function guidance_report(): HasMany
     {
         return $this->hasMany(GuidanceReport::class);
+    }
+
+    /** @return BelongsToMany<Badge, $this> */
+    public function badges(): BelongsToMany
+    {
+        return $this->belongsToMany(Badge::class, 'student_badge')
+            ->withPivot('awarded_at')
+            ->withTimestamps();
     }
 
     /**

@@ -390,18 +390,45 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
   - Membuat feature test `StreakCalculatorTest` (5 test, 10 assertions) untuk memvalidasi kasus empty/tanpa aktivitas, perhitungan streak harian beruntun, reset streak akibat adanya hari yang bolong (gap), keawetan rekor longest streak meskipun daily streak sudah ter-reset, serta penanganan duplikasi aktivitas pada hari yang sama agar tetap terhitung sebagai 1 hari streak.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 226/226 passed + 786 assertions**. `npm run lint` + `npm run types:check` lolos.
 
+### 37. M3.2 — Badge / Achievement (Blueprint Modul)
+
+- **Backend:**
+  - Membuat migration `2026_07_01_080726_create_badges_table` (kolom: `key` unique, `name`, `description`, `icon`, `color`, `rule_type`, `rule_value`) dan `2026_07_01_080727_create_student_badge_table` (pivot: `student_id`, `badge_id`, `awarded_at`, unique constraint).
+  - Membuat model `Badge` (fillable, konstanta `RULE_STREAK_JOURNAL`/`RULE_TOTAL_JOURNAL`/`RULE_TOTAL_ATTENDANCE`, relasi `students()` belongsToMany) dan menambahkan relasi `badges()` pada model `Student`.
+  - Membuat `BadgeFactory` dengan state helper `streakJournal()/totalJournal()/totalAttendance()`.
+  - Membuat service `BadgeAwarder` (inject `StreakCalculator`): method `checkAndAward(User)` mengevaluasi semua badge dari DB, membandingkan statistik user (current_streak, longest_streak, total_journal, total_attendance hadir), dan mengattach badge yang memenuhi syarat ke pivot `student_badge` — idempotent karena unique constraint mencegah duplikasi.
+  - Mengintegrasikan `BadgeAwarder::checkAndAward()` ke `ActivityController::store()` dan `update()` (setelah simpan jurnal) dan `AttendanceController::checkIn()` (setelah simpan absen).
+  - Memperbarui `DashboardController::studentDashboard()` untuk menyertakan seluruh badge dengan flag `earned`/`awarded_at` (query pivot table langsung untuk menghindari magic `->pivot` access).
+  - Membuat `BadgeSeeder` (7 badge default: streak_7/streak_30/journal_10/journal_50/journal_100/attendance_5/attendance_20) dan mendaftarkannya di `DatabaseSeeder`.
+- **Frontend:**
+  - Membuat komponen Atomic Design di `components/badges/`:
+    - **Atom `badge-atom.tsx`**: pill badge (ikon + nama + warna), greyscale+opacity jika belum diraih.
+    - **Molekul `badge-card.tsx`**: kartu badge dengan ikon besar, deskripsi, tanggal diraih atau syarat, badge terkunci tampil dengan ikon 🔒.
+    - **Organisme `badge-showcase.tsx`**: grid etalase (earned first, lalu locked), header dengan counter "N/total diraih".
+  - Memperbarui `dashboard-student.tsx`: menambahkan prop `badges: BadgeData[]` + `stats.current_streak`/`stats.longest_streak`, section **Streak** (dua kartu: current streak 🔥 dan longest streak ⚡), dan section **Badge Showcase** (hanya muncul bila ada badge tersedia).
+  - Mengaktifkan menu **Streak & Badge** di `nav.ts` (sebelumnya tanpa `href`) → mengarah ke dashboard siswa.
+- **Tests:** `BadgeAwarderTest` (8 test, 8 assertions):
+  - Tanpa aktivitas = 0 badge.
+  - Streak 7 hari berturut: badge `streak_7` ter-award.
+  - Streak < 7 hari: badge `streak_7` TIDAK ter-award.
+  - Total jurnal ≥ 10: badge `journal_10` ter-award.
+  - Total hadir ≥ 5: badge `attendance_5` ter-award.
+  - Award idempotent (panggil dua kali = tetap 1 pivot row).
+  - Badge ter-award otomatis setelah `POST /jurnal` (integrasi HTTP).
+  - User tanpa profil siswa (role guru) tidak error.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 234/234 passed + 794 assertions** (+8 BadgeAwarderTest). `npm run lint` + `npm run types:check` lolos.
+
 ---
 
 ## 📍 Current step
-**M3.1 Streak Engine selesai.** Penghitungan streak pengisian jurnal harian siswa secara dinamis telah aktif. Sistem menghitung daily streak saat ini dan longest streak terbaik secara akurat dengan reset otomatis bila ada hari bolong, serta menyediakannya ke prop dashboard siswa.
+**M3.2 Badge / Achievement selesai.** Sistem badge otomatis aktif: 7 badge default (streak 7/30 hari, total jurnal 10/50/100, hadir 5/20 kali) ter-award setelah siswa menyimpan jurnal atau check-in absen. Dashboard siswa kini menampilkan widget streak (current + longest) dan etalase badge bergaya Atomic Design (earned + locked).
 
-Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M3.2** (Badge / Achievement) — prasyarat M3.1 ✅ terpenuhi
-- **M3.3** (UI Gamifikasi Siswa) — prasyarat M3.1 ✅ terpenuhi
+Modul blueprint yang bisa dikerjakan selanjutnya:
+- **M3.3** (UI Gamifikasi Siswa) — prasyarat M3.1 + M3.2 ✅ terpenuhi
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M3.2 Badge / Achievement** — modul penghargaan otomatis berdasarkan pencapaian presensi/jurnal (termasuk streak 7/30 hari).
-2. **M3.3 UI Gamifikasi Siswa** — widget visualisasi streak dan etalase badge pada dashboard siswa.
+1. **M3.3 UI Gamifikasi Siswa** — widget streak + etalase badge diperluas ke halaman jurnal; dedicated `/badges` page.
+2. **M4.1 QR Keaslian Sertifikat** — generate QR signed-URL + halaman verifikasi publik.
