@@ -81,9 +81,7 @@ export default function ActivitiesIndex({
                 <div
                     className={cn(
                         'mt-4 flex items-center gap-3 rounded-2xl px-4 py-3',
-                        streak.current > 0
-                            ? 'bg-orange-500/10'
-                            : 'bg-muted/10',
+                        streak.current > 0 ? 'bg-orange-500/10' : 'bg-muted/10',
                     )}
                 >
                     <span className="text-2xl leading-none">
@@ -113,8 +111,7 @@ export default function ActivitiesIndex({
                         </div>
                     ) : (
                         <p className="text-sm text-muted">
-                            Tulis jurnal hari ini untuk memulai streak
-                            harianmu!
+                            Tulis jurnal hari ini untuk memulai streak harianmu!
                         </p>
                     )}
                 </div>

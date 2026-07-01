@@ -28,7 +28,9 @@ export function BadgeCard({ badge }: BadgeCardProps) {
                 <span
                     className={cn(
                         'flex size-10 shrink-0 items-center justify-center rounded-xl text-xl',
-                        badge.earned ? badge.color : 'bg-muted/10 opacity-40 grayscale',
+                        badge.earned
+                            ? badge.color
+                            : 'bg-muted/10 opacity-40 grayscale',
                     )}
                 >
                     {badge.icon}

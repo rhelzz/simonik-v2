@@ -22,10 +22,12 @@ use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PembimbingController;
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RaporController;
 use App\Http\Controllers\SakitIzinController;
 use App\Http\Controllers\StreakController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -35,6 +37,9 @@ Route::get('/', function () {
         ? redirect()->route('dashboard')
         : Inertia::render('welcome');
 })->name('home');
+
+// Verifikasi publik keaslian dokumen PKL (sertifikat & rapor) via QR ber-signature.
+Route::get('verifikasi/{student}', VerificationController::class)->name('verification.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
@@ -95,6 +100,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin|kaprog|wakasek|siswa')->group(function () {
         Route::get('sertifikat', [CertificateController::class, 'index'])->name('certificates.index');
         Route::get('sertifikat/{student}', [CertificateController::class, 'show'])->name('certificates.show');
+
+        // Rapor Digital — kompilasi nilai + rekap + QR keaslian, siap cetak.
+        Route::get('rapor', [RaporController::class, 'index'])->name('rapor.index');
+        Route::get('rapor/{student}', [RaporController::class, 'show'])->name('rapor.show');
     });
 
     // Rekap Penilaian — lihat (semua cakupan) + input nilai (guru/pembimbing).

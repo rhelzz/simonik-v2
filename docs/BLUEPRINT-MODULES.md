@@ -177,13 +177,13 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 
 ### FASE 4 — Rapor & Sertifikat ber-QR (independen)
 
-#### M4.1 — QR Keaslian Sertifikat ⏳
+#### M4.1 — QR Keaslian Sertifikat ✅
 - **Prasyarat:** sertifikat existing.
 - **Backend:** generate QR (PHP, mis. `simplesoftwareio/simple-qrcode`) berisi signed-URL verifikasi; route + halaman verifikasi publik (read-only data sertifikat).
 - **Frontend:** QR pada output sertifikat; halaman verifikasi publik.
 - **DoD:** scan QR → halaman verifikasi menampilkan keaslian; tautan ber-signature.
 
-#### M4.2 — Rapor Digital ⏳
+#### M4.2 — Rapor Digital ✅
 - **Prasyarat:** penilaian + sidang existing; idealnya M4.1 (QR).
 - **Backend:** kompilasi nilai (teknis+non-teknis) + sidang + rekap absen/jurnal → dokumen rapor (print-to-PDF, konsisten dgn pola sertifikat) + QR.
 - **Frontend:** halaman rapor per siswa siap cetak.
@@ -271,8 +271,8 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 - [x] M3.1 Streak Engine
 - [x] M3.2 Badge / Achievement
 - [x] M3.3 UI Gamifikasi Siswa
-- [ ] M4.1 QR Keaslian Sertifikat
-- [ ] M4.2 Rapor Digital
+- [x] M4.1 QR Keaslian Sertifikat
+- [x] M4.2 Rapor Digital
 - [ ] M5.1 Akuntabilitas Dana
 - [ ] M5.2 Manajemen Kemitraan + Kuota
 - [ ] M5.3 Supervisi Global & Statistik

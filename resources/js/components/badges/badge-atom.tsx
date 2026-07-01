@@ -23,12 +23,8 @@ export function BadgeAtom({ badge, size = 'md' }: BadgeAtomProps) {
         <span
             className={cn(
                 'inline-flex items-center gap-1.5 rounded-full font-semibold',
-                size === 'sm'
-                    ? 'px-2.5 py-1 text-xs'
-                    : 'px-3 py-1.5 text-sm',
-                badge.earned
-                    ? badge.color
-                    : 'bg-muted/20 text-muted/60',
+                size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm',
+                badge.earned ? badge.color : 'bg-muted/20 text-muted/60',
             )}
             title={badge.description ?? badge.name}
         >

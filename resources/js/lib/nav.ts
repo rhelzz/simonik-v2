@@ -48,6 +48,7 @@ import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentCont
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
 import { index as periodsIndex } from '@/actions/App/Http/Controllers/PeriodController';
 import { edit as profileEdit } from '@/actions/App/Http/Controllers/ProfileController';
+import { index as raporIndex } from '@/actions/App/Http/Controllers/RaporController';
 import { index as sakitIzinIndex } from '@/actions/App/Http/Controllers/SakitIzinController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
@@ -258,7 +259,7 @@ export const navSections: NavSection[] = [
             {
                 label: 'Rapor Digital',
                 icon: FileText,
-                // M4.2 — belum tersedia
+                href: raporIndex.url(),
                 roles: ['admin', 'wakasek', 'kaprog', 'siswa'],
             },
         ],

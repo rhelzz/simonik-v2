@@ -17,6 +17,7 @@ type Props = {
         eligible: boolean;
     };
     template: { background: string | null; anchors: PreviewAnchor[] } | null;
+    qr: string;
 };
 
 const printCss = `@media print {
@@ -26,7 +27,7 @@ const printCss = `@media print {
     #cert-print { position: absolute; inset: 0; width: 100%; }
 }`;
 
-export default function CertificateShow({ student, template }: Props) {
+export default function CertificateShow({ student, template, qr }: Props) {
     const { auth } = usePage<SharedData>().props;
     const isStudent = auth.roles?.includes('siswa');
 
@@ -90,11 +91,22 @@ export default function CertificateShow({ student, template }: Props) {
                     </div>
                 ) : (
                     <div className="overflow-hidden rounded-3xl bg-surface p-3 sm:p-5">
-                        <div id="cert-print">
+                        <div id="cert-print" className="@container relative">
                             <CertificatePreview
                                 background={template.background}
                                 items={template.anchors}
                             />
+                            {/* QR keaslian — pojok kanan bawah sertifikat */}
+                            <div className="absolute right-[4%] bottom-[5%] flex w-[12%] flex-col items-center gap-[0.4cqw]">
+                                <img
+                                    src={qr}
+                                    alt="QR verifikasi keaslian"
+                                    className="w-full rounded-sm bg-white p-[0.4cqw] shadow-sm"
+                                />
+                                <span className="text-[1.1cqw] leading-none font-medium text-black/60">
+                                    Scan untuk verifikasi
+                                </span>
+                            </div>
                         </div>
                     </div>
                 )}

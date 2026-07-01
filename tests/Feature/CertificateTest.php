@@ -87,6 +87,8 @@ class CertificateTest extends TestCase
                 // Hanya anchor enabled (nama) yang dikirim, dengan teks nyata.
                 ->has('template.anchors', 1)
                 ->where('template.anchors.0.text', 'Budi Santoso')
+                // QR keaslian (M4.1) ikut dikirim sebagai data-URI SVG.
+                ->has('qr')
             );
     }
 

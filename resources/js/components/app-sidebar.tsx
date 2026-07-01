@@ -148,7 +148,8 @@ function NavLink({
     const active = isActive(item.href, current);
     const { auth } = usePage<SharedData>().props;
     const pendingCount = auth.pendingApprovalsCount ?? 0;
-    const showInboxBadge = item.label === 'Inbox Persetujuan' && pendingCount > 0;
+    const showInboxBadge =
+        item.label === 'Inbox Persetujuan' && pendingCount > 0;
 
     if (!item.href) {
         return (
@@ -184,7 +185,7 @@ function NavLink({
             <Icon className="size-[1.15rem] shrink-0" />
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
             {showInboxBadge ? (
-                <span className="shrink-0 rounded-full bg-red-500 px-2 py-0.5 text-[0.65rem] font-bold text-white leading-none">
+                <span className="shrink-0 rounded-full bg-red-500 px-2 py-0.5 text-[0.65rem] leading-none font-bold text-white">
                     {pendingCount}
                 </span>
             ) : (

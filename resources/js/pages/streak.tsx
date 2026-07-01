@@ -16,16 +16,16 @@ const progressValue = (
     stats: StreakPageProps['stats'],
 ): number => {
     if (badge.rule_type === 'streak_journal') {
-return streak.current;
-}
+        return streak.current;
+    }
 
     if (badge.rule_type === 'total_journal') {
-return stats.total_journal;
-}
+        return stats.total_journal;
+    }
 
     if (badge.rule_type === 'total_attendance') {
-return stats.total_attendance;
-}
+        return stats.total_attendance;
+    }
 
     return 0;
 };
@@ -96,8 +96,7 @@ export default function StreakPage({ streak, stats, badges }: StreakPageProps) {
                                 100,
                                 Math.round((current / target) * 100),
                             );
-                            const label =
-                                ruleLabels[badge.rule_type] ?? '';
+                            const label = ruleLabels[badge.rule_type] ?? '';
 
                             return (
                                 <div key={badge.id}>
@@ -141,4 +140,3 @@ export default function StreakPage({ streak, stats, badges }: StreakPageProps) {
         </AppLayout>
     );
 }
-

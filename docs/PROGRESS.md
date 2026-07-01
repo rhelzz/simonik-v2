@@ -433,15 +433,34 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
     - Menambahkan **`BadgeShowcase`** (komponen organisme M3.2) sebagai section terpisah di bawah daftar jurnal — hanya muncul bila ada badge tersedia.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 234/234 passed + 794 assertions**. `npm run lint` + `npm run types:check` lolos.
 
+### 39. M4.1 + M4.2 — QR Keaslian Sertifikat & Rapor Digital (Blueprint Modul, Fase 4)
+
+- **Dependency:** menambah `bacon/bacon-qr-code` (dipakai langsung, backend SVG tanpa imagick/GD). Sempat memasang `simplesoftwareio/simple-qrcode` lalu diganti Bacon langsung karena docblock paket tsb tanpa leading-backslash membuat PHPStan salah-resolve tipe kembalian `generate()`.
+- **M4.1 — QR Keaslian Sertifikat:**
+  - `App\Services\QrCodeGenerator`: `verificationUrl()` (tautan `URL::signedRoute('verification.show')` tanpa kedaluwarsa) + `verificationQr()` (QR SVG → data-URI base64).
+  - Rute publik `GET /verifikasi/{student}` (`verification.show`) di luar grup `auth`. `VerificationController` (invokable) memeriksa `hasValidSignature()`: bila valid → kirim data keaslian (nama, NIS, kelas, industri, periode, nomor dokumen, status, nilai akhir); bila tidak → `valid=false` tanpa membocorkan data siswa (anti-enumerasi).
+  - Halaman publik standalone `resources/js/pages/verification/show.tsx` (tanpa `AppLayout`): kartu "Dokumen Terverifikasi" vs "Tidak Dapat Diverifikasi".
+  - `CertificateController::show()` inject `QrCodeGenerator`, kirim prop `qr`; `certificates/show.tsx` menempel QR (data-URI SVG) di pojok kanan-bawah sertifikat, ikut ter-cetak (`#cert-print` jadi `@container` agar ukuran QR & label skala relatif lebar sertifikat).
+- **M4.2 — Rapor Digital:**
+  - `RaporController` (pakai `ScopesStudentsByRole`, inject `QrCodeGenerator`): `index` (daftar siswa ter-scope + rata-rata nilai; siswa auto-redirect ke rapornya) + `show` (kompilasi lengkap). Kompilasi: aspek teknis/non-teknis + skor + grade, nilai sidang (`SidangScore` + `SidangResult` + penguji/status/deskripsi), rekap kehadiran per status (hadir/izin/sakit/alpha/libur via satu query `groupBy`), total jurnal, rata-rata per komponen + **nilai akhir** (rata-rata komponen tersedia) + grade + kualifikasi, dan QR keaslian.
+  - Rute `GET /rapor` + `/rapor/{student}` di grup `role:admin|kaprog|wakasek|siswa`; siswa hanya rapornya sendiri (403 untuk milik orang lain).
+  - `resources/js/pages/rapor/index.tsx` (daftar + cari + kolom nilai/grade) & `rapor/show.tsx` (dokumen A4 portrait siap cetak: kop, identitas, tabel nilai teknis & non-teknis, sidang, rekap absen/jurnal, ringkasan nilai akhir, QR + area tanda tangan; `window.print()`).
+  - Mengaktifkan menu **Rapor Digital** di `nav.ts` (sebelumnya placeholder tanpa `href`) → `rapor.index`.
+- **Tests:**
+  - `VerificationTest` (5): signature valid menampilkan record; tanpa signature tidak membocorkan data; signature dipalsukan ditolak; URL dari `QrCodeGenerator` lolos verifikasi; halaman publik (tanpa auth) tetap dapat diakses.
+  - `RaporTest` (7): guest redirect login; role tak berwenang 403; siswa redirect ke rapor sendiri; admin lihat daftar; siswa tak bisa lihat rapor siswa lain (403); kompilasi nilai + sidang + rekap absen + jurnal + QR akurat; siswa bisa lihat rapor sendiri.
+  - `CertificateTest`: tambah assert prop `qr` terkirim.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 246/246 passed + 898 assertions** (+12 tests). `npm run lint` + `npm run format:check` + `npm run types:check` lolos.
+
 ---
 
 ## 📍 Current step
-**M3.3 UI Gamifikasi Siswa selesai.** Halaman jurnal siswa kini menampilkan banner streak motivasional (🔥 N hari berturut-turut, atau prompt memulai streak bila 0) dan etalase badge penuh di bawah daftar jurnal. Reward psikologis gamifikasi kini hadir di dua titik: dashboard siswa (M3.2) dan halaman jurnal (M3.3). **Fase 3 Gamifikasi Jurnal sepenuhnya selesai.**
+**M4.1 + M4.2 selesai — Fase 4 (Rapor & Sertifikat ber-QR) sepenuhnya selesai.** Sertifikat kini ber-QR keaslian; scan QR membuka halaman verifikasi publik ber-signature yang menampilkan data PKL resmi (atau menolak tautan yang diubah). Rapor Digital mengompilasi nilai teknis/non-teknis + sidang + rekap absen/jurnal menjadi dokumen A4 siap cetak ber-QR.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M4.1 QR Keaslian Sertifikat** — generate QR signed-URL + halaman verifikasi publik (independen).
-2. **M4.2 Rapor Digital** — kompilasi nilai + rekap absen/jurnal → print-to-PDF ber-QR (prasyarat M4.1 ideal).
-3. **M5.1 Akuntabilitas Dana** — modul keuangan Wakasek (penerimaan + pengeluaran).
+1. **M5.1 Akuntabilitas Dana** — modul keuangan Wakasek (`BudgetReceipt` + `Expense`, CRUD, rekap saldo).
+2. **M5.2 Manajemen Kemitraan + Kuota** — field `kuota` industri + indikator penempatan.
+3. **M6.1 PWA Setup** — installable + offline shell (`vite-plugin-pwa`).

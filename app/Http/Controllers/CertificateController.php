@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CertificateTemplate;
 use App\Models\Student;
 use App\Models\User;
+use App\Services\QrCodeGenerator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,10 @@ use Inertia\Response;
  */
 class CertificateController extends Controller
 {
+    public function __construct(
+        private readonly QrCodeGenerator $qr,
+    ) {}
+
     public function index(Request $request): Response|RedirectResponse
     {
         /** @var User $user */
@@ -89,6 +94,7 @@ class CertificateController extends Controller
                 'background' => $template->background,
                 'anchors' => $this->resolveAnchors($template, $student),
             ],
+            'qr' => $this->qr->verificationQr($student),
         ]);
     }
 
