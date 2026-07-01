@@ -130,6 +130,7 @@ Route::middleware('auth')->group(function () {
 
     // Approval engine — approve/reject (pembimbing, guru, kaprog, orangtua).
     Route::middleware('role:pembimbing|guru|kaprog|orangtua')->group(function () {
+        Route::get('approvals', [ApprovalController::class, 'index'])->name('approvals.index');
         Route::post('approvals/{approval}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
         Route::post('approvals/{approval}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     });

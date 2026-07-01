@@ -30,6 +30,7 @@ import {
     Wallet,
 } from 'lucide-react';
 import { index as activitiesIndex } from '@/actions/App/Http/Controllers/ActivityController';
+import { index as approvalsIndex } from '@/actions/App/Http/Controllers/ApprovalController';
 import { index as aspectsIndex } from '@/actions/App/Http/Controllers/AspectController';
 import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
 import { index as attendanceIndex } from '@/actions/App/Http/Controllers/AttendanceController';
@@ -42,12 +43,12 @@ import { index as guidesIndex } from '@/actions/App/Http/Controllers/GuideContro
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
 import { index as leaveRequestsIndex } from '@/actions/App/Http/Controllers/LeaveRequestController';
-import { index as sakitIzinIndex } from '@/actions/App/Http/Controllers/SakitIzinController';
 import { show as myIndustryShow } from '@/actions/App/Http/Controllers/MyIndustryController';
 import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentController';
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
 import { index as periodsIndex } from '@/actions/App/Http/Controllers/PeriodController';
 import { edit as profileEdit } from '@/actions/App/Http/Controllers/ProfileController';
+import { index as sakitIzinIndex } from '@/actions/App/Http/Controllers/SakitIzinController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
 import { dashboard } from '@/routes';
@@ -198,7 +199,7 @@ export const navSections: NavSection[] = [
             {
                 label: 'Inbox Persetujuan',
                 icon: MailCheck,
-                // M2.3 — belum tersedia
+                href: approvalsIndex.url(),
                 roles: ['kaprog', 'guru', 'pembimbing', 'orangtua'],
             },
             { label: 'Kalender', icon: CalendarDays, roles: STAFF },

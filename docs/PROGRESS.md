@@ -365,18 +365,32 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
   - Membuat test suite `SakitIzinTest` (4 test, 25 assertions) yang memvalidasi keharusan siswa menautkan Orang Tua, penyerahan pengajuan, alur persetujuan bertahap (peran orang tua vs pembimbing, pembatasan orang tua lain, pembentukan presensi hanya setelah Tahap 2 disetujui), dan tidak adanya efek jika Tahap 1 ditolak.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 218/218 passed + 717 assertions**. `npm run lint` + `npm run types:check` lolos.
 
+### 35. M2.3 — Inbox Approval (Blueprint Modul)
+
+- **Backend:**
+  - Menambahkan query scope `scopeForUserQueue(Builder $query, User $user)` pada model `Approval` untuk menyaring antrian persetujuan berdasarkan peran (`pembimbing`, `guru`, `kaprog`, `orangtua`) dan cakupan siswa yang dibina (menggunakan query bimbingan industri/sekolah/anak kandung).
+  - Menyediakan relasi dan mapping polymorphic di `ApprovalController::index` untuk menyajikan data secara dinamis dari `LeaveRequest`, `SakitIzin`, dan `Attendance` (WFA).
+  - Memperbarui `HandleInertiaRequests::share()` untuk membagikan `pendingApprovalsCount` secara lazy-loaded di prop `auth` untuk setiap user pengakses eligible.
+  - Menambahkan rute `/approvals` pada web routes dengan nama `approvals.index`.
+- **Frontend:**
+  - Membuat halaman inbox terpadu `resources/js/pages/approvals/index.tsx` dengan segmented tab ("Antrian Pending" & "Riwayat Keputusan") dan card visual yang premium. Kartu menampilkan info murid, tanggal, detail alasan, lampiran bukti, catatan, dan form keputusan langsung.
+  - Memperbarui sidebar `app-sidebar.tsx` untuk menampilkan badge jumlah pending (warna merah menyala) secara real-time di samping menu "Inbox Persetujuan" jika nilai pending > 0.
+  - Menghubungkan menu "Inbox Persetujuan" di `resources/js/lib/nav.ts` ke rute `/approvals`.
+- **Tests:**
+  - Membuat test suite `InboxApprovalTest` (3 test, 59 assertions) untuk memverifikasi proteksi role non-approver (403), antrian bimbingan yang terisolasi per pembimbing, batasan tahap 1 orangtua pada Sakit/Izin, dan pergeseran status ke tab riwayat (history) saat disetujui.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 221/221 passed + 776 assertions**. `npm run lint` + `npm run types:check` lolos.
+
 ---
 
 ## 📍 Current step
-**M2.2 Sakit/Izin Multi-step selesai.** Siswa sekarang dapat mengajukan izin sakit/keperluan dengan melampirkan bukti. Pengajuan tersebut diproses secara bertahap: Tahap 1 (Orang Tua) -> Tahap 2 (Industri/Guru). Status presensi (`sakit` atau `izin`) baru sah dan diperbarui di monitoring setelah kedua tahap disetujui.
+**M2.3 Inbox Approval selesai.** Pembimbing, guru, kaprog, dan orangtua sekarang dapat memantau, menyaring, dan memproses semua pengajuan WFA, Libur, dan Sakit/Izin siswa di bawah cakupan masing-masing secara terpusat dari satu halaman. Badge notifikasi antrian pending terpasang secara dinamis di menu sidebar.
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M2.3** (Inbox Approval) — prasyarat M1.4, M2.1, M2.2 ✅ terpenuhi
 - **M3.1** (Streak Engine) — prasyarat M0.2 ✅ terpenuhi
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M2.3 Inbox Approval** — satu inbox terpusat bagi pembimbing/guru/kaprog/ortu untuk memproses WFA, Libur, Sakit/Izin.
-2. **M3.1 Streak Engine** — kalkulasi streak kehadiran berturut-turut untuk gamifikasi siswa.
+1. **M3.1 Streak Engine** — kalkulasi streak kehadiran berturut-turut untuk gamifikasi siswa.
+2. **M3.2 Badge / Achievement** — modul penghargaan otomatis berdasarkan pencapaian presensi.

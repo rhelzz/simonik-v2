@@ -21,4 +21,5 @@ export type Role =
 export type Auth = {
     user: User | null;
     roles: Role[];
+    pendingApprovalsCount?: number;
 };

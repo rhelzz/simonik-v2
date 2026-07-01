@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Approval;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -41,6 +42,17 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'roles' => $request->user()?->getRoleNames() ?? [],
+                'pendingApprovalsCount' => function () use ($request) {
+                    $user = $request->user();
+                    if (! $user || ! $user->hasAnyRole(['pembimbing', 'guru', 'kaprog', 'orangtua'])) {
+                        return 0;
+                    }
+
+                    return Approval::query()
+                        ->forUserQueue($user)
+                        ->where('status', Approval::STATUS_PENDING)
+                        ->count();
+                },
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

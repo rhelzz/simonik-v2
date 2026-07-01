@@ -147,7 +147,7 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 - **Frontend:** form + unggah bukti (siswa); panel persetujuan ortu & industri.
 - **DoD:** status berubah hanya setelah kedua tahap; tercermin di monitoring.
 
-#### M2.3 — Inbox Approval ⏳
+#### M2.3 — Inbox Approval ✅
 - **Prasyarat:** M1.4, M2.1, M2.2.
 - **Backend:** query antrian approval per peran.
 - **Frontend:** halaman "Persetujuan" (badge jumlah pending di topbar/nav) untuk pembimbing/guru/kaprog/ortu.
@@ -267,7 +267,7 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 - [x] M1.4 Mode WFO/WFA + Approval WFA
 - [x] M2.1 Pengajuan Libur
 - [x] M2.2 Sakit/Izin Multi-step
-- [ ] M2.3 Inbox Approval
+- [x] M2.3 Inbox Approval
 - [ ] M3.1 Streak Engine
 - [ ] M3.2 Badge / Achievement
 - [ ] M3.3 UI Gamifikasi Siswa
