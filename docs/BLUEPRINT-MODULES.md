@@ -157,7 +157,7 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 
 ### FASE 3 — Gamifikasi Jurnal (independen)
 
-#### M3.1 — Streak Engine ⏳
+#### M3.1 — Streak Engine ✅
 - **Prasyarat:** jurnal existing.
 - **Backend:** hitung daily streak & longest streak dari `activities` (service, bukan kolom redundan bila bisa dihitung).
 - **DoD:** streak akurat lintas tanggal (termasuk reset bila bolong).
@@ -268,7 +268,7 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 - [x] M2.1 Pengajuan Libur
 - [x] M2.2 Sakit/Izin Multi-step
 - [x] M2.3 Inbox Approval
-- [ ] M3.1 Streak Engine
+- [x] M3.1 Streak Engine
 - [ ] M3.2 Badge / Achievement
 - [ ] M3.3 UI Gamifikasi Siswa
 - [ ] M4.1 QR Keaslian Sertifikat

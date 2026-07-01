@@ -11,6 +11,7 @@ use App\Models\Pembimbing;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Services\StreakCalculator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -20,6 +21,10 @@ use Inertia\Response;
 class DashboardController extends Controller
 {
     use ScopesStudentsByRole;
+
+    public function __construct(
+        private readonly StreakCalculator $streakCalculator
+    ) {}
 
     /**
      * Dashboard diarahkan sesuai role pemanggil.
@@ -150,6 +155,8 @@ class DashboardController extends Controller
 
         $student?->loadMissing(['industries:id,name', 'pkl_period:id,name_period']);
 
+        $streaks = $this->streakCalculator->calculate($user);
+
         return Inertia::render('dashboard-student', [
             'profile' => [
                 'industry' => $student?->industries?->name,
@@ -171,6 +178,8 @@ class DashboardController extends Controller
                 'journalTotal' => Activity::query()->where('user_id', $userId)->count(),
                 'avg' => $avg,
                 'grade' => Evaluation::gradeFor($avg),
+                'current_streak' => $streaks['current_streak'],
+                'longest_streak' => $streaks['longest_streak'],
             ],
             'today' => Carbon::now()->translatedFormat('l, d F Y'),
         ]);

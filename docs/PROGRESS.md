@@ -380,17 +380,28 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
   - Membuat test suite `InboxApprovalTest` (3 test, 59 assertions) untuk memverifikasi proteksi role non-approver (403), antrian bimbingan yang terisolasi per pembimbing, batasan tahap 1 orangtua pada Sakit/Izin, dan pergeseran status ke tab riwayat (history) saat disetujui.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 221/221 passed + 776 assertions**. `npm run lint` + `npm run types:check` lolos.
 
+### 36. M3.1 — Streak Engine (Blueprint Modul)
+
+- **Backend:**
+  - Membuat service class `App\Services\StreakCalculator` untuk menghitung `current_streak` (daily streak beruntun mundur dari hari ini/kemarin) dan `longest_streak` (streak terpanjang historis) secara dinamis dari tabel `activities`.
+  - Mengimplementasikan normalisasi tanggal menggunakan string format `Y-m-d` dan `startOfDay()` guna memuluskan selisih hari. Menggunakan type casting `(int)` pada `abs()` untuk menghidari error strict-type comparison float vs integer.
+  - Mengintegrasikan `StreakCalculator` ke dalam `DashboardController` (`studentDashboard`) untuk mengirimkan data daily streak dan longest streak ke client-side.
+- **Tests:**
+  - Membuat feature test `StreakCalculatorTest` (5 test, 10 assertions) untuk memvalidasi kasus empty/tanpa aktivitas, perhitungan streak harian beruntun, reset streak akibat adanya hari yang bolong (gap), keawetan rekor longest streak meskipun daily streak sudah ter-reset, serta penanganan duplikasi aktivitas pada hari yang sama agar tetap terhitung sebagai 1 hari streak.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 226/226 passed + 786 assertions**. `npm run lint` + `npm run types:check` lolos.
+
 ---
 
 ## 📍 Current step
-**M2.3 Inbox Approval selesai.** Pembimbing, guru, kaprog, dan orangtua sekarang dapat memantau, menyaring, dan memproses semua pengajuan WFA, Libur, dan Sakit/Izin siswa di bawah cakupan masing-masing secara terpusat dari satu halaman. Badge notifikasi antrian pending terpasang secara dinamis di menu sidebar.
+**M3.1 Streak Engine selesai.** Penghitungan streak pengisian jurnal harian siswa secara dinamis telah aktif. Sistem menghitung daily streak saat ini dan longest streak terbaik secara akurat dengan reset otomatis bila ada hari bolong, serta menyediakannya ke prop dashboard siswa.
 
 Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md)):
-- **M3.1** (Streak Engine) — prasyarat M0.2 ✅ terpenuhi
+- **M3.2** (Badge / Achievement) — prasyarat M3.1 ✅ terpenuhi
+- **M3.3** (UI Gamifikasi Siswa) — prasyarat M3.1 ✅ terpenuhi
 
 ---
 
 ## ⏭️ Next step — opsi terbaik (detail & spec di [`BLUEPRINT-MODULES.md`](BLUEPRINT-MODULES.md))
 
-1. **M3.1 Streak Engine** — kalkulasi streak kehadiran berturut-turut untuk gamifikasi siswa.
-2. **M3.2 Badge / Achievement** — modul penghargaan otomatis berdasarkan pencapaian presensi.
+1. **M3.2 Badge / Achievement** — modul penghargaan otomatis berdasarkan pencapaian presensi/jurnal (termasuk streak 7/30 hari).
+2. **M3.3 UI Gamifikasi Siswa** — widget visualisasi streak dan etalase badge pada dashboard siswa.
