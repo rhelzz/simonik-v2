@@ -23,6 +23,7 @@ use App\Http\Controllers\PembimbingController;
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SakitIzinController;
+use App\Http\Controllers\StreakController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Auth;
@@ -126,6 +127,9 @@ Route::middleware('auth')->group(function () {
         // Pengajuan Sakit/Izin milik siswa.
         Route::get('sakit-izin', [SakitIzinController::class, 'index'])->name('sakit-izin.index');
         Route::post('sakit-izin', [SakitIzinController::class, 'store'])->name('sakit-izin.store');
+
+        // Halaman Streak & Badge gamifikasi jurnal.
+        Route::get('streak', StreakController::class)->name('streak');
     });
 
     // Approval engine — approve/reject (pembimbing, guru, kaprog, orangtua).

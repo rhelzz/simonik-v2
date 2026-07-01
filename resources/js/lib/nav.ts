@@ -51,7 +51,7 @@ import { edit as profileEdit } from '@/actions/App/Http/Controllers/ProfileContr
 import { index as sakitIzinIndex } from '@/actions/App/Http/Controllers/SakitIzinController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
-import { dashboard } from '@/routes';
+import { dashboard, streak } from '@/routes';
 import type { NavItem, NavSection } from '@/types';
 import type { Role } from '@/types/auth';
 
@@ -103,7 +103,7 @@ export const navSections: NavSection[] = [
             {
                 label: 'Streak & Badge',
                 icon: Flame,
-                href: dashboard().url,
+                href: streak.url(),
                 roles: ['siswa'],
             },
         ],
