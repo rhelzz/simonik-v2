@@ -141,7 +141,7 @@ File "panas" yang disentuh banyak modul: `resources/js/lib/nav.ts`, `resources/j
 - **Frontend:** form pengajuan libur (siswa) + status.
 - **DoD:** libur disetujui satu pihak = sah; tercatat di riwayat presensi.
 
-#### M2.2 — Sakit/Izin Multi-step ⏳
+#### M2.2 — Sakit/Izin Multi-step ✅
 - **Prasyarat:** M0.3.
 - **Backend:** pengajuan Sakit/Izin + upload bukti → **tahap 1 Ortu → tahap 2 Industri**.
 - **Frontend:** form + unggah bukti (siswa); panel persetujuan ortu & industri.
@@ -266,7 +266,7 @@ Pengguna menentukan modul awal; selama prasyarat terpenuhi, urutan boleh fleksib
 - [x] M1.3 Geofencing + Anti-Fake (WFO)
 - [x] M1.4 Mode WFO/WFA + Approval WFA
 - [x] M2.1 Pengajuan Libur
-- [ ] M2.2 Sakit/Izin Multi-step
+- [x] M2.2 Sakit/Izin Multi-step
 - [ ] M2.3 Inbox Approval
 - [ ] M3.1 Streak Engine
 - [ ] M3.2 Badge / Achievement
