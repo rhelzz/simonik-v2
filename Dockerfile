@@ -30,15 +30,26 @@ RUN composer install \
 FROM node:22-bookworm-slim AS assets
 WORKDIR /app
 
-# PHP CLI is required so the Wayfinder Vite plugin can run `php artisan`.
+# PHP 8.4 CLI is required so the Wayfinder Vite plugin can run `php artisan`.
+# Debian bookworm ships PHP 8.2 by default, but this app requires PHP 8.4
+# (composer.json: "php": "^8.4"), so install it from the Sury repository.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        php-cli php-mbstring php-xml php-tokenizer php-curl php-sqlite3 unzip \
+        ca-certificates apt-transport-https lsb-release gnupg curl unzip \
+    && curl -sSL https://packages.sury.org/php/apt.gpg -o /etc/apt/trusted.gpg.d/php.gpg \
+    && echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        php8.4-cli php8.4-mbstring php8.4-xml php8.4-tokenizer php8.4-curl php8.4-sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Vendor first (Laravel must boot for wayfinder:generate).
 COPY --from=vendor /app/vendor ./vendor
 COPY . .
+
+# Wayfinder boots the Laravel app during `vite build`, which needs an APP_KEY.
+# Use a throwaway .env for the build only (real env comes from Dokploy at runtime).
+RUN cp .env.example .env && php artisan key:generate --force
 
 # Use `npm install` (not `npm ci`): the committed lockfile is generated on
 # Windows and omits Linux-only transitive deps (e.g. @emnapi/core from the
