@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ScopesProgramByKaprog;
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
 use App\Models\Activity;
 use App\Models\Attendance;
 use App\Models\Badge;
+use App\Models\BudgetReceipt;
+use App\Models\Departemen;
 use App\Models\Evaluation;
+use App\Models\Expense;
 use App\Models\Industry;
 use App\Models\Pembimbing;
 use App\Models\Student;
@@ -21,6 +25,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    use ScopesProgramByKaprog;
     use ScopesStudentsByRole;
 
     public function __construct(
@@ -51,7 +56,11 @@ class DashboardController extends Controller
             return $this->wakasekDashboard();
         }
 
-        // admin / kaprog: analitik penuh.
+        if ($user->hasRole('kaprog')) {
+            return $this->kaprogDashboard($user);
+        }
+
+        // admin: analitik penuh.
         return $this->adminDashboard();
     }
 
@@ -85,17 +94,123 @@ class DashboardController extends Controller
     }
 
     /**
-     * Dashboard Wakasek Humas/Hubin — ringkasan global & placeholder modul M5.x.
+     * Dashboard Wakasek Humas/Hubin — supervisi global: keuangan, daya tampung
+     * kemitraan, partisipasi presensi/jurnal, dan rekap per jurusan.
      */
     private function wakasekDashboard(): Response
     {
+        $activeUserIds = Student::query()
+            ->where('status_pkl', 'proses')
+            ->pluck('user_id')
+            ->all();
+
+        $participation = $this->participation($activeUserIds);
+
+        // Akuntabilitas dana (M5.1): saldo berjalan.
+        $receipts = (float) BudgetReceipt::query()->sum('amount');
+        $expenses = (float) Expense::query()->sum('amount');
+
+        // Daya tampung kemitraan (M5.2): abaikan mitra tanpa kuota.
+        $withQuota = Industry::query()->whereNotNull('kuota')->withCount('students')->get();
+        $capacity = (int) $withQuota->sum('kuota');
+        $placed = (int) $withQuota->sum('students_count');
+        $overCapacity = $withQuota
+            ->filter(fn (Industry $industry): bool => $industry->students_count > (int) $industry->kuota)
+            ->count();
+
         return Inertia::render('dashboard-wakasek', [
             'stats' => [
                 'students' => Student::where('archived', false)->count(),
-                'activePkl' => Student::where('status_pkl', 'proses')->count(),
+                'activePkl' => \count($activeUserIds),
                 'industries' => Industry::count(),
                 'teachers' => Teacher::count(),
             ],
+            'finance' => [
+                'receipts' => $receipts,
+                'expenses' => $expenses,
+                'balance' => $receipts - $expenses,
+            ],
+            'capacity' => [
+                'partners' => Industry::query()->count(),
+                'quota' => $capacity,
+                'placed' => $placed,
+                'remaining' => max(0, $capacity - $placed),
+                'utilization' => $capacity > 0 ? (int) min(100, round($placed / $capacity * 100)) : 0,
+                'over' => $overCapacity,
+            ],
+            'attendanceRate' => $participation['attendance'],
+            'journalRate' => $participation['journal'],
+            'byDepartment' => $this->departmentBreakdown(),
+            'today' => Carbon::now()->translatedFormat('l, d F Y'),
+        ]);
+    }
+
+    /**
+     * Rekap ringkas per jurusan untuk supervisi global wakasek.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function departmentBreakdown(): array
+    {
+        return Departemen::query()
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Departemen $dep): array => [
+                'id' => $dep->id,
+                'name' => $dep->name,
+                'students' => Student::query()
+                    ->where('departemen_id', $dep->id)
+                    ->where('archived', false)
+                    ->count(),
+                'activePkl' => Student::query()
+                    ->where('departemen_id', $dep->id)
+                    ->where('status_pkl', 'proses')
+                    ->count(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Dashboard Kepala Program Keahlian — dibatasi ke jurusan yang dipimpin:
+     * ringkasan penempatan, partisipasi presensi/jurnal, & siswa belum mulai PKL.
+     */
+    private function kaprogDashboard(User $user): Response
+    {
+        $depIds = $this->programDepartemenIds($user);
+
+        $departemens = Departemen::query()
+            ->whereIn('id', $depIds)
+            ->orderBy('name')
+            ->pluck('name')
+            ->all();
+
+        $scoped = fn () => Student::query()->whereIn('departemen_id', $depIds);
+
+        $activeUserIds = $scoped()
+            ->where('status_pkl', 'proses')
+            ->pluck('user_id')
+            ->all();
+
+        $participation = $this->participation($activeUserIds);
+
+        return Inertia::render('dashboard-kaprog', [
+            'stats' => [
+                'departemens' => \count($depIds),
+                'students' => $scoped()->where('archived', false)->count(),
+                'activePkl' => \count($activeUserIds),
+                'notStarted' => $scoped()->where('status_pkl', 'belum')->count(),
+            ],
+            'departemens' => $departemens,
+            'attendanceRate' => $participation['attendance'],
+            'journalRate' => $participation['journal'],
+            'notStartedStudents' => $this->presentStudents(
+                $scoped()
+                    ->where('status_pkl', 'belum')
+                    ->with(['classes:id,name', 'industries:id,name'])
+                    ->orderBy('name')
+                    ->take(6),
+            ),
             'today' => Carbon::now()->translatedFormat('l, d F Y'),
         ]);
     }

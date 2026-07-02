@@ -37,12 +37,16 @@ class DemoDataSeeder extends Seeder
             'end_period' => '2026-04-06',
         ]);
 
+        // Kaprog demo memimpin seluruh program keahlian agar dashboard & plotting terisi.
+        $kaprog = User::where('email', 'kaprog@simonik.test')->first();
+
         $departemens = collect([
             'Rekayasa Perangkat Lunak',
             'Teknik Komputer dan Jaringan',
         ])->map(fn (string $name) => Departemen::factory()->create([
             'name' => $name,
             'slug' => Str::slug($name),
+            'user_id' => $kaprog?->id,
         ]));
 
         $classes = $departemens->flatMap(fn (Departemen $dept) => collect(['XII-A', 'XII-B'])

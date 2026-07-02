@@ -478,12 +478,23 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
 - **Frontend:** komponen `components/pwa/pwa-prompt.tsx` — registrasi SW (skip di `import.meta.env.DEV`), toast "Versi baru tersedia" (kirim `SKIP_WAITING` ke waiting worker + reload via `controllerchange`), dan tombol "Pasang SIMONIK" via `beforeinstallprompt`. Dirender di `app-layout.tsx`. Tipe `vite-plugin-pwa/client` ditambah di `types/vite-env.d.ts`.
 - ✅ **`composer test` penuh: Pint + PHPStan 0 error + 262/262 passed + 987 assertions**. `npm run build` sukses (SW 135 entri precache, hanya aset build), `npm run types:check` + `npm run lint` + `npm run format:check` lolos.
 
+### 42. Manajemen Peran Wakasek & Kaprog — CRUD, dashboard & fitur
+
+- **CRUD Data Wakasek (admin):** `WakasekController` (resourceful tanpa `show`) mengelola `User` ber-role `wakasek` (scope Spatie `role()`), guard `hasRole` + tolak hapus akun sendiri. `Store/UpdateWakasekRequest`. Halaman `pages/wakaseks/{index,create,edit}` + `components/wakaseks/wakasek-form`. Route `role:admin`. Menu **Data Wakasek** di dropdown "Data User". Test `WakasekTest` (8).
+- **Dashboard Wakasek analitik:** `DashboardController::wakasekDashboard()` kini menghitung saldo dana (`BudgetReceipt`/`Expense`), daya tampung kuota kemitraan (terisi/utilisasi/kelebihan), rate presensi & jurnal (`participation()`), dan `departmentBreakdown()`. `dashboard-wakasek.tsx` ditulis ulang: kartu keuangan, kartu kuota (progress + peringatan), 2 `RateCard`, tabel per-jurusan, 3 pintasan.
+- **CRUD Data Kaprog (admin):** `KaprogController` mengelola `User` ber-role `kaprog` + **penautan program keahlian** via `departemens.user_id` (`syncDepartemens`: klaim/lepas). **Guard cascade-delete**: FK `departemens.user_id` `cascadeOnDelete` → `destroy()` men-detach jurusan (set null) dulu dalam transaksi sebelum hapus user (mencegah terhapusnya jurusan→kelas→siswa). `Store/UpdateKaprogRequest`. Halaman `pages/kaprogs/*` + `kaprog-form` (checkbox multi-jurusan, tanda "dipegang X"). Menu **Data Kaprog** (`role:admin`). Test `KaprogTest` (8).
+- **Dashboard Kaprog (scoped):** trait baru `ScopesProgramByKaprog` (admin=semua jurusan, kaprog=jurusan yang dipimpin via `departemens.user_id`). `DashboardController` branch `kaprog` → `kaprogDashboard()`: stat scoped (program, siswa, PKL berjalan, belum mulai), 2 `RateCard`, tabel siswa belum ditempatkan, 3 pintasan. `dashboard-kaprog.tsx`.
+- **Fitur Plotting & Penempatan (admin/kaprog):** `PlacementController` (route `/penempatan`, gate `role:admin|kaprog`) — daftar siswa dalam scope program + `update` penempatan (`industri_id` menentukan guru pembimbing via `industry.teacher_id`, + `status_pkl`), guard 403 di luar scope. `UpdatePlacementRequest`. `pages/placements/index.tsx` kartu berbasis grid (industri & status auto-submit `router.patch`, guru sebagai chip, responsif). Menu **Plotting & Penempatan** di Data Master. Test `PlacementTest` (6).
+- **Seeder:** `DemoDataSeeder` menautkan `kaprog@simonik.test` ke kedua jurusan demo agar dashboard & plotting langsung terisi.
+- ✅ **`composer test` penuh: Pint + PHPStan 0 error + 285/285 passed + 1049 assertions**. `npm run build` + `types:check` + `lint` + `format` lolos. `migrate:fresh --seed` sukses.
+
 ---
 
 ## 📍 Current step
-**Fase 6 (PWA) selesai — seluruh 19 modul blueprint (M0.1–M6.1) rampung.** SIMONIK kini installable ke homescreen (manifest + ikon + service worker scope `/`), dengan runtime-caching aset/font/peta dan prompt update + install. Model face-api besar sengaja tidak di-precache agar SW ringan.
+**Manajemen peran Wakasek & Kaprog lengkap.** Admin dapat CRUD akun Wakasek & Kaprog (kaprog + penautan program keahlian). Wakasek punya dashboard analitik (keuangan/kuota/partisipasi/per-jurusan). Kaprog punya dashboard scoped + fitur **Plotting & Penempatan** siswa ke industri. Seluruh 19 modul blueprint (M0.1–M6.1) sudah rampung sebelumnya.
 
 ---
 
-## ⏭️ Next step
-Seluruh modul blueprint PKL lanjutan telah selesai. Opsi berikutnya bersifat penyempurnaan (mis. offline fallback page, uji audit Lighthouse PWA di perangkat, atau iterasi fitur non-blueprint sesuai kebutuhan pengguna).
+## ⏭️ Next step — opsi terbaik
+1. **Manajemen Jadwal monitoring (anti-bentrok)** — fitur blueprint kaprog yang belum ada: menyusun jadwal monitoring guru tanpa bentrok jadwal mengajar (butuh subsistem penjadwalan).
+2. Penyempurnaan PWA (offline fallback page, audit Lighthouse) atau iterasi fitur lain sesuai kebutuhan.

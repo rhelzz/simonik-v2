@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Attendance;
+use App\Models\Departemen;
 use App\Models\Industry;
 use App\Models\Parents;
 use App\Models\Student;
@@ -87,6 +88,34 @@ class DashboardTest extends TestCase
                 ->has('stats.activePkl')
                 ->has('stats.industries')
                 ->has('stats.teachers')
+                ->has('finance.balance')
+                ->has('finance.receipts')
+                ->has('finance.expenses')
+                ->has('capacity.quota')
+                ->has('capacity.utilization')
+                ->has('attendanceRate.month')
+                ->has('journalRate.month')
+                ->has('byDepartment')
+            );
+    }
+
+    public function test_kaprog_sees_scoped_program_dashboard(): void
+    {
+        $kaprogUser = $this->user('kaprog');
+        $dep = Departemen::factory()->create(['user_id' => $kaprogUser->id]);
+        Student::factory()->count(2)->create(['departemen_id' => $dep->id]);
+        // Siswa di jurusan lain tidak dihitung.
+        Student::factory()->create();
+
+        $this->actingAs($kaprogUser)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard-kaprog')
+                ->where('stats.departemens', 1)
+                ->where('stats.students', 2)
+                ->has('attendanceRate.month')
+                ->has('journalRate.month')
+                ->has('departemens')
             );
     }
 

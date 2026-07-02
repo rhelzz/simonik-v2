@@ -16,6 +16,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\JournalMonitorController;
+use App\Http\Controllers\KaprogController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\MyIndustryController;
 use App\Http\Controllers\ParentController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\PartnershipController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\PembimbingController;
 use App\Http\Controllers\PeriodController;
+use App\Http\Controllers\PlacementController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RaporController;
 use App\Http\Controllers\SakitIzinController;
@@ -31,6 +33,7 @@ use App\Http\Controllers\StreakController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\VerificationController;
+use App\Http\Controllers\WakasekController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -93,6 +96,20 @@ Route::middleware('auth')->group(function () {
         Route::resource('teachers', TeacherController::class);
         Route::resource('pembimbings', PembimbingController::class);
         Route::resource('parents', ParentController::class)->except('show');
+
+        // Akun Wakasek Humas/Hubin — hanya Super Admin yang boleh mengelola.
+        Route::resource('wakaseks', WakasekController::class)
+            ->except('show')
+            ->middleware('role:admin');
+
+        // Akun Kepala Program Keahlian — hanya Super Admin yang boleh mengelola.
+        Route::resource('kaprogs', KaprogController::class)
+            ->except('show')
+            ->middleware('role:admin');
+
+        // Plotting & Penempatan siswa ke industri (lingkup program keahlian kaprog).
+        Route::get('penempatan', [PlacementController::class, 'index'])->name('placements.index');
+        Route::patch('penempatan/{student}', [PlacementController::class, 'update'])->name('placements.update');
 
         // Data referensi akademik.
         Route::resource('departemens', DepartemenController::class)->only(['index', 'store', 'update', 'destroy', 'show']);

@@ -8,6 +8,7 @@ import {
     CalendarRange,
     Camera,
     ClipboardCheck,
+    ClipboardList,
     FileImage,
     FileText,
     Fingerprint,
@@ -23,6 +24,7 @@ import {
     Network,
     NotebookPen,
     School,
+    ShieldCheck,
     UserCheck,
     UserCog,
     Users,
@@ -43,18 +45,21 @@ import { index as financeIndex } from '@/actions/App/Http/Controllers/FinanceCon
 import { index as guidesIndex } from '@/actions/App/Http/Controllers/GuideController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
+import { index as kaprogsIndex } from '@/actions/App/Http/Controllers/KaprogController';
 import { index as leaveRequestsIndex } from '@/actions/App/Http/Controllers/LeaveRequestController';
 import { show as myIndustryShow } from '@/actions/App/Http/Controllers/MyIndustryController';
 import { index as parentsIndex } from '@/actions/App/Http/Controllers/ParentController';
 import { index as partnershipsIndex } from '@/actions/App/Http/Controllers/PartnershipController';
 import { index as pembimbingsIndex } from '@/actions/App/Http/Controllers/PembimbingController';
 import { index as periodsIndex } from '@/actions/App/Http/Controllers/PeriodController';
+import { index as placementsIndex } from '@/actions/App/Http/Controllers/PlacementController';
 import { edit as profileEdit } from '@/actions/App/Http/Controllers/ProfileController';
 import { index as raporIndex } from '@/actions/App/Http/Controllers/RaporController';
 import { index as sakitIzinIndex } from '@/actions/App/Http/Controllers/SakitIzinController';
 import { index as statistikIndex } from '@/actions/App/Http/Controllers/StatistikController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
+import { index as wakaseksIndex } from '@/actions/App/Http/Controllers/WakasekController';
 import { dashboard, streak } from '@/routes';
 import type { NavItem, NavSection } from '@/types';
 import type { Role } from '@/types/auth';
@@ -140,7 +145,25 @@ export const navSections: NavSection[] = [
                         icon: UsersRound,
                         href: parentsIndex.url(),
                     },
+                    {
+                        label: 'Data Wakasek',
+                        icon: ShieldCheck,
+                        href: wakaseksIndex.url(),
+                        roles: ['admin'],
+                    },
+                    {
+                        label: 'Data Kaprog',
+                        icon: UserCog,
+                        href: kaprogsIndex.url(),
+                        roles: ['admin'],
+                    },
                 ],
+            },
+            {
+                label: 'Plotting & Penempatan',
+                icon: ClipboardList,
+                href: placementsIndex.url(),
+                roles: ['admin', 'kaprog'],
             },
             {
                 label: 'Data Industri',
