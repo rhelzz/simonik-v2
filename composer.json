@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.4",
         "bacon/bacon-qr-code": "^2.0",
+        "fakerphp/faker": "^1.24",
         "inertiajs/inertia-laravel": "^3.0",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
@@ -18,7 +19,6 @@
         "spatie/laravel-permission": "*"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.24",
         "larastan/larastan": "^3.9",
         "laravel/boost": "^2.2",
         "laravel/pail": "^1.2.5",
