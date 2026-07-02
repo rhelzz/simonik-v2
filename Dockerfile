@@ -40,7 +40,10 @@ RUN apt-get update \
 COPY --from=vendor /app/vendor ./vendor
 COPY . .
 
-RUN npm ci
+# Use `npm install` (not `npm ci`): the committed lockfile is generated on
+# Windows and omits Linux-only transitive deps (e.g. @emnapi/core from the
+# linux-x64-gnu binaries), which makes `npm ci` fail on this build platform.
+RUN npm install --no-audit --no-fund
 RUN npm run build
 
 # ---------------------------------------------------------------------------
