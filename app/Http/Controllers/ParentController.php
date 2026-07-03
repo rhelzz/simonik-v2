@@ -21,17 +21,37 @@ class ParentController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
+        $gender = (string) $request->query('gender', '');
+        $gender = in_array($gender, ['L', 'P'], true) ? $gender : '';
+
+        // Nilai gender bisa bervariasi antar-sumber data (L/P vs male/female);
+        // padankan keduanya saat memfilter.
+        $genderAliases = [
+            'L' => ['L', 'l', 'male', 'm'],
+            'P' => ['P', 'p', 'female', 'f'],
+        ];
 
         $parents = Parents::query()
             ->with(['users:id,email', 'students:id,name,parent_id'])
-            ->when($search !== '', fn ($query) => $query->where('nama', 'like', "%{$search}%"))
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($q) use ($search): void {
+                    $q->where('nama', 'like', "%{$search}%")
+                        ->orWhere('occupation', 'like', "%{$search}%")
+                        ->orWhere('phoneNumber', 'like', "%{$search}%");
+                });
+            })
+            ->when($gender !== '', fn ($query) => $query->whereIn('gender', $genderAliases[$gender]))
             ->latest()
             ->paginate(10)
             ->withQueryString()
             ->through(fn (Parents $parent): array => [
                 'id' => $parent->id,
                 'nama' => $parent->nama,
-                'gender' => $parent->gender,
+                'gender' => match (strtolower($parent->gender ?? '')) {
+                    'male', 'm', 'l' => 'Laki-laki',
+                    'female', 'f', 'p' => 'Perempuan',
+                    default => null,
+                },
                 'occupation' => $parent->occupation,
                 'phoneNumber' => $parent->phoneNumber,
                 'email' => $parent->users?->email,
@@ -40,7 +60,10 @@ class ParentController extends Controller
 
         return Inertia::render('parents/index', [
             'parents' => $parents,
-            'filters' => ['search' => $search],
+            'filters' => [
+                'search' => $search,
+                'gender' => $gender !== '' ? $gender : null,
+            ],
         ]);
     }
 

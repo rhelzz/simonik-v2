@@ -28,6 +28,10 @@ class StudentController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $classId = $request->integer('class_id');
+        $industriId = $request->integer('industri_id');
+        $statusPkl = (string) $request->query('status_pkl', '');
+        $validStatuses = ['belum', 'proses', 'selesai'];
+        $statusPkl = in_array($statusPkl, $validStatuses, true) ? $statusPkl : '';
 
         $students = Student::query()
             ->where('archived', false)
@@ -39,6 +43,8 @@ class StudentController extends Controller
                 });
             })
             ->when($classId > 0, fn ($query) => $query->where('class_id', $classId))
+            ->when($industriId > 0, fn ($query) => $query->where('industri_id', $industriId))
+            ->when($statusPkl !== '', fn ($query) => $query->where('status_pkl', $statusPkl))
             ->latest()
             ->paginate(10)
             ->withQueryString()
@@ -57,9 +63,12 @@ class StudentController extends Controller
         return Inertia::render('students/index', [
             'students' => $students,
             'classes' => Classes::orderBy('name')->get(['id', 'name']),
+            'industries' => Industry::orderBy('name')->get(['id', 'name']),
             'filters' => [
                 'search' => $search,
                 'class_id' => $classId > 0 ? $classId : null,
+                'industri_id' => $industriId > 0 ? $industriId : null,
+                'status_pkl' => $statusPkl !== '' ? $statusPkl : null,
             ],
         ]);
     }

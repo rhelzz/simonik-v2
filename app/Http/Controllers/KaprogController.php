@@ -23,6 +23,7 @@ class KaprogController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
+        $departemenId = $request->integer('departemen_id');
 
         $kaprogs = User::query()
             ->role('kaprog')
@@ -31,6 +32,10 @@ class KaprogController extends Controller
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             }))
+            ->when($departemenId > 0, fn ($query) => $query->whereHas(
+                'departements',
+                fn ($q) => $q->where('departemens.id', $departemenId),
+            ))
             ->latest()
             ->paginate(10)
             ->withQueryString()
@@ -44,7 +49,11 @@ class KaprogController extends Controller
 
         return Inertia::render('kaprogs/index', [
             'kaprogs' => $kaprogs,
-            'filters' => ['search' => $search],
+            'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
+            'filters' => [
+                'search' => $search,
+                'departemen_id' => $departemenId > 0 ? $departemenId : null,
+            ],
         ]);
     }
 

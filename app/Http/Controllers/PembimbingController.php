@@ -21,13 +21,28 @@ class PembimbingController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
+        $gender = (string) $request->query('gender', '');
+        $gender = in_array($gender, ['L', 'P'], true) ? $gender : '';
+
+        // Nilai gender bisa bervariasi antar-sumber data (L/P vs male/female);
+        // padankan keduanya saat memfilter.
+        $genderAliases = [
+            'L' => ['L', 'l', 'male', 'm'],
+            'P' => ['P', 'p', 'female', 'f'],
+        ];
 
         // Pembimbing industri terikat ke satu PT (industries.pembimbing_id);
         // siswa diturunkan lewat PT itu (hasManyThrough).
         $pembimbings = Pembimbing::query()
             ->with(['user:id,email', 'industry:id,name,pembimbing_id'])
             ->withCount('students')
-            ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($q) use ($search): void {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('no_hp', 'like', "%{$search}%");
+                });
+            })
+            ->when($gender !== '', fn ($query) => $query->whereIn('gender', $genderAliases[$gender]))
             ->latest()
             ->paginate(10)
             ->withQueryString()
@@ -35,7 +50,11 @@ class PembimbingController extends Controller
                 'id' => $pembimbing->id,
                 'name' => $pembimbing->name,
                 'no_hp' => $pembimbing->no_hp,
-                'gender' => $pembimbing->gender,
+                'gender' => match (strtolower($pembimbing->gender ?? '')) {
+                    'male', 'm', 'l' => 'Laki-laki',
+                    'female', 'f', 'p' => 'Perempuan',
+                    default => null,
+                },
                 'email' => $pembimbing->user?->email,
                 'industry' => $pembimbing->industry?->name,
                 'students_count' => $pembimbing->students_count,
@@ -43,7 +62,10 @@ class PembimbingController extends Controller
 
         return Inertia::render('pembimbings/index', [
             'pembimbings' => $pembimbings,
-            'filters' => ['search' => $search],
+            'filters' => [
+                'search' => $search,
+                'gender' => $gender !== '' ? $gender : null,
+            ],
         ]);
     }
 

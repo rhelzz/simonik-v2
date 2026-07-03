@@ -22,11 +22,18 @@ class TeacherController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
+        $departemenId = $request->integer('departemen_id');
 
         $teachers = Teacher::query()
             ->with(['users:id,email', 'departements:id,name'])
             ->withCount(['industries', 'students'])
-            ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
+            ->when($search !== '', function ($query) use ($search): void {
+                $query->where(function ($q) use ($search): void {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('no_hp', 'like', "%{$search}%");
+                });
+            })
+            ->when($departemenId > 0, fn ($query) => $query->where('departemen_id', $departemenId))
             ->latest()
             ->paginate(10)
             ->withQueryString()
@@ -43,7 +50,11 @@ class TeacherController extends Controller
 
         return Inertia::render('teachers/index', [
             'teachers' => $teachers,
-            'filters' => ['search' => $search],
+            'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
+            'filters' => [
+                'search' => $search,
+                'departemen_id' => $departemenId > 0 ? $departemenId : null,
+            ],
         ]);
     }
 

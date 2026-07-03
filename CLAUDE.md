@@ -84,6 +84,7 @@ These are distilled from the Laravel Boost guidelines bundled with this project 
 - **No `any`** (`npm run types:check` is in the CI gate). Type page props explicitly; reuse shared types from `@/types`. Import via the `@/` alias, never `../../..`.
 - **Tailwind v4 is CSS-first**: theme lives in `resources/css/app.css` via `@theme` and `@import "tailwindcss"` — there is no `tailwind.config.js`. Avoid removed v3 utilities (`bg-opacity-*` → `bg-black/50`, `flex-shrink-*` → `shrink-*`, etc.), use `gap-*` for spacing between siblings rather than margins, and match the project's dark-mode approach if present.
 - Merge conditional classes with the `cn()` helper in `@/lib/utils` (clsx + tailwind-merge); let **Prettier** (with the Tailwind class-sorting plugin) own formatting via `npm run format` — don't reorder classes by hand.
+- **Reuse the shared UI patterns** documented in [`docs/UI-PATTERNS.md`](docs/UI-PATTERNS.md) — the custom `Select` dropdown (`@/components/ui/select`, never a native `<select>`), and the list-table / filter / form conventions. Follow it when building any new admin page so styling stays consistent; update the doc when a pattern evolves.
 
 ### Workflow before finishing
 - If you touched PHP, run `vendor/bin/pint --dirty` to auto-format (don't fix style manually, and don't use `--test` to "check only" — just let it fix).

@@ -1,13 +1,17 @@
 import { Link, router } from '@inertiajs/react';
 import {
+    Building2,
     ChevronLeft,
     ChevronRight,
     Eye,
+    GraduationCap,
+    ListFilter,
     Pencil,
     Plus,
     Search,
     Trash2,
     UserRoundX,
+    X,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
@@ -18,6 +22,8 @@ import {
     index,
     show,
 } from '@/actions/App/Http/Controllers/StudentController';
+import { Select } from '@/components/ui/select';
+import type { SelectOption } from '@/components/ui/select';
 import { AppLayout } from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types';
@@ -36,12 +42,18 @@ type StudentRow = {
     image: string | null;
 };
 
-type ClassOption = { id: number; name: string };
+type NamedOption = { id: number; name: string };
 
 type StudentsIndexProps = {
     students: Paginated<StudentRow>;
-    classes: ClassOption[];
-    filters: { search: string; class_id: number | null };
+    classes: NamedOption[];
+    industries: NamedOption[];
+    filters: {
+        search: string;
+        class_id: number | null;
+        industri_id: number | null;
+        status_pkl: StatusPkl | null;
+    };
 };
 
 const statusStyles: Record<StatusPkl, string> = {
@@ -56,23 +68,81 @@ const statusLabels: Record<StatusPkl, string> = {
     selesai: 'Selesai',
 };
 
+const statusDot: Record<StatusPkl, string> = {
+    belum: 'bg-muted',
+    proses: 'bg-warning',
+    selesai: 'bg-positive',
+};
+
+/** Small colored dot used inside the status filter dropdown. */
+function Dot({ className }: { className: string }) {
+    return <span className={cn('block size-2 rounded-full', className)} />;
+}
+
 export default function StudentsIndex({
     students,
     classes,
+    industries,
     filters,
 }: StudentsIndexProps) {
     const [search, setSearch] = useState(filters.search);
 
-    function applyFilters(next: { search?: string; class_id?: string }) {
+    type FilterPatch = {
+        search?: string;
+        class_id?: string;
+        industri_id?: string;
+        status_pkl?: string;
+    };
+
+    function applyFilters(next: FilterPatch) {
         router.get(
             index.url(),
             {
                 search: next.search ?? search,
                 class_id: next.class_id ?? filters.class_id ?? '',
+                industri_id: next.industri_id ?? filters.industri_id ?? '',
+                status_pkl: next.status_pkl ?? filters.status_pkl ?? '',
             },
             { preserveState: true, replace: true, preserveScroll: true },
         );
     }
+
+    function resetFilters() {
+        setSearch('');
+        router.get(
+            index.url(),
+            {},
+            { preserveState: true, replace: true, preserveScroll: true },
+        );
+    }
+
+    const classOptions: SelectOption[] = [
+        { value: '', label: 'Semua kelas' },
+        ...classes.map((cls) => ({ value: String(cls.id), label: cls.name })),
+    ];
+
+    const industryOptions: SelectOption[] = [
+        { value: '', label: 'Semua industri' },
+        ...industries.map((ind) => ({
+            value: String(ind.id),
+            label: ind.name,
+        })),
+    ];
+
+    const statusOptions: SelectOption[] = [
+        { value: '', label: 'Semua status' },
+        ...(Object.keys(statusLabels) as StatusPkl[]).map((key) => ({
+            value: key,
+            label: statusLabels[key],
+            hint: <Dot className={statusDot[key]} />,
+        })),
+    ];
+
+    const activeCount =
+        (filters.class_id ? 1 : 0) +
+        (filters.industri_id ? 1 : 0) +
+        (filters.status_pkl ? 1 : 0) +
+        (filters.search ? 1 : 0);
 
     function remove(student: StudentRow) {
         if (
@@ -106,38 +176,77 @@ export default function StudentsIndex({
                 </div>
 
                 {/* Filters */}
-                <form
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        applyFilters({ search });
-                    }}
-                    className="mt-5 flex flex-col gap-3 sm:flex-row"
-                >
-                    <label className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted">
-                        <Search className="size-4" />
-                        <input
-                            type="search"
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Cari nama atau NIS…"
-                            className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
-                        />
-                    </label>
-                    <select
-                        value={filters.class_id ?? ''}
-                        onChange={(event) =>
-                            applyFilters({ class_id: event.target.value })
-                        }
-                        className="rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-ink focus:outline-none"
-                    >
-                        <option value="">Semua kelas</option>
-                        {classes.map((cls) => (
-                            <option key={cls.id} value={cls.id}>
-                                {cls.name}
-                            </option>
-                        ))}
-                    </select>
-                </form>
+                <div className="mt-5 space-y-3">
+                    <div className="flex flex-col gap-3 lg:flex-row">
+                        <form
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                applyFilters({ search });
+                            }}
+                            className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
+                        >
+                            <Search className="size-4" />
+                            <input
+                                type="search"
+                                value={search}
+                                onChange={(event) =>
+                                    setSearch(event.target.value)
+                                }
+                                placeholder="Cari nama atau NIS…"
+                                className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
+                            />
+                        </form>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:w-xl">
+                            <Select
+                                ariaLabel="Filter kelas"
+                                value={String(filters.class_id ?? '')}
+                                options={classOptions}
+                                onChange={(value) =>
+                                    applyFilters({ class_id: value })
+                                }
+                                icon={<GraduationCap className="size-4" />}
+                                placeholder="Semua kelas"
+                            />
+                            <Select
+                                ariaLabel="Filter industri"
+                                value={String(filters.industri_id ?? '')}
+                                options={industryOptions}
+                                onChange={(value) =>
+                                    applyFilters({ industri_id: value })
+                                }
+                                icon={<Building2 className="size-4" />}
+                                placeholder="Semua industri"
+                            />
+                            <Select
+                                ariaLabel="Filter status PKL"
+                                value={filters.status_pkl ?? ''}
+                                options={statusOptions}
+                                onChange={(value) =>
+                                    applyFilters({ status_pkl: value })
+                                }
+                                icon={<ListFilter className="size-4" />}
+                                placeholder="Semua status"
+                            />
+                        </div>
+                    </div>
+
+                    {activeCount > 0 && (
+                        <div className="flex items-center gap-2 text-xs text-muted">
+                            <span>
+                                {students.total} hasil · {activeCount} filter
+                                aktif
+                            </span>
+                            <button
+                                type="button"
+                                onClick={resetFilters}
+                                className="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 font-medium text-ink/70 transition-colors hover:bg-primary-soft hover:text-primary"
+                            >
+                                <X className="size-3" />
+                                Reset filter
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {/* Table */}
                 {students.data.length === 0 ? (
@@ -149,12 +258,22 @@ export default function StudentsIndex({
                         <p className="text-sm text-muted">
                             Sesuaikan pencarian atau tambah siswa baru.
                         </p>
+                        {activeCount > 0 && (
+                            <button
+                                type="button"
+                                onClick={resetFilters}
+                                className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
+                            >
+                                <X className="size-3" />
+                                Reset filter
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="mt-4 overflow-x-auto">
                         <table className="w-full min-w-160 border-collapse text-left text-sm">
                             <thead>
-                                <tr className="text-xs font-semibold tracking-wide text-muted uppercase">
+                                <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
                                     <th className="pb-3 font-semibold">
                                         Siswa
                                     </th>
@@ -174,17 +293,28 @@ export default function StudentsIndex({
                             </thead>
                             <tbody className="divide-y divide-line">
                                 {students.data.map((student) => (
-                                    <tr key={student.id}>
-                                        <td className="py-3">
-                                            <p className="font-semibold text-ink">
-                                                {student.name}
-                                            </p>
-                                            <p className="text-xs text-muted">
-                                                NIS {student.nis}
-                                                {student.email
-                                                    ? ` · ${student.email}`
-                                                    : ''}
-                                            </p>
+                                    <tr
+                                        key={student.id}
+                                        className="group transition-colors hover:bg-canvas/50"
+                                    >
+                                        <td className="py-3 pl-2">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar
+                                                    name={student.name}
+                                                    image={student.image}
+                                                />
+                                                <div className="min-w-0">
+                                                    <p className="truncate font-semibold text-ink">
+                                                        {student.name}
+                                                    </p>
+                                                    <p className="truncate text-xs text-muted">
+                                                        NIS {student.nis}
+                                                        {student.email
+                                                            ? ` · ${student.email}`
+                                                            : ''}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className="py-3 text-ink/80">
                                             {student.class ?? '—'}
@@ -195,12 +325,19 @@ export default function StudentsIndex({
                                         <td className="py-3">
                                             <span
                                                 className={cn(
-                                                    'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
+                                                    'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
                                                     statusStyles[
                                                         student.status_pkl
                                                     ],
                                                 )}
                                             >
+                                                <Dot
+                                                    className={
+                                                        statusDot[
+                                                            student.status_pkl
+                                                        ]
+                                                    }
+                                                />
                                                 {
                                                     statusLabels[
                                                         student.status_pkl
@@ -208,18 +345,18 @@ export default function StudentsIndex({
                                                 }
                                             </span>
                                         </td>
-                                        <td className="py-3">
-                                            <div className="flex items-center justify-end gap-1">
+                                        <td className="py-3 pr-2">
+                                            <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                                                 <Link
                                                     href={show.url(student.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
                                                     aria-label={`Lihat detail ${student.name}`}
                                                 >
                                                     <Eye className="size-4" />
                                                 </Link>
                                                 <Link
                                                     href={edit.url(student.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
                                                     aria-label={`Edit ${student.name}`}
                                                 >
                                                     <Pencil className="size-4" />
@@ -280,6 +417,32 @@ export default function StudentsIndex({
                 )}
             </section>
         </AppLayout>
+    );
+}
+
+/** Round student avatar — photo when available, otherwise colored initials. */
+function Avatar({ name, image }: { name: string; image: string | null }) {
+    if (image) {
+        return (
+            <img
+                src={image}
+                alt={name}
+                className="size-9 shrink-0 rounded-full object-cover"
+            />
+        );
+    }
+
+    const initials = name
+        .split(' ')
+        .slice(0, 2)
+        .map((part) => part[0] ?? '')
+        .join('')
+        .toUpperCase();
+
+    return (
+        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-xs font-bold text-primary">
+            {initials}
+        </span>
     );
 }
 
