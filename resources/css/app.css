@@ -26,6 +26,23 @@ html {
     background-color: var(--color-canvas);
 }
 
+/*
+ * Neutralize the browser autofill styling (Chrome/Safari paint their own blue
+ * background + font on autofilled inputs, which clashes with our floating-label
+ * fields). Keep the surface background and ink text, and match the field font.
+ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--color-ink);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-surface) inset;
+    box-shadow: 0 0 0 1000px var(--color-surface) inset;
+    caret-color: var(--color-ink);
+    font-size: 0.875rem;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
 /* Welcome splash entrance animations */
 @keyframes welcome-rise {
     from {
