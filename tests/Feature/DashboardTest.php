@@ -56,6 +56,10 @@ class DashboardTest extends TestCase
                 ->where('stats.activePkl', 2)
                 ->has('attendanceRate.today')
                 ->has('journalRate.today')
+                ->has('trend.attendance.week.points', 7)
+                ->has('trend.attendance.month.points', 4)
+                ->has('trend.journal.week.points', 7)
+                ->has('trend.journal.month.points', 4)
             );
     }
 

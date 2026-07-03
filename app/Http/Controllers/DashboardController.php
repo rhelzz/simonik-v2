@@ -86,6 +86,7 @@ class DashboardController extends Controller
             ],
             'attendanceRate' => $participation['attendance'],
             'journalRate' => $participation['journal'],
+            'trend' => $this->participationTrend($activeUserIds),
             'recentStudents' => $this->presentStudents(
                 Student::query()->with(['classes:id,name', 'industries:id,name'])->latest()->take(5),
             ),
@@ -395,6 +396,106 @@ class DashboardController extends Controller
         return [
             'attendance' => $this->rates($attendanceDays, $activeCount),
             'journal' => $this->rates($journalDays, $activeCount),
+        ];
+    }
+
+    /**
+     * Tren jumlah absensi & pengisian jurnal siswa aktif untuk grafik dashboard
+     * yang bisa di-toggle: masing-masing per-minggu (7 titik harian) dan
+     * per-bulan (4 titik mingguan).
+     *
+     * @param  array<int, int>  $activeUserIds
+     * @return array{
+     *     attendance: array{
+     *         week: array{total: int, points: array<int, array{label: string, value: int}>},
+     *         month: array{total: int, points: array<int, array{label: string, value: int}>}
+     *     },
+     *     journal: array{
+     *         week: array{total: int, points: array<int, array{label: string, value: int}>},
+     *         month: array{total: int, points: array<int, array{label: string, value: int}>}
+     *     }
+     * }
+     */
+    private function participationTrend(array $activeUserIds): array
+    {
+        $now = Carbon::now();
+        $windowStart = $now->copy()->subDays(27)->startOfDay()->toDateString();
+
+        $attendanceDates = empty($activeUserIds) ? [] : Attendance::query()
+            ->whereIn('user_id', $activeUserIds)
+            ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
+            ->whereDate('date', '>=', $windowStart)
+            ->get(['date'])
+            ->map(fn (Attendance $row): string => $row->date->format('Y-m-d'))
+            ->all();
+
+        $journalDates = empty($activeUserIds) ? [] : Activity::query()
+            ->whereIn('user_id', $activeUserIds)
+            ->whereDate('date', '>=', $windowStart)
+            ->get(['date'])
+            ->map(fn (Activity $row): string => $row->date->format('Y-m-d'))
+            ->all();
+
+        return [
+            'attendance' => $this->buildTrend($attendanceDates, $now),
+            'journal' => $this->buildTrend($journalDates, $now),
+        ];
+    }
+
+    /**
+     * Rangkum daftar tanggal menjadi tren mingguan (7 titik) & bulanan (4 titik).
+     *
+     * @param  array<int, string>  $dates  daftar tanggal 'Y-m-d' (boleh duplikat)
+     * @return array{
+     *     week: array{total: int, points: array<int, array{label: string, value: int}>},
+     *     month: array{total: int, points: array<int, array{label: string, value: int}>}
+     * }
+     */
+    private function buildTrend(array $dates, Carbon $now): array
+    {
+        /** @var array<string, int> $countByDate */
+        $countByDate = [];
+        foreach ($dates as $date) {
+            $countByDate[$date] = ($countByDate[$date] ?? 0) + 1;
+        }
+
+        // Per-minggu: 7 hari terakhir termasuk hari ini.
+        $dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        $week = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $day = $now->copy()->subDays($i);
+            $week[] = [
+                'label' => $dayLabels[$day->dayOfWeek],
+                'value' => $countByDate[$day->format('Y-m-d')] ?? 0,
+            ];
+        }
+
+        // Per-bulan: 4 bucket 7-harian, minggu terlama lebih dulu.
+        $month = [];
+        for ($w = 3; $w >= 0; $w--) {
+            $start = $now->copy()->subDays(($w + 1) * 7 - 1)->format('Y-m-d');
+            $end = $now->copy()->subDays($w * 7)->format('Y-m-d');
+            $sum = 0;
+            foreach ($countByDate as $date => $count) {
+                if ($date >= $start && $date <= $end) {
+                    $sum += $count;
+                }
+            }
+            $month[] = [
+                'label' => 'Minggu '.(4 - $w),
+                'value' => $sum,
+            ];
+        }
+
+        return [
+            'week' => [
+                'total' => array_sum(array_column($week, 'value')),
+                'points' => $week,
+            ],
+            'month' => [
+                'total' => array_sum(array_column($month, 'value')),
+                'points' => $month,
+            ],
         ];
     }
 

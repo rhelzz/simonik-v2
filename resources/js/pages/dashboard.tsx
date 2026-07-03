@@ -8,12 +8,14 @@ import {
     Workflow,
 } from 'lucide-react';
 import {
+    AttendanceTrendCards,
     HeroGreeting,
     RateCard,
     RecentStudentsTable,
     StatCard,
 } from '@/components/dashboard/widgets';
 import type {
+    ParticipationTrend,
     RateByRange,
     RecentStudent,
 } from '@/components/dashboard/widgets';
@@ -29,6 +31,7 @@ type DashboardProps = {
     };
     attendanceRate: RateByRange;
     journalRate: RateByRange;
+    trend: ParticipationTrend;
     recentStudents: RecentStudent[];
     today: string;
 };
@@ -37,6 +40,7 @@ export default function Dashboard({
     stats,
     attendanceRate,
     journalRate,
+    trend,
     recentStudents,
     today,
 }: DashboardProps) {
@@ -96,6 +100,10 @@ export default function Dashboard({
                     data={journalRate}
                     tint="bg-warning/15 text-warning"
                 />
+            </section>
+
+            <section className="mt-5 grid gap-4 lg:grid-cols-3">
+                <AttendanceTrendCards data={trend} />
             </section>
 
             <div className="mt-5">

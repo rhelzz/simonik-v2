@@ -26,6 +26,56 @@ html {
     background-color: var(--color-canvas);
 }
 
+/* Welcome splash entrance animations */
+@keyframes welcome-rise {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes welcome-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+    60% {
+        transform: scale(1.08);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes welcome-float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@utility animate-welcome-rise {
+    opacity: 0;
+    animation: welcome-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@utility animate-welcome-pop {
+    opacity: 0;
+    animation: welcome-pop 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@utility animate-welcome-float {
+    animation: welcome-float 4s ease-in-out infinite;
+}
+
 /* Slim, subtle scrollbar for scroll regions like the sidebar nav. */
 @utility scrollbar-slim {
     scrollbar-width: thin;
