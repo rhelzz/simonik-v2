@@ -10,11 +10,13 @@ function Field({
     error,
     icon,
     children,
+    action,
 }: {
     label: string;
     error?: string;
     icon: ReactNode;
     children: ReactNode;
+    action?: ReactNode;
 }) {
     return (
         <div>
@@ -28,6 +30,7 @@ function Field({
                     </span>
                     {children}
                 </div>
+                {action}
             </div>
             {error && (
                 <p className="mt-1 px-1 text-xs font-medium text-red-500">
@@ -296,21 +299,7 @@ export default function Login({ status }: { status?: string }) {
                                         label="Password"
                                         error={errors.password}
                                         icon={<Lock className="size-4" />}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                id="password"
-                                                name="password"
-                                                type={
-                                                    showPassword
-                                                        ? 'text'
-                                                        : 'password'
-                                                }
-                                                autoComplete="current-password"
-                                                required
-                                                placeholder="••••••••"
-                                                className={inputClass}
-                                            />
+                                        action={
                                             <button
                                                 type="button"
                                                 onClick={() =>
@@ -318,7 +307,7 @@ export default function Login({ status }: { status?: string }) {
                                                         (prev) => !prev,
                                                     )
                                                 }
-                                                className="text-muted transition-colors hover:text-ink"
+                                                className="shrink-0 text-muted transition-colors hover:text-ink"
                                                 aria-label={
                                                     showPassword
                                                         ? 'Sembunyikan kata sandi'
@@ -331,7 +320,21 @@ export default function Login({ status }: { status?: string }) {
                                                     <Eye className="size-4" />
                                                 )}
                                             </button>
-                                        </div>
+                                        }
+                                    >
+                                        <input
+                                            id="password"
+                                            name="password"
+                                            type={
+                                                showPassword
+                                                    ? 'text'
+                                                    : 'password'
+                                            }
+                                            autoComplete="current-password"
+                                            required
+                                            placeholder="••••••••"
+                                            className={inputClass}
+                                        />
                                     </Field>
 
                                     <div className="flex items-center justify-between">
