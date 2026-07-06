@@ -1,21 +1,12 @@
-import { router, useForm } from '@inertiajs/react';
-import {
-    CalendarRange,
-    LoaderCircle,
-    Pencil,
-    Plus,
-    Search,
-    Trash2,
-} from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { CalendarRange, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
-import type { FormEvent, ReactNode } from 'react';
 import {
+    create,
     destroy,
+    edit,
     index,
-    store,
-    update,
 } from '@/actions/App/Http/Controllers/PeriodController';
-import { Modal } from '@/components/ui/modal';
 import { Pagination } from '@/components/ui/pagination';
 import { AppLayout } from '@/layouts/app-layout';
 import type { Paginated } from '@/types';
@@ -33,55 +24,20 @@ type PeriodsIndexProps = {
     filters: { search: string };
 };
 
-const inputClass =
-    'w-full rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-ink placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none';
-
-const emptyForm = {
-    name_period: '',
-    start_period: '',
-    end_period: '',
-};
-
 export default function PeriodsIndex({ periods, filters }: PeriodsIndexProps) {
     const [search, setSearch] = useState(filters.search);
-    const [open, setOpen] = useState(false);
-    const [editing, setEditing] = useState<PeriodRow | null>(null);
 
-    const form = useForm({ ...emptyForm });
-
-    function close() {
-        setOpen(false);
-        form.reset();
-        form.clearErrors();
+    function applyFilters(nextSearch: string) {
+        router.get(
+            index.url(),
+            { search: nextSearch },
+            { preserveState: true, replace: true, preserveScroll: true },
+        );
     }
 
-    function openCreate() {
-        form.reset();
-        form.clearErrors();
-        setEditing(null);
-        setOpen(true);
-    }
-
-    function openEdit(period: PeriodRow) {
-        form.setData({
-            name_period: period.name_period,
-            start_period: period.start_period ?? '',
-            end_period: period.end_period ?? '',
-        });
-        form.clearErrors();
-        setEditing(period);
-        setOpen(true);
-    }
-
-    function submit(event: FormEvent) {
-        event.preventDefault();
-        const options = { preserveScroll: true, onSuccess: close };
-
-        if (editing) {
-            form.put(update.url(editing.id), options);
-        } else {
-            form.post(store.url(), options);
-        }
+    function resetFilters() {
+        setSearch('');
+        applyFilters('');
     }
 
     function remove(period: PeriodRow) {
@@ -102,32 +58,24 @@ export default function PeriodsIndex({ periods, filters }: PeriodsIndexProps) {
                             {periods.total} periode terdaftar
                         </p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={openCreate}
+                    <Link
+                        href={create.url()}
                         className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
                     >
                         <Plus className="size-4" />
                         Tambah periode
-                    </button>
+                    </Link>
                 </div>
 
-                <form
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        router.get(
-                            index.url(),
-                            { search },
-                            {
-                                preserveState: true,
-                                replace: true,
-                                preserveScroll: true,
-                            },
-                        );
-                    }}
-                    className="mt-5"
-                >
-                    <label className="flex items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted">
+                {/* Filters */}
+                <div className="mt-5 space-y-3">
+                    <form
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            applyFilters(search);
+                        }}
+                        className="flex items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
+                    >
                         <Search className="size-4" />
                         <input
                             type="search"
@@ -136,8 +84,22 @@ export default function PeriodsIndex({ periods, filters }: PeriodsIndexProps) {
                             placeholder="Cari periode…"
                             className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
                         />
-                    </label>
-                </form>
+                    </form>
+
+                    {filters.search && (
+                        <div className="flex items-center gap-2 text-xs text-muted">
+                            <span>{periods.total} hasil · 1 filter aktif</span>
+                            <button
+                                type="button"
+                                onClick={resetFilters}
+                                className="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 font-medium text-ink/70 transition-colors hover:bg-primary-soft hover:text-primary"
+                            >
+                                <X className="size-3" />
+                                Reset filter
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {periods.data.length === 0 ? (
                     <div className="mt-6 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line py-14 text-center">
@@ -145,13 +107,26 @@ export default function PeriodsIndex({ periods, filters }: PeriodsIndexProps) {
                         <p className="text-sm font-medium text-ink">
                             Belum ada periode
                         </p>
+                        <p className="text-sm text-muted">
+                            Sesuaikan pencarian atau tambah periode baru.
+                        </p>
+                        {filters.search && (
+                            <button
+                                type="button"
+                                onClick={resetFilters}
+                                className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
+                            >
+                                <X className="size-3" />
+                                Reset filter
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="mt-4 overflow-x-auto">
                         <table className="w-full min-w-lg border-collapse text-left text-sm">
                             <thead>
-                                <tr className="text-xs font-semibold tracking-wide text-muted uppercase">
-                                    <th className="pb-3 font-semibold">
+                                <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
+                                    <th className="pb-3 pl-2 font-semibold">
                                         Periode
                                     </th>
                                     <th className="pb-3 font-semibold">
@@ -163,16 +138,26 @@ export default function PeriodsIndex({ periods, filters }: PeriodsIndexProps) {
                                     <th className="pb-3 font-semibold">
                                         Siswa
                                     </th>
-                                    <th className="pb-3 text-right font-semibold">
+                                    <th className="pr-2 pb-3 text-right font-semibold">
                                         Aksi
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-line">
                                 {periods.data.map((period) => (
-                                    <tr key={period.id}>
-                                        <td className="py-3 font-semibold text-ink">
-                                            {period.name_period}
+                                    <tr
+                                        key={period.id}
+                                        className="group transition-colors hover:bg-canvas/50"
+                                    >
+                                        <td className="py-3 pl-2">
+                                            <div className="flex items-center gap-3">
+                                                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                                                    <CalendarRange className="size-4" />
+                                                </span>
+                                                <p className="truncate font-semibold text-ink">
+                                                    {period.name_period}
+                                                </p>
+                                            </div>
                                         </td>
                                         <td className="py-3 text-ink/80">
                                             {period.start_period ?? '—'}
@@ -183,18 +168,15 @@ export default function PeriodsIndex({ periods, filters }: PeriodsIndexProps) {
                                         <td className="py-3 text-ink/80">
                                             {period.students_count}
                                         </td>
-                                        <td className="py-3">
-                                            <div className="flex items-center justify-end gap-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        openEdit(period)
-                                                    }
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                        <td className="py-3 pr-2">
+                                            <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                                                <Link
+                                                    href={edit.url(period.id)}
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
                                                     aria-label={`Edit ${period.name_period}`}
                                                 >
                                                     <Pencil className="size-4" />
-                                                </button>
+                                                </Link>
                                                 <button
                                                     type="button"
                                                     onClick={() =>
@@ -216,113 +198,6 @@ export default function PeriodsIndex({ periods, filters }: PeriodsIndexProps) {
 
                 <Pagination meta={periods} />
             </section>
-
-            <Modal
-                open={open}
-                onClose={close}
-                title={editing ? 'Edit periode' : 'Tambah periode'}
-            >
-                <form onSubmit={submit} className="space-y-4">
-                    <Field
-                        label="Nama periode"
-                        htmlFor="name_period"
-                        error={form.errors.name_period}
-                    >
-                        <input
-                            id="name_period"
-                            value={form.data.name_period}
-                            onChange={(event) =>
-                                form.setData('name_period', event.target.value)
-                            }
-                            placeholder="mis. Gelombang 1 - 2026"
-                            className={inputClass}
-                            autoFocus
-                        />
-                    </Field>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <Field
-                            label="Tanggal mulai"
-                            htmlFor="start_period"
-                            error={form.errors.start_period}
-                        >
-                            <input
-                                id="start_period"
-                                type="date"
-                                value={form.data.start_period}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'start_period',
-                                        event.target.value,
-                                    )
-                                }
-                                className={inputClass}
-                            />
-                        </Field>
-                        <Field
-                            label="Tanggal selesai"
-                            htmlFor="end_period"
-                            error={form.errors.end_period}
-                        >
-                            <input
-                                id="end_period"
-                                type="date"
-                                value={form.data.end_period}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'end_period',
-                                        event.target.value,
-                                    )
-                                }
-                                className={inputClass}
-                            />
-                        </Field>
-                    </div>
-
-                    <div className="flex items-center justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={close}
-                            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-ink/70 transition-colors hover:bg-canvas"
-                        >
-                            Batal
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={form.processing}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-                        >
-                            {form.processing && (
-                                <LoaderCircle className="size-4 animate-spin" />
-                            )}
-                            Simpan
-                        </button>
-                    </div>
-                </form>
-            </Modal>
         </AppLayout>
-    );
-}
-
-function Field({
-    label,
-    htmlFor,
-    error,
-    children,
-}: {
-    label: string;
-    htmlFor: string;
-    error?: string;
-    children: ReactNode;
-}) {
-    return (
-        <div className="space-y-1.5">
-            <label htmlFor={htmlFor} className="text-sm font-medium text-ink">
-                {label}
-            </label>
-            {children}
-            {error && (
-                <p className="text-xs font-medium text-red-500">{error}</p>
-            )}
-        </div>
     );
 }

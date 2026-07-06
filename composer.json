@@ -2,12 +2,12 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "laravel/blank-react-starter-kit",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "SIMONIK — sistem monitoring PKL. Proprietary; lihat berkas LICENSE.",
     "keywords": [
         "laravel",
         "framework"
     ],
-    "license": "MIT",
+    "license": "proprietary",
     "require": {
         "php": "^8.4",
         "bacon/bacon-qr-code": "^2.0",

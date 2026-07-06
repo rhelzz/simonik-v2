@@ -35,8 +35,26 @@ class ClassController extends Controller
 
         return Inertia::render('classes/index', [
             'classes' => $classes,
-            'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
             'filters' => ['search' => $search],
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('classes/create', [
+            'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function edit(Classes $class): Response
+    {
+        return Inertia::render('classes/edit', [
+            'class' => [
+                'id' => $class->id,
+                'name' => $class->name,
+                'departemen_id' => $class->departemen_id,
+            ],
+            'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -78,7 +96,7 @@ class ClassController extends Controller
             'departemen_id' => $data['departemen_id'],
         ]);
 
-        return back()->with('success', 'Kelas berhasil ditambahkan.');
+        return to_route('classes.index')->with('success', 'Kelas berhasil ditambahkan.');
     }
 
     public function update(ClassRequest $request, Classes $class): RedirectResponse
@@ -91,7 +109,7 @@ class ClassController extends Controller
             'departemen_id' => $data['departemen_id'],
         ]);
 
-        return back()->with('success', 'Kelas berhasil diperbarui.');
+        return to_route('classes.index')->with('success', 'Kelas berhasil diperbarui.');
     }
 
     public function destroy(Classes $class): RedirectResponse

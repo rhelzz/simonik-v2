@@ -36,6 +36,21 @@ class DepartemenController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('departemens/create');
+    }
+
+    public function edit(Departemen $departemen): Response
+    {
+        return Inertia::render('departemens/edit', [
+            'departemen' => [
+                'id' => $departemen->id,
+                'name' => $departemen->name,
+            ],
+        ]);
+    }
+
     public function show(Departemen $departemen): Response
     {
         $classes = $departemen->classes()
@@ -69,7 +84,7 @@ class DepartemenController extends Controller
             'slug' => $this->uniqueSlug($name),
         ]);
 
-        return back()->with('success', 'Jurusan berhasil ditambahkan.');
+        return to_route('departemens.index')->with('success', 'Jurusan berhasil ditambahkan.');
     }
 
     public function update(DepartemenRequest $request, Departemen $departemen): RedirectResponse
@@ -81,7 +96,7 @@ class DepartemenController extends Controller
             'slug' => $this->uniqueSlug($name, $departemen->id),
         ]);
 
-        return back()->with('success', 'Jurusan berhasil diperbarui.');
+        return to_route('departemens.index')->with('success', 'Jurusan berhasil diperbarui.');
     }
 
     public function destroy(Departemen $departemen): RedirectResponse

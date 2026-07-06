@@ -38,18 +38,35 @@ class PeriodController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('periods/create');
+    }
+
+    public function edit(PKLPeriod $period): Response
+    {
+        return Inertia::render('periods/edit', [
+            'period' => [
+                'id' => $period->id,
+                'name_period' => $period->name_period,
+                'start_period' => $period->start_period?->format('Y-m-d'),
+                'end_period' => $period->end_period?->format('Y-m-d'),
+            ],
+        ]);
+    }
+
     public function store(PeriodRequest $request): RedirectResponse
     {
         PKLPeriod::create($request->validated());
 
-        return back()->with('success', 'Periode PKL berhasil ditambahkan.');
+        return to_route('periods.index')->with('success', 'Periode PKL berhasil ditambahkan.');
     }
 
     public function update(PeriodRequest $request, PKLPeriod $period): RedirectResponse
     {
         $period->update($request->validated());
 
-        return back()->with('success', 'Periode PKL berhasil diperbarui.');
+        return to_route('periods.index')->with('success', 'Periode PKL berhasil diperbarui.');
     }
 
     public function destroy(PKLPeriod $period): RedirectResponse

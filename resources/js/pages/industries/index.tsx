@@ -1,16 +1,6 @@
 import { Link, router } from '@inertiajs/react';
-import {
-    Building2,
-    ChevronLeft,
-    ChevronRight,
-    Eye,
-    Pencil,
-    Plus,
-    Search,
-    Trash2,
-} from 'lucide-react';
+import { Building2, Eye, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import {
     create,
     destroy,
@@ -18,8 +8,8 @@ import {
     index,
     show,
 } from '@/actions/App/Http/Controllers/IndustryController';
+import { Pagination } from '@/components/ui/pagination';
 import { AppLayout } from '@/layouts/app-layout';
-import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types';
 
 type IndustryRow = {
@@ -47,6 +37,15 @@ export default function IndustriesIndex({
         router.get(
             index.url(),
             { search: next.search ?? search },
+            { preserveState: true, replace: true, preserveScroll: true },
+        );
+    }
+
+    function resetFilters() {
+        setSearch('');
+        router.get(
+            index.url(),
+            {},
             { preserveState: true, replace: true, preserveScroll: true },
         );
     }
@@ -83,14 +82,14 @@ export default function IndustriesIndex({
                 </div>
 
                 {/* Filters */}
-                <form
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        applyFilters({ search });
-                    }}
-                    className="mt-5 flex flex-col gap-3 sm:flex-row"
-                >
-                    <label className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted">
+                <div className="mt-5 space-y-3">
+                    <form
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            applyFilters({ search });
+                        }}
+                        className="flex items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
+                    >
                         <Search className="size-4" />
                         <input
                             type="search"
@@ -99,8 +98,24 @@ export default function IndustriesIndex({
                             placeholder="Cari nama industri…"
                             className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
                         />
-                    </label>
-                </form>
+                    </form>
+
+                    {filters.search && (
+                        <div className="flex items-center gap-2 text-xs text-muted">
+                            <span>
+                                {industries.total} hasil · 1 filter aktif
+                            </span>
+                            <button
+                                type="button"
+                                onClick={resetFilters}
+                                className="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 font-medium text-ink/70 transition-colors hover:bg-primary-soft hover:text-primary"
+                            >
+                                <X className="size-3" />
+                                Reset filter
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {/* Table */}
                 {industries.data.length === 0 ? (
@@ -112,13 +127,23 @@ export default function IndustriesIndex({
                         <p className="text-sm text-muted">
                             Sesuaikan pencarian atau tambah industri baru.
                         </p>
+                        {filters.search && (
+                            <button
+                                type="button"
+                                onClick={resetFilters}
+                                className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
+                            >
+                                <X className="size-3" />
+                                Reset filter
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="mt-4 overflow-x-auto">
                         <table className="w-full min-w-160 border-collapse text-left text-sm">
                             <thead>
-                                <tr className="text-xs font-semibold tracking-wide text-muted uppercase">
-                                    <th className="pb-3 font-semibold">
+                                <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
+                                    <th className="pb-3 pl-2 font-semibold">
                                         Industri
                                     </th>
                                     <th className="pb-3 font-semibold">
@@ -131,21 +156,31 @@ export default function IndustriesIndex({
                                     <th className="pb-3 font-semibold">
                                         Siswa
                                     </th>
-                                    <th className="pb-3 text-right font-semibold">
+                                    <th className="pr-2 pb-3 text-right font-semibold">
                                         Aksi
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-line">
                                 {industries.data.map((industry) => (
-                                    <tr key={industry.id}>
-                                        <td className="py-3">
-                                            <p className="font-semibold text-ink">
-                                                {industry.name}
-                                            </p>
-                                            <p className="text-xs text-muted">
-                                                {industry.alamat}
-                                            </p>
+                                    <tr
+                                        key={industry.id}
+                                        className="group transition-colors hover:bg-canvas/50"
+                                    >
+                                        <td className="py-3 pl-2">
+                                            <div className="flex items-center gap-3">
+                                                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
+                                                    <Building2 className="size-4" />
+                                                </span>
+                                                <div className="min-w-0">
+                                                    <p className="truncate font-semibold text-ink">
+                                                        {industry.name}
+                                                    </p>
+                                                    <p className="truncate text-xs text-muted">
+                                                        {industry.alamat}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className="py-3 text-ink/80">
                                             {industry.bidang}
@@ -159,18 +194,18 @@ export default function IndustriesIndex({
                                         <td className="py-3 text-ink/80">
                                             {industry.students_count}
                                         </td>
-                                        <td className="py-3">
-                                            <div className="flex items-center justify-end gap-1">
+                                        <td className="py-3 pr-2">
+                                            <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                                                 <Link
                                                     href={show.url(industry.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
                                                     aria-label={`Lihat ${industry.name}`}
                                                 >
                                                     <Eye className="size-4" />
                                                 </Link>
                                                 <Link
                                                     href={edit.url(industry.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
+                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
                                                     aria-label={`Edit ${industry.name}`}
                                                 >
                                                     <Pencil className="size-4" />
@@ -194,80 +229,8 @@ export default function IndustriesIndex({
                     </div>
                 )}
 
-                {/* Pagination */}
-                {industries.last_page > 1 && (
-                    <div className="mt-5 flex items-center justify-between">
-                        <p className="text-xs text-muted">
-                            Hal. {industries.current_page} dari{' '}
-                            {industries.last_page}
-                        </p>
-                        <div className="flex items-center gap-1">
-                            <PageLink
-                                url={industries.links[0]?.url ?? null}
-                                ariaLabel="Sebelumnya"
-                            >
-                                <ChevronLeft className="size-4" />
-                            </PageLink>
-                            {industries.links.slice(1, -1).map((link, i) => (
-                                <PageLink
-                                    key={i}
-                                    url={link.url}
-                                    active={link.active}
-                                >
-                                    {link.label}
-                                </PageLink>
-                            ))}
-                            <PageLink
-                                url={
-                                    industries.links[
-                                        industries.links.length - 1
-                                    ]?.url ?? null
-                                }
-                                ariaLabel="Berikutnya"
-                            >
-                                <ChevronRight className="size-4" />
-                            </PageLink>
-                        </div>
-                    </div>
-                )}
+                <Pagination meta={industries} />
             </section>
         </AppLayout>
-    );
-}
-
-function PageLink({
-    url,
-    active = false,
-    ariaLabel,
-    children,
-}: {
-    url: string | null;
-    active?: boolean;
-    ariaLabel?: string;
-    children: ReactNode;
-}) {
-    const className = cn(
-        'grid h-8 min-w-8 place-items-center rounded-lg px-2 text-sm font-medium',
-        active ? 'bg-primary text-white' : 'text-ink/80 hover:bg-canvas',
-        !url && 'pointer-events-none opacity-40',
-    );
-
-    if (!url) {
-        return (
-            <span className={className} aria-label={ariaLabel}>
-                {children}
-            </span>
-        );
-    }
-
-    return (
-        <Link
-            href={url}
-            preserveScroll
-            aria-label={ariaLabel}
-            className={className}
-        >
-            {children}
-        </Link>
     );
 }

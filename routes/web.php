@@ -112,11 +112,11 @@ Route::middleware('auth')->group(function () {
         Route::patch('penempatan/{student}', [PlacementController::class, 'update'])->name('placements.update');
 
         // Data referensi akademik.
-        Route::resource('departemens', DepartemenController::class)->only(['index', 'store', 'update', 'destroy', 'show']);
-        Route::resource('classes', ClassController::class)->only(['index', 'store', 'update', 'destroy', 'show']);
+        Route::resource('departemens', DepartemenController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy', 'show']);
+        Route::resource('classes', ClassController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy', 'show']);
 
         // Periode / gelombang PKL.
-        Route::resource('periods', PeriodController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('periods', PeriodController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 
         // Master aspek penilaian (teknis & non-teknis).
         Route::resource('aspects', AspectController::class)->only(['index', 'store', 'update', 'destroy']);
