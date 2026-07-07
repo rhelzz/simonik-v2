@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
 use App\Http\Requests\AssessmentRequest;
 use App\Models\AspekProduktif;
+use App\Models\Classes;
+use App\Models\Departemen;
 use App\Models\Evaluation;
 use App\Models\Student;
 use App\Models\User;
@@ -20,7 +22,7 @@ class AssessmentController extends Controller
     use ScopesStudentsByRole;
 
     /**
-     * Daftar siswa (dibatasi cakupan role) beserta ringkasan nilai.
+     * Layer 1 — daftar jurusan yang memuat siswa dalam cakupan role.
      */
     public function index(Request $request): Response|RedirectResponse
     {
@@ -35,10 +37,75 @@ class AssessmentController extends Controller
             return redirect()->route('assessments.show', $student->id);
         }
 
+        $counts = $this->scopedStudents($user)
+            ->selectRaw('departemen_id, count(*) as total')
+            ->groupBy('departemen_id')
+            ->pluck('total', 'departemen_id');
+
+        $departemens = Departemen::query()
+            ->whereIn('id', $counts->keys())
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Departemen $departemen): array => [
+                'id' => $departemen->id,
+                'name' => $departemen->name,
+                'students' => (int) $counts->get($departemen->id, 0),
+            ]);
+
+        return Inertia::render('assessments/index', [
+            'departemens' => $departemens,
+            'aspectTotal' => AspekProduktif::query()->count(),
+        ]);
+    }
+
+    /**
+     * Layer 2 — daftar kelas (dalam satu jurusan) yang memuat siswa dalam cakupan.
+     */
+    public function classes(Request $request, Departemen $departemen): Response
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $counts = $this->scopedStudents($user)
+            ->where('departemen_id', $departemen->id)
+            ->selectRaw('class_id, count(*) as total')
+            ->groupBy('class_id')
+            ->pluck('total', 'class_id');
+
+        abort_if($counts->isEmpty(), 403);
+
+        $classes = Classes::query()
+            ->whereIn('id', $counts->keys())
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Classes $class): array => [
+                'id' => $class->id,
+                'name' => $class->name,
+                'students' => (int) $counts->get($class->id, 0),
+            ]);
+
+        return Inertia::render('assessments/classes', [
+            'departemen' => ['id' => $departemen->id, 'name' => $departemen->name],
+            'classes' => $classes,
+        ]);
+    }
+
+    /**
+     * Layer 3 — daftar murid (dalam satu kelas) + ringkasan nilai.
+     */
+    public function students(Request $request, Classes $class): Response
+    {
+        /** @var User $user */
+        $user = $request->user();
+
         $search = trim((string) $request->query('search', ''));
 
-        $students = $this->scopedStudents($user)
-            ->with(['classes:id,name', 'industries:id,name'])
+        $scoped = $this->scopedStudents($user)->where('class_id', $class->id);
+
+        abort_unless((clone $scoped)->exists(), 403);
+
+        $students = $scoped
+            ->with(['industries:id,name'])
             ->withCount('evaluations')
             ->withAvg('evaluations as avg_score', 'score')
             ->when($search !== '', fn (Builder $query) => $query->where(
@@ -56,7 +123,6 @@ class AssessmentController extends Controller
                     'id' => $student->id,
                     'name' => $student->name,
                     'nis' => $student->nis,
-                    'class' => $student->classes?->name,
                     'industry' => $student->industries?->name,
                     'scored' => $student->evaluations_count,
                     'avg' => $avg,
@@ -64,7 +130,13 @@ class AssessmentController extends Controller
                 ];
             });
 
-        return Inertia::render('assessments/index', [
+        $class->loadMissing('departemens:id,name');
+
+        return Inertia::render('assessments/students', [
+            'departemen' => $class->departemens
+                ? ['id' => $class->departemens->id, 'name' => $class->departemens->name]
+                : null,
+            'class' => ['id' => $class->id, 'name' => $class->name],
             'students' => $students,
             'filters' => ['search' => $search],
             'aspectTotal' => AspekProduktif::query()->count(),

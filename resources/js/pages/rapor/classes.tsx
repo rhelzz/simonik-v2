@@ -1,63 +1,67 @@
 import { Link } from '@inertiajs/react';
-import { ChevronRight, FileText, Network } from 'lucide-react';
-import { classes } from '@/actions/App/Http/Controllers/RaporController';
+import { ChevronRight, School } from 'lucide-react';
+import {
+    index,
+    students,
+} from '@/actions/App/Http/Controllers/RaporController';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { AppLayout } from '@/layouts/app-layout';
 
-type DepartemenCard = {
+type ClassCard = {
     id: number;
     name: string;
     students: number;
 };
 
 type Props = {
-    departemens: DepartemenCard[];
+    departemen: { id: number; name: string };
+    classes: ClassCard[];
 };
 
-export default function RaporIndex({ departemens }: Props) {
+export default function RaporClasses({ departemen, classes }: Props) {
     return (
         <AppLayout title="Rapor Digital">
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
-                <div className="flex items-start gap-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
-                        <FileText className="size-5" />
-                    </span>
-                    <div>
-                        <h2 className="text-base font-bold text-ink">
-                            Cetak rapor digital
-                        </h2>
-                        <p className="text-sm text-muted">
-                            Pilih jurusan untuk menelusuri kelas, murid, lalu
-                            rapor yang dicetak.
-                        </p>
-                    </div>
-                </div>
+                <Breadcrumb
+                    items={[
+                        { label: 'Rapor Digital', href: index.url() },
+                        { label: departemen.name },
+                    ]}
+                />
 
-                {departemens.length === 0 ? (
+                <h2 className="mt-4 text-base font-bold text-ink">
+                    Pilih kelas
+                </h2>
+                <p className="text-sm text-muted">
+                    Kelas pada jurusan {departemen.name}.
+                </p>
+
+                {classes.length === 0 ? (
                     <div className="mt-6 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line py-14 text-center">
-                        <Network className="size-8 text-muted" />
+                        <School className="size-8 text-muted" />
                         <p className="text-sm font-medium text-ink">
-                            Belum ada data dalam cakupan Anda
+                            Belum ada kelas dengan murid
                         </p>
                     </div>
                 ) : (
                     <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        {departemens.map((departemen) => (
+                        {classes.map((klass) => (
                             <Link
-                                key={departemen.id}
-                                href={classes.url(departemen.id)}
+                                key={klass.id}
+                                href={students.url(klass.id)}
                                 prefetch
                                 className="group flex items-center justify-between gap-3 rounded-2xl border border-line bg-canvas/40 p-4 transition-colors hover:border-primary/40 hover:bg-canvas"
                             >
                                 <div className="flex items-center gap-3">
                                     <span className="grid size-10 place-items-center rounded-xl bg-surface text-primary">
-                                        <Network className="size-5" />
+                                        <School className="size-5" />
                                     </span>
                                     <div>
                                         <p className="font-semibold text-ink">
-                                            {departemen.name}
+                                            {klass.name}
                                         </p>
                                         <p className="text-xs text-muted">
-                                            {departemen.students} murid
+                                            {klass.students} murid
                                         </p>
                                     </div>
                                 </div>

@@ -56,7 +56,7 @@ class RaporTest extends TestCase
             ->assertRedirect("/rapor/{$student->id}");
     }
 
-    public function test_admin_can_view_student_list(): void
+    public function test_admin_can_view_department_layer(): void
     {
         Student::factory()->create(['archived' => false]);
 
@@ -65,6 +65,28 @@ class RaporTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('rapor/index')
+                ->has('departemens', 1)
+            );
+    }
+
+    public function test_admin_can_drill_into_classes_and_students(): void
+    {
+        $student = Student::factory()->create(['archived' => false]);
+        $admin = $this->user('admin');
+
+        $this->actingAs($admin)
+            ->get("/rapor/jurusan/{$student->departemen_id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('rapor/classes')
+                ->has('classes', 1)
+            );
+
+        $this->actingAs($admin)
+            ->get("/rapor/kelas/{$student->class_id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('rapor/students')
                 ->has('students.data', 1)
             );
     }

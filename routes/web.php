@@ -135,13 +135,19 @@ Route::middleware('auth')->group(function () {
         Route::get('sertifikat/{student}', [CertificateController::class, 'show'])->name('certificates.show');
 
         // Rapor Digital — kompilasi nilai + rekap + QR keaslian, siap cetak.
+        // Penelusuran berjenjang: Jurusan -> Kelas -> Murid -> rapor.
         Route::get('rapor', [RaporController::class, 'index'])->name('rapor.index');
+        Route::get('rapor/jurusan/{departemen}', [RaporController::class, 'classes'])->name('rapor.classes');
+        Route::get('rapor/kelas/{class}', [RaporController::class, 'students'])->name('rapor.students');
         Route::get('rapor/{student}', [RaporController::class, 'show'])->name('rapor.show');
     });
 
     // Rekap Penilaian — lihat (semua cakupan) + input nilai (guru/pembimbing).
     Route::middleware('role:admin|kaprog|wakasek|guru|pembimbing|siswa|orangtua')->group(function () {
+        // Penelusuran berjenjang: Jurusan -> Kelas -> Murid -> rekap nilai.
         Route::get('penilaian', [AssessmentController::class, 'index'])->name('assessments.index');
+        Route::get('penilaian/jurusan/{departemen}', [AssessmentController::class, 'classes'])->name('assessments.classes');
+        Route::get('penilaian/kelas/{class}', [AssessmentController::class, 'students'])->name('assessments.students');
         Route::get('penilaian/{student}', [AssessmentController::class, 'show'])->name('assessments.show');
         Route::put('penilaian/{student}', [AssessmentController::class, 'update'])
             ->middleware('role:guru|pembimbing')
