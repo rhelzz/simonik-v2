@@ -3,7 +3,10 @@ import { usePage } from '@inertiajs/react';
 import { ArrowLeft, Printer, TriangleAlert } from 'lucide-react';
 import { index } from '@/actions/App/Http/Controllers/CertificateController';
 import { CertificatePreview } from '@/components/certificates/certificate-preview';
-import type { PreviewAnchor } from '@/components/certificates/certificate-preview';
+import type {
+    PreviewAnchor,
+    PreviewSignature,
+} from '@/components/certificates/certificate-preview';
 import { AppLayout } from '@/layouts/app-layout';
 import type { SharedData } from '@/types';
 
@@ -16,7 +19,11 @@ type Props = {
         industry: string | null;
         eligible: boolean;
     };
-    template: { background: string | null; anchors: PreviewAnchor[] } | null;
+    template: {
+        background: string | null;
+        anchors: PreviewAnchor[];
+        signature: PreviewSignature | null;
+    } | null;
     qr: string;
 };
 
@@ -95,6 +102,7 @@ export default function CertificateShow({ student, template, qr }: Props) {
                             <CertificatePreview
                                 background={template.background}
                                 items={template.anchors}
+                                signature={template.signature}
                             />
                             {/* QR keaslian — pojok kanan bawah sertifikat */}
                             <div className="absolute right-[4%] bottom-[5%] flex w-[12%] flex-col items-center gap-[0.4cqw]">

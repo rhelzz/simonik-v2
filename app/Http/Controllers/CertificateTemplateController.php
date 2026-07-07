@@ -39,6 +39,7 @@ class CertificateTemplateController extends Controller
     {
         return Inertia::render('certificate-templates/create', [
             'fields' => CertificateTemplate::FIELDS,
+            'fonts' => CertificateTemplate::FONTS,
         ]);
     }
 
@@ -46,12 +47,14 @@ class CertificateTemplateController extends Controller
     {
         $data = $request->validated();
 
-        CertificateTemplate::create([
+        $template = CertificateTemplate::create([
             'name' => $data['name'],
             'anchors' => $data['anchors'],
             'background_path' => $request->file('background')->store('certificate-templates', 'public'),
             'is_active' => false,
         ]);
+
+        $this->applySignature($request, $template);
 
         return redirect()
             ->route('certificate-templates.index')
@@ -66,8 +69,11 @@ class CertificateTemplateController extends Controller
                 'name' => $certificateTemplate->name,
                 'background' => $certificateTemplate->background,
                 'anchors' => $certificateTemplate->anchors,
+                'signatureUrl' => $certificateTemplate->signatureUrl,
+                'signaturePos' => $certificateTemplate->signature,
             ],
             'fields' => CertificateTemplate::FIELDS,
+            'fonts' => CertificateTemplate::FONTS,
         ]);
     }
 
@@ -87,6 +93,8 @@ class CertificateTemplateController extends Controller
 
         $certificateTemplate->update($fields);
 
+        $this->applySignature($request, $certificateTemplate);
+
         return redirect()
             ->route('certificate-templates.index')
             ->with('success', 'Template sertifikat berhasil diperbarui.');
@@ -95,6 +103,7 @@ class CertificateTemplateController extends Controller
     public function destroy(CertificateTemplate $certificateTemplate): RedirectResponse
     {
         $this->deleteBackground($certificateTemplate);
+        $this->deleteSignature($certificateTemplate);
         $certificateTemplate->delete();
 
         return back()->with('success', 'Template sertifikat berhasil dihapus.');
@@ -117,6 +126,51 @@ class CertificateTemplateController extends Controller
     {
         if ($template->background_path) {
             Storage::disk('public')->delete($template->background_path);
+        }
+    }
+
+    /**
+     * Simpan/hapus TTD digital + posisinya sesuai input request. Berkas TTD
+     * lama dihapus saat diganti atau saat penghapusan diminta.
+     */
+    private function applySignature(CertificateTemplateRequest $request, CertificateTemplate $template): void
+    {
+        $data = $request->validated();
+
+        // Penghapusan eksplisit: buang berkas + posisi.
+        if (($data['removeSignature'] ?? false) && ! $request->hasFile('signature')) {
+            $this->deleteSignature($template);
+            $template->update(['signature_path' => null, 'signature' => null]);
+
+            return;
+        }
+
+        $fields = [];
+
+        if ($request->hasFile('signature')) {
+            $this->deleteSignature($template);
+            $fields['signature_path'] = $request->file('signature')->store('certificate-signatures', 'public');
+        }
+
+        // Posisi hanya bermakna bila ada berkas TTD (baru atau tersimpan).
+        if (isset($data['signaturePos']) && ($fields['signature_path'] ?? $template->signature_path)) {
+            $pos = $data['signaturePos'];
+            $fields['signature'] = [
+                'x' => (float) $pos['x'],
+                'y' => (float) $pos['y'],
+                'width' => (float) $pos['width'],
+            ];
+        }
+
+        if ($fields !== []) {
+            $template->update($fields);
+        }
+    }
+
+    private function deleteSignature(CertificateTemplate $template): void
+    {
+        if ($template->signature_path) {
+            Storage::disk('public')->delete($template->signature_path);
         }
     }
 }

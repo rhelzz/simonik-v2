@@ -8,20 +8,30 @@ export type PreviewAnchor = {
     size: number;
     align: 'left' | 'center' | 'right';
     color: string;
+    font?: string;
+};
+
+export type PreviewSignature = {
+    url: string;
+    x: number;
+    y: number;
+    width: number;
 };
 
 /**
- * Render latar sertifikat + teks ter-anchor. Posisi x/y dalam persen; ukuran
- * teks dalam `cqw` (persen lebar) sehingga skalanya identik di pratinjau editor
- * maupun saat dicetak, berapa pun lebar wadahnya.
+ * Render latar sertifikat + teks ter-anchor + TTD digital. Posisi x/y dalam
+ * persen; ukuran teks dalam `cqw` (persen lebar) sehingga skalanya identik di
+ * pratinjau editor maupun saat dicetak, berapa pun lebar wadahnya.
  */
 export function CertificatePreview({
     background,
     items,
+    signature,
     className,
 }: {
     background: string | null;
     items: PreviewAnchor[];
+    signature?: PreviewSignature | null;
     className?: string;
 }) {
     if (!background) {
@@ -65,11 +75,24 @@ export function CertificatePreview({
                             fontSize: `${item.size}cqw`,
                             color: item.color,
                             textAlign: item.align,
+                            fontFamily: `'${item.font ?? 'Poppins'}', serif`,
                         }}
                     >
                         {item.text}
                     </span>
                 ))}
+                {signature && (
+                    <img
+                        src={signature.url}
+                        alt="Tanda tangan"
+                        className="absolute -translate-x-1/2 -translate-y-1/2 object-contain"
+                        style={{
+                            left: `${signature.x}%`,
+                            top: `${signature.y}%`,
+                            width: `${signature.width}%`,
+                        }}
+                    />
+                )}
             </div>
         </div>
     );

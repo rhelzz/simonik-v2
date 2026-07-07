@@ -82,6 +82,67 @@ class CertificateTemplateTest extends TestCase
         Storage::disk('public')->assertExists($template->background_path);
     }
 
+    public function test_admin_can_create_template_with_font_and_signature(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->user('admin'))
+            ->post('/certificate-templates', [
+                'name' => 'Sertifikat TTD',
+                'background' => UploadedFile::fake()->image('bg.png', 1000, 700),
+                'anchors' => json_encode([
+                    ['field' => 'nama', 'x' => 50, 'y' => 45, 'size' => 6, 'align' => 'center', 'color' => '#000000', 'font' => 'Playfair Display', 'enabled' => true],
+                ]),
+                'signature' => UploadedFile::fake()->image('ttd.png', 300, 120),
+                'signaturePos' => json_encode(['x' => 70, 'y' => 82, 'width' => 18]),
+            ])
+            ->assertRedirect('/certificate-templates');
+
+        $template = CertificateTemplate::firstOrFail();
+        $this->assertSame('Playfair Display', $template->anchors[0]['font']);
+        $this->assertNotNull($template->signature_path);
+        $this->assertSame(18.0, (float) $template->signature['width']);
+        Storage::disk('public')->assertExists($template->signature_path);
+    }
+
+    public function test_create_rejects_unknown_font(): void
+    {
+        Storage::fake('public');
+
+        $this->actingAs($this->user('admin'))
+            ->post('/certificate-templates', [
+                'name' => 'Font aneh',
+                'background' => UploadedFile::fake()->image('bg.png'),
+                'anchors' => json_encode([
+                    ['field' => 'nama', 'x' => 50, 'y' => 45, 'size' => 6, 'align' => 'center', 'color' => '#000', 'font' => 'Comic Sans MS', 'enabled' => true],
+                ]),
+            ])
+            ->assertSessionHasErrors('anchors.0.font');
+    }
+
+    public function test_admin_can_remove_signature(): void
+    {
+        Storage::fake('public');
+        $path = UploadedFile::fake()->image('ttd.png')->store('certificate-signatures', 'public');
+        $template = CertificateTemplate::factory()->create([
+            'signature_path' => $path,
+            'signature' => ['x' => 70, 'y' => 80, 'width' => 20],
+        ]);
+
+        $this->actingAs($this->user('admin'))
+            ->put("/certificate-templates/{$template->id}", [
+                'name' => $template->name,
+                'anchors' => json_encode($this->anchors()),
+                'removeSignature' => '1',
+            ])
+            ->assertRedirect('/certificate-templates');
+
+        $template->refresh();
+        $this->assertNull($template->signature_path);
+        $this->assertNull($template->signature);
+        Storage::disk('public')->assertMissing($path);
+    }
+
     public function test_create_requires_background_and_anchors(): void
     {
         $this->actingAs($this->user('admin'))

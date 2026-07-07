@@ -93,6 +93,7 @@ class CertificateController extends Controller
             'template' => $template === null ? null : [
                 'background' => $template->background,
                 'anchors' => $this->resolveAnchors($template, $student),
+                'signature' => $this->resolveSignature($template),
             ],
             'qr' => $this->qr->verificationQr($student),
         ]);
@@ -121,10 +122,32 @@ class CertificateController extends Controller
                 'size' => $anchor['size'],
                 'align' => $anchor['align'],
                 'color' => $anchor['color'],
+                'font' => $anchor['font'] ?? 'Poppins',
             ];
         }
 
         return $resolved;
+    }
+
+    /**
+     * TTD digital (url + posisi) bila template memilikinya.
+     *
+     * @return array{url: string, x: float, y: float, width: float}|null
+     */
+    private function resolveSignature(CertificateTemplate $template): ?array
+    {
+        if ($template->signature_path === null || $template->signature === null) {
+            return null;
+        }
+
+        $pos = $template->signature;
+
+        return [
+            'url' => (string) $template->signatureUrl,
+            'x' => (float) ($pos['x'] ?? 50),
+            'y' => (float) ($pos['y'] ?? 80),
+            'width' => (float) ($pos['width'] ?? 20),
+        ];
     }
 
     /**

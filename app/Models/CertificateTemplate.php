@@ -16,12 +16,14 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $name
  * @property string $background_path
+ * @property string|null $signature_path
  * @property array<int, array<string, mixed>> $anchors
+ * @property array<string, mixed>|null $signature
  * @property bool $is_active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'background_path', 'anchors', 'is_active'])]
+#[Fillable(['name', 'background_path', 'signature_path', 'anchors', 'signature', 'is_active'])]
 class CertificateTemplate extends Model
 {
     /** @use HasFactory<CertificateTemplateFactory> */
@@ -30,6 +32,16 @@ class CertificateTemplate extends Model
     /** Field yang dapat ditaruh di template; nilainya diisi dari data siswa. */
     public const FIELDS = ['nama', 'nis', 'nomor', 'industri', 'tanggal'];
 
+    /** Pilihan font yang cocok untuk sertifikat (dimuat di app.blade.php). */
+    public const FONTS = [
+        'Poppins',
+        'Playfair Display',
+        'Merriweather',
+        'Cormorant Garamond',
+        'Montserrat',
+        'Great Vibes',
+    ];
+
     /**
      * @return array<string, string>
      */
@@ -37,6 +49,7 @@ class CertificateTemplate extends Model
     {
         return [
             'anchors' => 'array',
+            'signature' => 'array',
             'is_active' => 'boolean',
         ];
     }
@@ -51,6 +64,20 @@ class CertificateTemplate extends Model
         return Attribute::make(
             get: fn (): ?string => $this->background_path
                 ? asset("/storage/{$this->background_path}")
+                : null,
+        );
+    }
+
+    /**
+     * URL publik gambar TTD digital dari path tersimpan.
+     *
+     * @return Attribute<string|null, never>
+     */
+    protected function signatureUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?string => $this->signature_path
+                ? asset("/storage/{$this->signature_path}")
                 : null,
         );
     }

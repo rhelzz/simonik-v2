@@ -14,8 +14,8 @@ class CertificateTemplateRequest extends FormRequest
     }
 
     /**
-     * Anchor dikirim sebagai string JSON (karena form multipart) lalu di-decode
-     * menjadi array sebelum divalidasi.
+     * Anchor & posisi TTD dikirim sebagai string JSON (karena form multipart)
+     * lalu di-decode menjadi array sebelum divalidasi.
      */
     protected function prepareForValidation(): void
     {
@@ -23,6 +23,12 @@ class CertificateTemplateRequest extends FormRequest
 
         if (is_string($anchors)) {
             $this->merge(['anchors' => json_decode($anchors, true) ?? []]);
+        }
+
+        $signaturePos = $this->input('signaturePos');
+
+        if (is_string($signaturePos)) {
+            $this->merge(['signaturePos' => json_decode($signaturePos, true)]);
         }
     }
 
@@ -46,7 +52,16 @@ class CertificateTemplateRequest extends FormRequest
             'anchors.*.size' => ['required', 'integer', 'between:1,100'],
             'anchors.*.align' => ['required', Rule::in(['left', 'center', 'right'])],
             'anchors.*.color' => ['required', 'string', 'max:9'],
+            'anchors.*.font' => ['nullable', Rule::in(CertificateTemplate::FONTS)],
             'anchors.*.enabled' => ['required', 'boolean'],
+
+            // TTD digital opsional: berkas gambar + posisi/ukuran persen.
+            'signature' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:2048'],
+            'removeSignature' => ['nullable', 'boolean'],
+            'signaturePos' => ['nullable', 'array'],
+            'signaturePos.x' => ['required_with:signaturePos', 'numeric', 'between:0,100'],
+            'signaturePos.y' => ['required_with:signaturePos', 'numeric', 'between:0,100'],
+            'signaturePos.width' => ['required_with:signaturePos', 'numeric', 'between:1,100'],
         ];
     }
 

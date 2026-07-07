@@ -4,8 +4,10 @@ import { AppLayout } from '@/layouts/app-layout';
 
 export default function CertificateTemplateCreate({
     fields,
+    fonts,
 }: {
     fields: string[];
+    fonts: string[];
 }) {
     return (
         <AppLayout title="Template Sertifikat">
@@ -13,6 +15,7 @@ export default function CertificateTemplateCreate({
                 action={store.url()}
                 method="post"
                 fields={fields}
+                fonts={fonts}
                 submitLabel="Simpan template"
             />
         </AppLayout>
