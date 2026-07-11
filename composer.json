@@ -16,6 +16,7 @@
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
+        "maatwebsite/excel": "*",
         "spatie/laravel-permission": "*"
     },
     "require-dev": {
@@ -104,7 +105,7 @@
     "config": {
         "optimize-autoloader": true,
         "platform": {
-            "php": "8.4"
+            "php": "8.4.20"
         },
         "preferred-install": "dist",
         "sort-packages": true,

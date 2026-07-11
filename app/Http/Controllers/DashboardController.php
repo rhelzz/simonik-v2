@@ -20,6 +20,7 @@ use App\Services\StreakCalculator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -278,7 +279,7 @@ class DashboardController extends Controller
 
         // Keyed by badge_id for O(1) lookups without pivot magic access.
         $pivotRows = $student !== null
-            ? \DB::table('student_badge')
+            ? DB::table('student_badge')
                 ->where('student_id', $student->id)
                 ->get(['badge_id', 'awarded_at'])
                 ->keyBy('badge_id')
