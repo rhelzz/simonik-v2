@@ -85,14 +85,13 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 | **Absen Foto + Geo** (siswa) | ✅ | Input absen web (foto `getUserMedia`/upload + `navigator.geolocation`): masuk/pulang/izin/sakit, sekali per hari. |
 | **Data Absen** | ✅ | Monitoring **drill-down 4 layer** (§6) Jurusan→Kelas→Murid→**rekap performa**, role-scoped. Verifikasi **dihapus** (§27) → diganti rekap berbasis hitungan (count + rate). |
 | **Data Jurnal** | ✅ | Monitoring **drill-down 4 layer** (§6) Jurusan→Kelas→Murid→**rekap performa**, role-scoped. Tanpa verifikasi (§27). Pola identik Data Absen (reuse `ScopesStudentsByRole` + `Breadcrumb`). |
-| **Kalender** | ⏳ | Prioritas rendah (menggantikan rencana "Jadwal"). |
 | **Aspek Penilaian** | ✅ | Master aspek teknis/non-teknis (CRUD admin) — sumber untuk Rekap Penilaian (§7). |
 | **Rekap Penilaian** | ✅ | Input nilai (guru non-teknis, pembimbing teknis) + lihat role-scoped + grade A/B/C/D otomatis (§7). |
 | **Sertifikat** | ✅ | CRUD template (latar + anchor x/y, template aktif) + output cetak per siswa via `window.print()` (§8, PROGRESS §23). |
 
 **Menu sisi siswa** (tetap, di luar sudut pandang admin): **Absen Foto + Geo** (input) ✅, **Jurnal harian** (input) ✅, Panduan PKL (baca), Rekap Penilaian (lihat nilai sendiri) ✅, Sertifikat (unduh), Profil ✅.
 
-> Item lama yang **di-drop dari rencana** desain ini: Kunjungan, Sidang, "Jadwal" (→ jadi Kalender), Pengaturan app-level (bisa dipertimbangkan lagi nanti).
+> Item lama yang **di-drop dari rencana** desain ini: Kunjungan, Sidang, "Jadwal"/**Kalender** (dihapus §28), Pengaturan app-level (bisa dipertimbangkan lagi nanti).
 
 ---
 
@@ -165,7 +164,6 @@ C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 | Rekap Penilaian — lihat | ✓ semua | ✓ (PT-nya) | ✓ (PT-nya) | ✓ (sendiri) | ✓ (anak) |
 | Sertifikat | C template | — | — | unduh | — |
 | Forum PKL (⏳) | ✓ | ✓ | ✓ | ✓ | — |
-| Kalender (⏳) | ✓ | ✓ | ✓ | — | — |
 | Profil & ganti sandi | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 > Verifikasi absen/jurnal **dihapus** (§27) — diganti rekap performa berbasis hitungan.
@@ -180,5 +178,4 @@ Juga sudah jadi: **Absen Foto + Geo (siswa)** + **Jurnal harian (siswa)** input 
 
 **Urutan rekomendasi berikutnya:**
 1. **Forum PKL** — tanya-jawab antar role (model `Post`/`Comment` sudah ada); CRUD thread + balasan.
-2. **Kalender** — agenda/jadwal; prioritas rendah.
-3. ~~**Polish**: dashboard ringkas per-role; rapikan role `industri` vs `mitra`~~ ✅ **selesai** (dashboard per-role §26; role `mitra` dihapus §25).
+2. ~~**Polish**: dashboard ringkas per-role; rapikan role `industri` vs `mitra`~~ ✅ **selesai** (dashboard per-role §26; role `mitra` dihapus §25).

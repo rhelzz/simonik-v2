@@ -3,7 +3,6 @@ import {
     BarChart3,
     BookOpen,
     Building2,
-    CalendarDays,
     CalendarOff,
     CalendarRange,
     Camera,
@@ -229,7 +228,6 @@ export const navSections: NavSection[] = [
                 href: approvalsIndex.url(),
                 roles: ['kaprog', 'guru', 'pembimbing', 'orangtua'],
             },
-            { label: 'Kalender', icon: CalendarDays, roles: STAFF },
         ],
     },
     {

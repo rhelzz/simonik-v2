@@ -490,6 +490,12 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
 
 ---
 
+### 43. Hapus placeholder fitur Kalender
+
+- **Kalender di-drop** dari rencana (tidak dibutuhkan). Fitur ini hanya berupa item nav "Soon" (tanpa `href`/controller/route/halaman), jadi penghapusan cukup di `resources/js/lib/nav.ts` (item + import `CalendarDays` yang tak terpakai). Docs ROADMAP diperbarui (baris fitur, matriks hak akses, daftar rekomendasi, catatan item di-drop §28).
+
+---
+
 ## 📍 Current step
 **Manajemen peran Wakasek & Kaprog lengkap.** Admin dapat CRUD akun Wakasek & Kaprog (kaprog + penautan program keahlian). Wakasek punya dashboard analitik (keuangan/kuota/partisipasi/per-jurusan). Kaprog punya dashboard scoped + fitur **Plotting & Penempatan** siswa ke industri. Seluruh 19 modul blueprint (M0.1–M6.1) sudah rampung sebelumnya.
 
