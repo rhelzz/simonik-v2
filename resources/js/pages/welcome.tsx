@@ -14,7 +14,7 @@ export default function Welcome() {
         <>
             <Head title="SIMONIK — Sistem Monitoring PKL" />
 
-            <div className="min-h-screen bg-canvas text-ink">
+            <div className="welcome-theme min-h-screen bg-canvas text-ink">
                 <Navbar />
                 <main className="mx-auto max-w-6xl px-6">
                     <Hero />

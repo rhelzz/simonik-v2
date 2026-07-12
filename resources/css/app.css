@@ -11,16 +11,16 @@
         'Manrope', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* SIMONIK palette — clean white canvas, single blue accent */
-    --color-canvas: #ffffff;
+    /* SIMONIK palette — lavender canvas, indigo-periwinkle primary (admin default) */
+    --color-canvas: #ececfb;
     --color-surface: #ffffff;
     --color-ink: #1f2348;
     --color-muted: #8b8fb3;
-    --color-line: #e7e9f5;
+    --color-line: #ececf4;
     --color-primary: #4f5bd5;
     --color-primary-hover: #4450c4;
     --color-primary-soft: #eef0ff;
-    --color-accent: #4f5bd5;
+    --color-accent: #ff8a5c;
     --color-positive: #22b07d;
     --color-warning: #f2a93b;
 }
@@ -28,6 +28,17 @@
 html {
     background-color: var(--color-canvas);
     overflow-x: hidden;
+}
+
+/*
+ * Landing page has its own white/blue palette — scoped to this class so it
+ * doesn't override the admin app's lavender theme (was leaking globally
+ * because both shared the same @theme --color-* tokens).
+ */
+.welcome-theme {
+    --color-canvas: #ffffff;
+    --color-line: #e7e9f5;
+    --color-accent: #4f5bd5;
 }
 
 h1,
