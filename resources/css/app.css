@@ -5,25 +5,38 @@
 
 @theme {
     --font-sans:
-        'Poppins', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-heading:
+        'Manrope', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* SIMONIK palette — lavender canvas, indigo-periwinkle primary */
-    --color-canvas: #ececfb;
+    /* SIMONIK palette — clean white canvas, single blue accent */
+    --color-canvas: #ffffff;
     --color-surface: #ffffff;
     --color-ink: #1f2348;
     --color-muted: #8b8fb3;
-    --color-line: #ececf4;
+    --color-line: #e7e9f5;
     --color-primary: #4f5bd5;
     --color-primary-hover: #4450c4;
     --color-primary-soft: #eef0ff;
-    --color-accent: #ff8a5c;
+    --color-accent: #4f5bd5;
     --color-positive: #22b07d;
     --color-warning: #f2a93b;
 }
 
 html {
     background-color: var(--color-canvas);
+    overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading);
 }
 
 /*
@@ -111,4 +124,76 @@ input:-webkit-autofill:active {
     &::-webkit-scrollbar-track {
         background: transparent;
     }
+}
+
+/*
+ * Scroll-reveal for landing sections. Native scroll-driven animation — no JS,
+ * no dependency. Elements fade/rise as they enter the viewport once.
+ * Falls back to fully visible where unsupported or when motion is reduced.
+ */
+@media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+        .reveal {
+            animation: reveal-in linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 55%;
+        }
+    }
+}
+
+@keyframes reveal-in {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* One-shot load-in for above-the-fold hero content. */
+@media (prefers-reduced-motion: no-preference) {
+    .rise {
+        animation: reveal-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .rise-delay {
+        animation: reveal-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both;
+    }
+}
+
+/*
+ * Cursor-follow spotlight for interactive cards. JS sets --mx/--my on
+ * pointer move (see use-spotlight); the glow tints toward the primary color.
+ */
+.spotlight {
+    position: relative;
+    isolation: isolate;
+}
+.spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(
+        240px circle at var(--mx, 50%) var(--my, 50%),
+        color-mix(in srgb, var(--color-primary) 16%, transparent),
+        transparent 65%
+    );
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
+}
+.spotlight:hover::before {
+    opacity: 1;
+}
+
+/* Subtle dot grid to give flat section bands texture without noise. */
+@utility bg-dots {
+    background-image: radial-gradient(
+        color-mix(in srgb, var(--color-primary) 10%, transparent) 1px,
+        transparent 1px
+    );
+    background-size: 22px 22px;
 }
