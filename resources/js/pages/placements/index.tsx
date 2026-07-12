@@ -1,6 +1,7 @@
-import { router } from '@inertiajs/react';
-import { ClipboardList, Search, UserCheck } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
+import { ClipboardList, Search, TriangleAlert, UserCheck } from 'lucide-react';
 import { useState } from 'react';
+import { edit as editIndustry } from '@/actions/App/Http/Controllers/IndustryController';
 import {
     index,
     update,
@@ -30,10 +31,18 @@ type IndustryOption = {
     guru: string | null;
 };
 
+type UnassignedIndustry = {
+    id: number;
+    name: string;
+    missingGuru: boolean;
+    missingPembimbing: boolean;
+};
+
 type PlacementsIndexProps = {
     students: Paginated<PlacementStudent>;
     filters: { search: string };
     industries: IndustryOption[];
+    unassignedIndustries: UnassignedIndustry[];
 };
 
 const statusLabels: Record<StatusPkl, string> = {
@@ -119,7 +128,10 @@ function PlacementRow({
                         <span className="truncate">{guru}</span>
                     </span>
                 ) : (
-                    <span className="text-xs text-muted">Belum ada</span>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-warning">
+                        <TriangleAlert className="size-3.5 shrink-0" />
+                        Belum ada
+                    </span>
                 )}
             </div>
 
@@ -155,6 +167,7 @@ export default function PlacementsIndex({
     students,
     filters,
     industries,
+    unassignedIndustries,
 }: PlacementsIndexProps) {
     const [search, setSearch] = useState(filters.search);
 
@@ -171,6 +184,41 @@ export default function PlacementsIndex({
                         pembimbing.
                     </p>
                 </div>
+
+                {unassignedIndustries.length > 0 && (
+                    <div className="mt-4 flex flex-col gap-2 rounded-2xl bg-warning/10 p-4 text-sm text-warning">
+                        <div className="flex items-center gap-2 font-medium">
+                            <TriangleAlert className="size-4 shrink-0" />
+                            {unassignedIndustries.length} industri belum punya
+                            guru pembimbing/pembimbing industri — siswa di sana
+                            tidak akan terlihat oleh akun guru atau pembimbing
+                            manapun.
+                        </div>
+                        <ul className="flex flex-wrap gap-2">
+                            {unassignedIndustries.map((industry) => (
+                                <li key={industry.id}>
+                                    <Link
+                                        href={editIndustry.url(industry.id)}
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-warning underline-offset-2 hover:underline"
+                                    >
+                                        {industry.name}
+                                        <span className="text-warning/70">
+                                            (
+                                            {[
+                                                industry.missingGuru && 'guru',
+                                                industry.missingPembimbing &&
+                                                    'pembimbing',
+                                            ]
+                                                .filter(Boolean)
+                                                .join(', ')}{' '}
+                                            kosong)
+                                        </span>
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 <form
                     onSubmit={(event) => {

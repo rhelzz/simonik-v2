@@ -4,10 +4,13 @@ namespace Tests\Feature;
 
 use App\Models\Departemen;
 use App\Models\Industry;
+use App\Models\Pembimbing;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PlacementTest extends TestCase
@@ -109,5 +112,27 @@ class PlacementTest extends TestCase
             ->get('/penempatan')
             ->assertOk()
             ->assertSee($student->name);
+    }
+
+    public function test_flags_industries_missing_guru_or_pembimbing(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $incomplete = Industry::factory()->create(['teacher_id' => null, 'pembimbing_id' => null]);
+        Industry::factory()->create([
+            'teacher_id' => Teacher::factory(),
+            'pembimbing_id' => Pembimbing::factory(),
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/penempatan')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('unassignedIndustries', 1)
+                ->where('unassignedIndustries.0.id', $incomplete->id)
+                ->where('unassignedIndustries.0.missingGuru', true)
+                ->where('unassignedIndustries.0.missingPembimbing', true)
+            );
     }
 }

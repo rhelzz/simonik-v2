@@ -53,18 +53,33 @@ class PlacementController extends Controller
                 'status_pkl' => $student->status_pkl,
             ]);
 
+        $industries = Industry::query()
+            ->with(['teachers:id,name', 'pembimbingNormatif:id,name'])
+            ->orderBy('name')
+            ->get(['id', 'name', 'teacher_id', 'pembimbing_id']);
+
         return Inertia::render('placements/index', [
             'students' => $students,
             'filters' => ['search' => $search],
-            'industries' => Industry::query()
-                ->with('teachers:id,name')
-                ->orderBy('name')
-                ->get(['id', 'name', 'teacher_id'])
+            'industries' => $industries
                 ->map(fn (Industry $industry): array => [
                     'id' => $industry->id,
                     'name' => $industry->name,
                     'guru' => $industry->teachers?->name,
                 ])
+                ->all(),
+            // Industri tanpa guru pembimbing/pembimbing industri: siswa di sana
+            // jadi tak terlihat oleh akun guru/pembimbing manapun (lihat
+            // ScopesStudentsByRole) — tampilkan sebagai peringatan di UI.
+            'unassignedIndustries' => $industries
+                ->filter(fn (Industry $industry): bool => $industry->teacher_id === null || $industry->pembimbing_id === null)
+                ->map(fn (Industry $industry): array => [
+                    'id' => $industry->id,
+                    'name' => $industry->name,
+                    'missingGuru' => $industry->teacher_id === null,
+                    'missingPembimbing' => $industry->pembimbing_id === null,
+                ])
+                ->values()
                 ->all(),
         ]);
     }
