@@ -148,6 +148,12 @@ class Student extends Model
         return $this->hasMany(GuidanceReport::class);
     }
 
+    /** @return HasMany<Certificate, $this> */
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
     /** @return BelongsToMany<Badge, $this> */
     public function badges(): BelongsToMany
     {

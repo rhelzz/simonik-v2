@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Certificate;
 use App\Models\CertificateTemplate;
+use App\Models\Industry;
+use App\Models\Pembimbing;
+use App\Models\Student;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,6 +31,18 @@ class CertificateTemplateTest extends TestCase
         $user->assignRole($role);
 
         return $user;
+    }
+
+    /**
+     * @return array{0: User, 1: Industry}
+     */
+    private function pembimbingWithIndustry(): array
+    {
+        $user = $this->user('pembimbing');
+        $pembimbing = Pembimbing::factory()->create(['user_id' => $user->id]);
+        $industry = Industry::factory()->create(['pembimbing_id' => $pembimbing->id]);
+
+        return [$user, $industry];
     }
 
     /**
@@ -182,17 +198,55 @@ class CertificateTemplateTest extends TestCase
         ]);
     }
 
-    public function test_activate_marks_single_active_template(): void
+    public function test_toggle_global_flips_flag(): void
     {
-        $first = CertificateTemplate::factory()->active()->create();
-        $second = CertificateTemplate::factory()->create();
+        $template = CertificateTemplate::factory()->create();
 
         $this->actingAs($this->user('admin'))
-            ->post("/certificate-templates/{$second->id}/activate")
+            ->post("/certificate-templates/{$template->id}/toggle-global")
             ->assertSessionHas('success');
 
-        $this->assertFalse($first->refresh()->is_active);
-        $this->assertTrue($second->refresh()->is_active);
+        $this->assertSame(CertificateTemplate::SCOPE_GLOBAL, $template->refresh()->scope);
+
+        $this->actingAs($this->user('admin'))
+            ->post("/certificate-templates/{$template->id}/toggle-global")
+            ->assertSessionHas('success');
+
+        $this->assertSame(CertificateTemplate::SCOPE_INDIVIDUAL, $template->refresh()->scope);
+    }
+
+    public function test_marking_template_global_stamps_all_existing_students(): void
+    {
+        $template = CertificateTemplate::factory()->create();
+        $student = Student::factory()->create();
+
+        $this->actingAs($this->user('admin'))
+            ->post("/certificate-templates/{$template->id}/toggle-global")
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('certificates', [
+            'student_id' => $student->id,
+            'certificate_template_id' => $template->id,
+        ]);
+    }
+
+    public function test_disabling_global_does_not_revoke_existing_certificates(): void
+    {
+        $template = CertificateTemplate::factory()->global()->create();
+        $student = Student::factory()->create();
+        Certificate::factory()->create([
+            'student_id' => $student->id,
+            'certificate_template_id' => $template->id,
+        ]);
+
+        $this->actingAs($this->user('admin'))
+            ->post("/certificate-templates/{$template->id}/toggle-global")
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('certificates', [
+            'student_id' => $student->id,
+            'certificate_template_id' => $template->id,
+        ]);
     }
 
     public function test_admin_can_delete_template(): void
@@ -219,6 +273,104 @@ class CertificateTemplateTest extends TestCase
                 'background' => UploadedFile::fake()->image('bg.png'),
                 'anchors' => json_encode($this->anchors()),
             ])
+            ->assertForbidden();
+    }
+
+    public function test_pembimbing_creates_template_scoped_to_own_industry(): void
+    {
+        Storage::fake('public');
+        [$user, $industry] = $this->pembimbingWithIndustry();
+
+        $this->actingAs($user)
+            ->post('/certificate-templates', [
+                'name' => 'Sertifikat Industri A',
+                'background' => UploadedFile::fake()->image('bg.png'),
+                'anchors' => json_encode($this->anchors()),
+            ])
+            ->assertRedirect('/certificate-templates');
+
+        $template = CertificateTemplate::firstOrFail();
+        $this->assertSame(CertificateTemplate::SCOPE_INDUSTRY, $template->scope);
+        $this->assertSame($industry->id, $template->industry_id);
+    }
+
+    public function test_pembimbing_without_industry_cannot_create(): void
+    {
+        Storage::fake('public');
+        $user = $this->user('pembimbing');
+
+        $this->actingAs($user)
+            ->post('/certificate-templates', [
+                'name' => 'Coba',
+                'background' => UploadedFile::fake()->image('bg.png'),
+                'anchors' => json_encode($this->anchors()),
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_pembimbing_only_sees_own_industry_templates(): void
+    {
+        [$user, $industry] = $this->pembimbingWithIndustry();
+        CertificateTemplate::factory()->create(); // individual — bukan miliknya
+        CertificateTemplate::factory()->global()->create(); // global — bukan miliknya
+        CertificateTemplate::factory()->industry($industry)->create(); // miliknya
+
+        $this->actingAs($user)
+            ->get('/certificate-templates')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('certificate-templates/index')
+                ->has('templates', 1)
+            );
+    }
+
+    public function test_pembimbing_cannot_edit_others_template(): void
+    {
+        [$user] = $this->pembimbingWithIndustry();
+        $template = CertificateTemplate::factory()->create();
+
+        $this->actingAs($user)
+            ->put("/certificate-templates/{$template->id}", [
+                'name' => 'Diubah',
+                'anchors' => json_encode($this->anchors()),
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_pembimbing_cannot_delete_others_template(): void
+    {
+        [$user] = $this->pembimbingWithIndustry();
+        $template = CertificateTemplate::factory()->global()->create();
+
+        $this->actingAs($user)
+            ->delete("/certificate-templates/{$template->id}")
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('certificate_templates', ['id' => $template->id]);
+    }
+
+    public function test_pembimbing_can_update_own_template(): void
+    {
+        [$user, $industry] = $this->pembimbingWithIndustry();
+        $template = CertificateTemplate::factory()->industry($industry)->create(['name' => 'Lama']);
+
+        $this->actingAs($user)
+            ->put("/certificate-templates/{$template->id}", [
+                'name' => 'Baru',
+                'anchors' => json_encode($this->anchors()),
+            ])
+            ->assertRedirect('/certificate-templates');
+
+        $this->assertDatabaseHas('certificate_templates', ['id' => $template->id, 'name' => 'Baru']);
+    }
+
+    public function test_pembimbing_cannot_toggle_global(): void
+    {
+        [$user, $industry] = $this->pembimbingWithIndustry();
+        $template = CertificateTemplate::factory()->industry($industry)->create();
+
+        $this->actingAs($user)
+            ->post("/certificate-templates/{$template->id}/toggle-global")
             ->assertForbidden();
     }
 }

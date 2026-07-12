@@ -280,13 +280,13 @@ export const navSections: NavSection[] = [
                 label: 'Sertifikat',
                 icon: Award,
                 href: certificatesIndex.url(),
-                roles: ['admin', 'wakasek', 'kaprog', 'siswa'],
+                roles: ['admin', 'wakasek', 'kaprog', 'siswa', 'pembimbing'],
             },
             {
                 label: 'Template Sertifikat',
                 icon: FileImage,
                 href: certificateTemplatesIndex.url(),
-                roles: ['admin', 'kaprog'],
+                roles: ['admin', 'kaprog', 'pembimbing'],
             },
             {
                 label: 'Rapor Digital',

@@ -1,0 +1,130 @@
+import { Link, usePage } from '@inertiajs/react';
+import { ArrowLeft, Printer, TriangleAlert } from 'lucide-react';
+import { show } from '@/actions/App/Http/Controllers/CertificateController';
+import { CertificatePreview } from '@/components/certificates/certificate-preview';
+import type {
+    PreviewAnchor,
+    PreviewSignature,
+} from '@/components/certificates/certificate-preview';
+import { AppLayout } from '@/layouts/app-layout';
+import type { SharedData } from '@/types';
+
+type Props = {
+    student: {
+        id: number;
+        name: string;
+        nis: string;
+        class: string | null;
+        industry: string | null;
+        eligible: boolean;
+    };
+    title: string;
+    template: {
+        background: string | null;
+        anchors: PreviewAnchor[];
+        signature: PreviewSignature | null;
+    } | null;
+    qr: string;
+};
+
+const printCss = `@media print {
+    @page { size: landscape; margin: 0; }
+    body * { visibility: hidden; }
+    #cert-print, #cert-print * { visibility: visible; }
+    #cert-print { position: absolute; inset: 0; width: 100%; }
+}`;
+
+export default function CertificatePrint({
+    student,
+    title,
+    template,
+    qr,
+}: Props) {
+    const { auth } = usePage<SharedData>().props;
+    const isStudent = auth.roles?.includes('siswa');
+    const canPrint = template !== null && student.eligible;
+
+    return (
+        <AppLayout title={title}>
+            <style>{printCss}</style>
+
+            <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+                    <div className="flex items-center gap-3">
+                        <Link
+                            href={show.url(student.id)}
+                            className="grid size-9 place-items-center rounded-xl border border-line text-muted transition-colors hover:bg-surface"
+                            aria-label="Kembali"
+                        >
+                            <ArrowLeft className="size-4" />
+                        </Link>
+                        <div>
+                            <h2 className="text-base font-bold text-ink">
+                                {title}
+                            </h2>
+                            <p className="text-sm text-muted">
+                                {student.name} · NIS {student.nis}
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => canPrint && window.print()}
+                        disabled={!canPrint}
+                        title={
+                            canPrint
+                                ? undefined
+                                : 'Cetak tersedia setelah status PKL "selesai"'
+                        }
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <Printer className="size-4" />
+                        Cetak / Unduh PDF
+                    </button>
+                </div>
+
+                {!student.eligible && (
+                    <div className="flex items-center gap-2 rounded-2xl bg-warning/10 px-4 py-3 text-sm font-medium text-warning print:hidden">
+                        <TriangleAlert className="size-4 shrink-0" />
+                        {isStudent
+                            ? 'Sertifikat dapat dipratinjau, tapi baru dapat dicetak setelah PKL berstatus selesai.'
+                            : 'Status PKL siswa belum “selesai”. Pratinjau tersedia, cetak dinonaktifkan.'}
+                    </div>
+                )}
+
+                {template === null ? (
+                    <div className="flex flex-col items-center gap-2 rounded-3xl bg-surface py-16 text-center print:hidden">
+                        <TriangleAlert className="size-8 text-muted" />
+                        <p className="text-sm font-medium text-ink">
+                            Template sertifikat ini sudah dihapus
+                        </p>
+                        <p className="text-xs text-muted">
+                            Hubungi admin untuk menugaskan ulang template.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="overflow-hidden rounded-3xl bg-surface p-3 sm:p-5">
+                        <div id="cert-print" className="@container relative">
+                            <CertificatePreview
+                                background={template.background}
+                                items={template.anchors}
+                                signature={template.signature}
+                            />
+                            {/* QR keaslian — pojok kanan bawah sertifikat */}
+                            <div className="absolute right-[4%] bottom-[5%] flex w-[12%] flex-col items-center gap-[0.4cqw]">
+                                <img
+                                    src={qr}
+                                    alt="QR verifikasi keaslian"
+                                    className="w-full rounded-sm bg-white p-[0.4cqw] shadow-sm"
+                                />
+                                <span className="text-[1.1cqw] leading-none font-medium text-black/60">
+                                    Scan untuk verifikasi
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </AppLayout>
+    );
+}

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Certificate;
+use App\Models\CertificateTemplate;
 use App\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,8 +21,9 @@ class CertificateFactory extends Factory
     {
         return [
             'student_id' => Student::factory(),
+            'certificate_template_id' => CertificateTemplate::factory(),
             'certificate_id' => 'PKL-'.fake()->year().'-'.fake()->unique()->numerify('####'),
-            'file_path' => 'certificates/'.fake()->uuid().'.pdf',
+            'title' => null,
         ];
     }
 }

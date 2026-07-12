@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -19,11 +21,12 @@ use Illuminate\Support\Carbon;
  * @property string|null $signature_path
  * @property array<int, array<string, mixed>> $anchors
  * @property array<string, mixed>|null $signature
- * @property bool $is_active
+ * @property string $scope
+ * @property int|null $industry_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'background_path', 'signature_path', 'anchors', 'signature', 'is_active'])]
+#[Fillable(['name', 'background_path', 'signature_path', 'anchors', 'signature', 'scope', 'industry_id'])]
 class CertificateTemplate extends Model
 {
     /** @use HasFactory<CertificateTemplateFactory> */
@@ -42,6 +45,18 @@ class CertificateTemplate extends Model
         'Great Vibes',
     ];
 
+    /** Otomatis tertera ke semua siswa (admin/kaprog saja yang bisa mengatur). */
+    public const SCOPE_GLOBAL = 'global';
+
+    /** Sertifikat prestasi: ditugaskan manual per siswa oleh admin/kaprog. */
+    public const SCOPE_INDIVIDUAL = 'individual';
+
+    /** Milik satu industri (dibuat pembimbing), hanya untuk siswa magang di sana. */
+    public const SCOPE_INDUSTRY = 'industry';
+
+    /** @var array<int, string> */
+    public const SCOPES = [self::SCOPE_GLOBAL, self::SCOPE_INDIVIDUAL, self::SCOPE_INDUSTRY];
+
     /**
      * @return array<string, string>
      */
@@ -50,8 +65,19 @@ class CertificateTemplate extends Model
         return [
             'anchors' => 'array',
             'signature' => 'array',
-            'is_active' => 'boolean',
         ];
+    }
+
+    /** @return HasMany<Certificate, $this> */
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    /** @return BelongsTo<Industry, $this> */
+    public function industry(): BelongsTo
+    {
+        return $this->belongsTo(Industry::class);
     }
 
     /**
@@ -83,13 +109,14 @@ class CertificateTemplate extends Model
     }
 
     /**
-     * Hanya template yang aktif (dipakai untuk mencetak).
+     * Template global: otomatis tertera ke semua siswa (lihat
+     * CertificateController@stampGlobalTemplates).
      *
      * @param  Builder<CertificateTemplate>  $query
      * @return Builder<CertificateTemplate>
      */
-    public function scopeActive(Builder $query): Builder
+    public function scopeGlobal(Builder $query): Builder
     {
-        return $query->where('is_active', true);
+        return $query->where('scope', self::SCOPE_GLOBAL);
     }
 }

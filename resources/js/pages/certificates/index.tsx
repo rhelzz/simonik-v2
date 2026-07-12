@@ -17,16 +17,17 @@ type StudentRow = {
     class: string | null;
     industry: string | null;
     eligible: boolean;
+    certificatesCount: number;
 };
 
 export default function CertificatesIndex({
     students,
     filters,
-    hasActiveTemplate,
+    hasTemplates,
 }: {
     students: Paginated<StudentRow>;
     filters: { search: string };
-    hasActiveTemplate: boolean;
+    hasTemplates: boolean;
 }) {
     const [search, setSearch] = useState(filters.search);
 
@@ -42,11 +43,11 @@ export default function CertificatesIndex({
                     </p>
                 </div>
 
-                {!hasActiveTemplate && (
+                {!hasTemplates && (
                     <div className="mt-4 flex items-center gap-2 rounded-2xl bg-warning/10 px-4 py-3 text-sm font-medium text-warning">
                         <TriangleAlert className="size-4 shrink-0" />
-                        Belum ada template aktif. Atur di menu Template
-                        Sertifikat agar sertifikat dapat dicetak.
+                        Belum ada template sertifikat. Buat di menu Template
+                        Sertifikat agar sertifikat dapat ditugaskan.
                     </div>
                 )}
 
@@ -101,6 +102,9 @@ export default function CertificatesIndex({
                                     <th className="pb-3 font-semibold">
                                         Status PKL
                                     </th>
+                                    <th className="pb-3 font-semibold">
+                                        Sertifikat
+                                    </th>
                                     <th className="pb-3 text-right font-semibold">
                                         Aksi
                                     </th>
@@ -137,12 +141,15 @@ export default function CertificatesIndex({
                                                     : 'Belum selesai'}
                                             </span>
                                         </td>
+                                        <td className="py-3 text-ink/80">
+                                            {student.certificatesCount}
+                                        </td>
                                         <td className="py-3 text-right">
                                             <Link
                                                 href={show.url(student.id)}
                                                 className="inline-flex items-center rounded-lg px-3 py-1.5 text-sm font-semibold text-primary transition-colors hover:bg-canvas"
                                             >
-                                                Lihat / Cetak
+                                                Kelola sertifikat
                                             </Link>
                                         </td>
                                     </tr>

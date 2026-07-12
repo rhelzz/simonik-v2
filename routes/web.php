@@ -164,18 +164,29 @@ Route::middleware('auth')->group(function () {
         // Master aspek penilaian (teknis & non-teknis).
         Route::resource('aspects', AspectController::class)->only(['index', 'store', 'update', 'destroy']);
 
-        // Template sertifikat (gambar latar + anchor teks).
+        // Nyalakan/matikan status global — admin/kaprog saja, tidak berlaku
+        // untuk template milik industri (dikelola pembimbing di grup lain).
+        Route::post('certificate-templates/{certificateTemplate}/toggle-global', [CertificateTemplateController::class, 'toggleGlobal'])
+            ->name('certificate-templates.toggle-global');
+    });
+
+    // Template sertifikat — admin/kaprog kelola semua; pembimbing hanya boleh
+    // mengelola template industrinya sendiri (dibatasi di controller).
+    Route::middleware('role:admin|kaprog|pembimbing')->group(function () {
         Route::resource('certificate-templates', CertificateTemplateController::class)
             ->except('show')
             ->parameters(['certificate-templates' => 'certificateTemplate']);
-        Route::post('certificate-templates/{certificateTemplate}/activate', [CertificateTemplateController::class, 'activate'])
-            ->name('certificate-templates.activate');
+
+        // Penugasan sertifikat ke siswa (pilih template; siswa bisa punya lebih dari satu).
+        Route::post('sertifikat/{student}', [CertificateController::class, 'store'])->name('certificates.store');
+        Route::delete('sertifikat/{student}/{certificate}', [CertificateController::class, 'destroy'])->name('certificates.destroy');
     });
 
-    // Sertifikat — output per siswa (admin/kaprog/wakasek cetak semua; siswa miliknya).
-    Route::middleware('role:admin|kaprog|wakasek|siswa')->group(function () {
+    // Sertifikat — daftar & cetak per siswa (admin/kaprog/wakasek/pembimbing lihat sesuai lingkup; siswa miliknya).
+    Route::middleware('role:admin|kaprog|wakasek|siswa|pembimbing')->group(function () {
         Route::get('sertifikat', [CertificateController::class, 'index'])->name('certificates.index');
         Route::get('sertifikat/{student}', [CertificateController::class, 'show'])->name('certificates.show');
+        Route::get('sertifikat/{student}/{certificate}', [CertificateController::class, 'print'])->name('certificates.print');
 
         // Rapor Digital — kompilasi nilai + rekap + QR keaslian, siap cetak.
         // Penelusuran berjenjang: Jurusan -> Kelas -> Murid -> rapor.
