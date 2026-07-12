@@ -2,19 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PembimbingExport;
+use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Requests\StorePembimbingRequest;
 use App\Http\Requests\UpdatePembimbingRequest;
+use App\Imports\PembimbingImport;
 use App\Models\Pembimbing;
 use App\Models\User;
+use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PembimbingController extends Controller
 {
+    use HandlesImportExport;
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new PembimbingExport, 'data-pembimbing.xlsx');
+    }
+
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(ImportTemplates::pembimbing(), 'template-impor-pembimbing.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        return $this->runImport($request, new PembimbingImport, 'pembimbings.index');
+    }
+
     /**
      * Daftar pembimbing dengan pencarian nama.
      */

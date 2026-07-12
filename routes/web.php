@@ -91,6 +91,42 @@ Route::middleware('auth')->group(function () {
 
     // Master data pengguna (dikelola admin/kaprog).
     Route::middleware('role:admin|kaprog')->group(function () {
+        // Panduan urutan import/export data.
+        Route::inertia('panduan-import-export', 'data-port/guide')->name('data-guide');
+
+        // Impor/ekspor siswa — didefinisikan sebelum resource agar tidak
+        // tertangkap oleh route show `students/{student}`.
+        Route::get('students/export', [StudentController::class, 'export'])->name('students.export');
+        Route::get('students/template', [StudentController::class, 'template'])->name('students.template');
+        Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
+
+        // Impor/ekspor master data lain — literal path didahulukan sebelum resource
+        // agar tidak tertangkap route show `{id}`.
+        foreach ([
+            'industries' => IndustryController::class,
+            'teachers' => TeacherController::class,
+            'pembimbings' => PembimbingController::class,
+            'parents' => ParentController::class,
+            'departemens' => DepartemenController::class,
+            'classes' => ClassController::class,
+        ] as $slug => $controller) {
+            Route::get("{$slug}/export", [$controller, 'export'])->name("{$slug}.export");
+            Route::get("{$slug}/template", [$controller, 'template'])->name("{$slug}.template");
+            Route::post("{$slug}/import", [$controller, 'import'])->name("{$slug}.import");
+        }
+
+        // Wakasek & Kaprog — hanya Super Admin.
+        Route::middleware('role:admin')->group(function (): void {
+            foreach ([
+                'wakaseks' => WakasekController::class,
+                'kaprogs' => KaprogController::class,
+            ] as $slug => $controller) {
+                Route::get("{$slug}/export", [$controller, 'export'])->name("{$slug}.export");
+                Route::get("{$slug}/template", [$controller, 'template'])->name("{$slug}.template");
+                Route::post("{$slug}/import", [$controller, 'import'])->name("{$slug}.import");
+            }
+        });
+
         Route::resource('students', StudentController::class);
         Route::resource('industries', IndustryController::class);
         Route::resource('teachers', TeacherController::class);

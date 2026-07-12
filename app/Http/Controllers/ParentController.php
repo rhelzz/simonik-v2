@@ -2,19 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ParentExport;
+use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Requests\StoreParentRequest;
 use App\Http\Requests\UpdateParentRequest;
+use App\Imports\ParentImport;
 use App\Models\Parents;
 use App\Models\User;
+use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ParentController extends Controller
 {
+    use HandlesImportExport;
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new ParentExport, 'data-orangtua.xlsx');
+    }
+
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(ImportTemplates::parent(), 'template-impor-orangtua.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        return $this->runImport($request, new ParentImport, 'parents.index');
+    }
+
     /**
      * Daftar orang tua/wali + nama-nama anak (siswa).
      */

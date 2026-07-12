@@ -2,18 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\WakasekExport;
+use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Requests\StoreWakasekRequest;
 use App\Http\Requests\UpdateWakasekRequest;
+use App\Imports\WakasekImport;
 use App\Models\User;
+use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class WakasekController extends Controller
 {
+    use HandlesImportExport;
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new WakasekExport, 'data-wakasek.xlsx');
+    }
+
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(ImportTemplates::wakasek(), 'template-impor-wakasek.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        return $this->runImport($request, new WakasekImport, 'wakaseks.index');
+    }
+
     /**
      * Daftar akun Wakasek Humas/Hubin (User dengan role wakasek).
      */

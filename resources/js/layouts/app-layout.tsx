@@ -73,8 +73,8 @@ export function AppLayout({
                         </div>
                     )}
                     {flash.error && (
-                        <div className="flex items-center gap-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-                            <TriangleAlert className="size-4 shrink-0" />
+                        <div className="flex items-start gap-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium whitespace-pre-line text-red-600">
+                            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
                             {flash.error}
                         </div>
                     )}

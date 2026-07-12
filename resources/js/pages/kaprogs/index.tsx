@@ -14,7 +14,11 @@ import {
     destroy,
     edit,
     index,
+    exportMethod,
+    importMethod,
+    template,
 } from '@/actions/App/Http/Controllers/KaprogController';
+import { ImportExportBar } from '@/components/import-export-bar';
 import { Pagination } from '@/components/ui/pagination';
 import { Select } from '@/components/ui/select';
 import type { SelectOption } from '@/components/ui/select';
@@ -114,13 +118,21 @@ export default function KaprogsIndex({
                             {kaprogs.total} akun kaprog terdaftar
                         </p>
                     </div>
-                    <Link
-                        href={create.url()}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
-                    >
-                        <Plus className="size-4" />
-                        Tambah kaprog
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <ImportExportBar
+                            exportUrl={exportMethod.url()}
+                            templateUrl={template.url()}
+                            importUrl={importMethod.url()}
+                            entityLabel="kaprog"
+                        />
+                        <Link
+                            href={create.url()}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                        >
+                            <Plus className="size-4" />
+                            Tambah kaprog
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Filters */}

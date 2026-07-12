@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\KaprogExport;
+use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Requests\StoreKaprogRequest;
 use App\Http\Requests\UpdateKaprogRequest;
+use App\Imports\KaprogImport;
 use App\Models\Departemen;
 use App\Models\User;
+use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,9 +17,28 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class KaprogController extends Controller
 {
+    use HandlesImportExport;
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new KaprogExport, 'data-kaprog.xlsx');
+    }
+
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(ImportTemplates::kaprog(), 'template-impor-kaprog.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        return $this->runImport($request, new KaprogImport, 'kaprogs.index');
+    }
+
     /**
      * Daftar akun Kepala Program Keahlian (User dengan role kaprog) beserta
      * program keahlian (jurusan) yang dipimpinnya.

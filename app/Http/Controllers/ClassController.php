@@ -2,17 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ClassExport;
+use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Requests\ClassRequest;
+use App\Imports\ClassImport;
 use App\Models\Classes;
 use App\Models\Departemen;
+use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ClassController extends Controller
 {
+    use HandlesImportExport;
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new ClassExport, 'data-kelas.xlsx');
+    }
+
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(ImportTemplates::kelas(), 'template-impor-kelas.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        return $this->runImport($request, new ClassImport, 'classes.index');
+    }
+
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));

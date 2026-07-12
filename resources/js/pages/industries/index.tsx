@@ -7,7 +7,11 @@ import {
     edit,
     index,
     show,
+    exportMethod,
+    importMethod,
+    template,
 } from '@/actions/App/Http/Controllers/IndustryController';
+import { ImportExportBar } from '@/components/import-export-bar';
 import { Pagination } from '@/components/ui/pagination';
 import { AppLayout } from '@/layouts/app-layout';
 import type { Paginated } from '@/types';
@@ -72,13 +76,21 @@ export default function IndustriesIndex({
                             {industries.total} industri terdaftar
                         </p>
                     </div>
-                    <Link
-                        href={create.url()}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
-                    >
-                        <Plus className="size-4" />
-                        Tambah industri
-                    </Link>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <ImportExportBar
+                            exportUrl={exportMethod.url()}
+                            templateUrl={template.url()}
+                            importUrl={importMethod.url()}
+                            entityLabel="industri"
+                        />
+                        <Link
+                            href={create.url()}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                        >
+                            <Plus className="size-4" />
+                            Tambah industri
+                        </Link>
+                    </div>
                 </div>
 
                 {/* Filters */}

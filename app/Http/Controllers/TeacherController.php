@@ -2,20 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TeacherExport;
+use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Requests\StoreTeacherRequest;
 use App\Http\Requests\UpdateTeacherRequest;
+use App\Imports\TeacherImport;
 use App\Models\Departemen;
 use App\Models\Teacher;
 use App\Models\User;
+use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class TeacherController extends Controller
 {
+    use HandlesImportExport;
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new TeacherExport, 'data-guru.xlsx');
+    }
+
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(ImportTemplates::teacher(), 'template-impor-guru.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        return $this->runImport($request, new TeacherImport, 'teachers.index');
+    }
+
     /**
      * Daftar guru dengan pencarian nama.
      */

@@ -59,7 +59,7 @@ import { index as statistikIndex } from '@/actions/App/Http/Controllers/Statisti
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
 import { index as wakaseksIndex } from '@/actions/App/Http/Controllers/WakasekController';
-import { dashboard, streak } from '@/routes';
+import { dashboard, dataGuide, streak } from '@/routes';
 import type { NavItem, NavSection } from '@/types';
 import type { Role } from '@/types/auth';
 
@@ -119,6 +119,12 @@ export const navSections: NavSection[] = [
     {
         title: 'Data Master',
         items: [
+            {
+                label: 'Panduan Import/Export',
+                icon: BookOpen,
+                href: dataGuide.url(),
+                roles: ['admin', 'kaprog'],
+            },
             {
                 label: 'Data User',
                 icon: Users,

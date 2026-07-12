@@ -2,16 +2,39 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\DepartemenExport;
+use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Requests\DepartemenRequest;
+use App\Imports\DepartemenImport;
 use App\Models\Departemen;
+use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DepartemenController extends Controller
 {
+    use HandlesImportExport;
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new DepartemenExport, 'data-jurusan.xlsx');
+    }
+
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(ImportTemplates::departemen(), 'template-impor-jurusan.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        return $this->runImport($request, new DepartemenImport, 'departemens.index');
+    }
+
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));

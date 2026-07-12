@@ -2,20 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\IndustryExport;
+use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Requests\StoreIndustryRequest;
 use App\Http\Requests\UpdateIndustryCoordinatesRequest;
 use App\Http\Requests\UpdateIndustryRequest;
+use App\Imports\IndustryImport;
 use App\Models\Industry;
 use App\Models\Pembimbing;
 use App\Models\Teacher;
+use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class IndustryController extends Controller
 {
+    use HandlesImportExport;
+
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new IndustryExport, 'data-industri.xlsx');
+    }
+
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(ImportTemplates::industry(), 'template-impor-industri.xlsx');
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        return $this->runImport($request, new IndustryImport, 'industries.index');
+    }
+
     /**
      * Daftar industri (PT) + relasi guru pembimbing, pembimbing industri, jumlah siswa.
      */

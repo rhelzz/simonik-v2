@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\StudentsExport;
+use App\Exports\StudentsTemplateExport;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
+use App\Imports\StudentsImport;
 use App\Models\Classes;
 use App\Models\Departemen;
 use App\Models\Industry;
@@ -16,8 +19,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class StudentController extends Controller
 {
@@ -236,6 +242,44 @@ class StudentController extends Controller
         return redirect()
             ->route('students.index')
             ->with('success', 'Siswa berhasil dihapus.');
+    }
+
+    /**
+     * Unduh seluruh siswa aktif sebagai berkas Excel.
+     */
+    public function export(): BinaryFileResponse
+    {
+        return Excel::download(new StudentsExport, 'data-siswa.xlsx');
+    }
+
+    /**
+     * Unduh template contoh (berisi sheet contoh + referensi) untuk impor.
+     */
+    public function template(): BinaryFileResponse
+    {
+        return Excel::download(new StudentsTemplateExport, 'template-impor-siswa.xlsx');
+    }
+
+    /**
+     * Impor data siswa dari berkas Excel. Setiap akun dibuat dengan kata sandi
+     * default "password". Bila ada baris tak valid, tidak ada yang disimpan.
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
+        ]);
+
+        $import = new StudentsImport;
+        Excel::import($import, $request->file('file'));
+
+        if ($import->errors !== []) {
+            throw ValidationException::withMessages($import->errors);
+        }
+
+        return redirect()
+            ->route('students.index')
+            ->with('success', "{$import->created} siswa berhasil diimpor. Kata sandi default tiap akun: password");
     }
 
     /**
