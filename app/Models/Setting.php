@@ -11,12 +11,13 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property string|null $logo
+ * @property string|null $favicon
  * @property string|null $background
  * @property string|null $text
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['logo', 'background', 'text'])]
+#[Fillable(['logo', 'favicon', 'background', 'text'])]
 class Setting extends Model
 {
     /** @use HasFactory<SettingFactory> */

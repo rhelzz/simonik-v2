@@ -34,6 +34,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\WakasekController;
+use App\Http\Controllers\WebsiteSettingController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -73,6 +74,12 @@ Route::middleware('auth')->group(function () {
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+
+    // Pengaturan favicon situs — hanya Super Admin.
+    Route::middleware('role:admin')->group(function () {
+        Route::get('pengaturan-website', [WebsiteSettingController::class, 'edit'])->name('website-settings.edit');
+        Route::put('pengaturan-website', [WebsiteSettingController::class, 'update'])->name('website-settings.update');
+    });
 
     // Panduan PKL — semua role bisa lihat & unduh; kelola hanya admin/kaprog.
     Route::get('panduan', [GuideController::class, 'index'])->name('guides.index');

@@ -13,6 +13,7 @@ import {
     Fingerprint,
     Flame,
     GraduationCap,
+    Globe,
     Handshake,
     HardHat,
     HeartPulse,
@@ -59,6 +60,7 @@ import { index as statistikIndex } from '@/actions/App/Http/Controllers/Statisti
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
 import { index as wakaseksIndex } from '@/actions/App/Http/Controllers/WakasekController';
+import { edit as websiteSettingsEdit } from '@/actions/App/Http/Controllers/WebsiteSettingController';
 import { dashboard, dataGuide, streak } from '@/routes';
 import type { NavItem, NavSection } from '@/types';
 import type { Role } from '@/types/auth';
@@ -296,7 +298,15 @@ export const navSections: NavSection[] = [
     },
     {
         title: 'Akun',
-        items: [{ label: 'Profil', icon: UserCog, href: profileEdit.url() }],
+        items: [
+            { label: 'Profil', icon: UserCog, href: profileEdit.url() },
+            {
+                label: 'Website Settings',
+                icon: Globe,
+                href: websiteSettingsEdit.url(),
+                roles: ['admin'],
+            },
+        ],
     },
 ];
 
