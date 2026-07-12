@@ -34,8 +34,6 @@ type IndustryOption = {
 type UnassignedIndustry = {
     id: number;
     name: string;
-    missingGuru: boolean;
-    missingPembimbing: boolean;
 };
 
 type PlacementsIndexProps = {
@@ -190,9 +188,8 @@ export default function PlacementsIndex({
                         <div className="flex items-center gap-2 font-medium">
                             <TriangleAlert className="size-4 shrink-0" />
                             {unassignedIndustries.length} industri belum punya
-                            guru pembimbing/pembimbing industri — siswa di sana
-                            tidak akan terlihat oleh akun guru atau pembimbing
-                            manapun.
+                            guru pembimbing — siswa di sana tidak akan terlihat
+                            oleh akun guru manapun.
                         </div>
                         <ul className="flex flex-wrap gap-2">
                             {unassignedIndustries.map((industry) => (
@@ -202,17 +199,6 @@ export default function PlacementsIndex({
                                         className="inline-flex items-center gap-1.5 rounded-lg bg-white px-2.5 py-1.5 text-xs font-semibold text-warning underline-offset-2 hover:underline"
                                     >
                                         {industry.name}
-                                        <span className="text-warning/70">
-                                            (
-                                            {[
-                                                industry.missingGuru && 'guru',
-                                                industry.missingPembimbing &&
-                                                    'pembimbing',
-                                            ]
-                                                .filter(Boolean)
-                                                .join(', ')}{' '}
-                                            kosong)
-                                        </span>
                                     </Link>
                                 </li>
                             ))}

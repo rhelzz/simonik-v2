@@ -54,9 +54,9 @@ class PlacementController extends Controller
             ]);
 
         $industries = Industry::query()
-            ->with(['teachers:id,name', 'pembimbingNormatif:id,name'])
+            ->with('teachers:id,name')
             ->orderBy('name')
-            ->get(['id', 'name', 'teacher_id', 'pembimbing_id']);
+            ->get(['id', 'name', 'teacher_id']);
 
         return Inertia::render('placements/index', [
             'students' => $students,
@@ -68,16 +68,16 @@ class PlacementController extends Controller
                     'guru' => $industry->teachers?->name,
                 ])
                 ->all(),
-            // Industri tanpa guru pembimbing/pembimbing industri: siswa di sana
-            // jadi tak terlihat oleh akun guru/pembimbing manapun (lihat
-            // ScopesStudentsByRole) — tampilkan sebagai peringatan di UI.
+            // Industri tanpa guru pembimbing: siswa di sana jadi tak terlihat
+            // oleh akun guru manapun (lihat ScopesStudentsByRole) — tampilkan
+            // sebagai peringatan di UI. Pembimbing industri boleh kosong
+            // (tidak semua industri memakai akun pembimbing), jadi tidak
+            // ditandai.
             'unassignedIndustries' => $industries
-                ->filter(fn (Industry $industry): bool => $industry->teacher_id === null || $industry->pembimbing_id === null)
+                ->filter(fn (Industry $industry): bool => $industry->teacher_id === null)
                 ->map(fn (Industry $industry): array => [
                     'id' => $industry->id,
                     'name' => $industry->name,
-                    'missingGuru' => $industry->teacher_id === null,
-                    'missingPembimbing' => $industry->pembimbing_id === null,
                 ])
                 ->values()
                 ->all(),

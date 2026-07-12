@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Departemen;
 use App\Models\Industry;
-use App\Models\Pembimbing;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -114,15 +113,17 @@ class PlacementTest extends TestCase
             ->assertSee($student->name);
     }
 
-    public function test_flags_industries_missing_guru_or_pembimbing(): void
+    public function test_flags_industries_missing_guru_pembimbing_only(): void
     {
         $admin = User::factory()->create();
         $admin->assignRole('admin');
 
-        $incomplete = Industry::factory()->create(['teacher_id' => null, 'pembimbing_id' => null]);
+        $missingGuru = Industry::factory()->create(['teacher_id' => null, 'pembimbing_id' => null]);
+        // Pembimbing industri kosong sendirian tidak ditandai — itu wajar,
+        // tidak semua industri memakai akun pembimbing.
         Industry::factory()->create([
             'teacher_id' => Teacher::factory(),
-            'pembimbing_id' => Pembimbing::factory(),
+            'pembimbing_id' => null,
         ]);
 
         $this->actingAs($admin)
@@ -130,9 +131,7 @@ class PlacementTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->has('unassignedIndustries', 1)
-                ->where('unassignedIndustries.0.id', $incomplete->id)
-                ->where('unassignedIndustries.0.missingGuru', true)
-                ->where('unassignedIndustries.0.missingPembimbing', true)
+                ->where('unassignedIndustries.0.id', $missingGuru->id)
             );
     }
 }
