@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Network, NotebookPen } from 'lucide-react';
 import { classes } from '@/actions/App/Http/Controllers/JournalMonitorController';
+import { ScopeNote } from '@/components/ui/scope-note';
 import { AppLayout } from '@/layouts/app-layout';
 
 type DepartemenCard = {
@@ -11,8 +12,10 @@ type DepartemenCard = {
 
 export default function JournalMonitorIndex({
     departemens,
+    scopeLabel,
 }: {
     departemens: DepartemenCard[];
+    scopeLabel: string;
 }) {
     return (
         <AppLayout title="Data Jurnal">
@@ -29,6 +32,7 @@ export default function JournalMonitorIndex({
                             Pilih jurusan untuk menelusuri kelas, murid, lalu
                             jurnal kegiatan.
                         </p>
+                        <ScopeNote label={scopeLabel} />
                     </div>
                 </div>
 

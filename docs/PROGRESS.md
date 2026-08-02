@@ -496,11 +496,33 @@ Modul blueprint yang bisa dikerjakan selanjutnya (lihat [`docs/BLUEPRINT-MODULES
 
 ---
 
+### 44. Tindak lanjut UAT — perbaikan temuan penguji (7 peran, 30–31 Juli 2026)
+
+Verifikasi seluruh laporan ✖ pada formulir uji coba QA terhadap kode. Hasil triase: 4 bug nyata, 13 gejala dari satu akar (akun belum tertaut industri), 3 salah paham QA, dan **2 bug fatal yang justru dinilai ✔ oleh penguji**.
+
+- **A1 — Search & notifikasi topbar fungsional.** `app-topbar.tsx` sebelumnya memajang input search tanpa handler dan lonceng tanpa `onClick` + titik "ada notifikasi" hardcoded. Search kini submit ke `students.index?search=` (hanya untuk admin/kaprog yang punya halaman itu); lonceng jadi `<Link>` ke Inbox Persetujuan dengan badge angka dari `auth.pendingApprovalsCount` (hanya 4 role penyetuju).
+- **A2 — Link mati di halaman login.** Dua `<Link href="#">` ("Lupa password?", "Hubungi admin") melempar user ke halaman utama. Fitur reset password mandiri dihapus dari rencana; keduanya diganti teks yang mengarahkan ke admin sekolah.
+- **A3 — 403 palsu di drill-down.** Pola `abort_if($counts->isEmpty(), 403)` / `abort_unless((clone $scoped)->exists(), 403)` di layer *classes* & *students* pada `AttendanceMonitorController`, `JournalMonitorController`, `RaporController`, `AssessmentController` menjawab 403 untuk jurusan/kelas **kosong tapi sah diakses**. 8 abort dihapus → render empty state (halaman frontend-nya sudah punya). Otorisasi tetap utuh via `scopedStudents()` + `abort_unless` per-siswa di layer `show()`.
+- **A4 — Rapor Digital untuk Orang Tua.** Route rapor dipisah dari grup sertifikat lalu `orangtua` ditambahkan (`web.php` + `nav.ts`); digabung akan memberi route sertifikat yang tetap ditolak `CertificateController::authorizeView`.
+- **A5 — Catatan persetujuan hilang.** `approvals/index.tsx` memanggil `setData()` tepat sebelum `.post()` → catatan selalu terkirim kosong. `useForm` diganti `router.post(url, { note })`.
+- **B — Akun guru/pembimbing tak tertaut industri.** Akar dari 13 laporan ✖ adalah data (`industries.teacher_id`/`pembimbing_id` null), tapi kodenya membisu. Prop share baru `auth.accountNotice` (`HandleInertiaRequests::accountNotice()`) + spanduk di `app-layout.tsx` menerangkan sebabnya di **semua halaman sekaligus** (4 kondisi: profil belum ada vs belum ditugaskan, untuk guru & pembimbing). `CertificateTemplateController::store` mengganti 403 mentah dengan `back()->withInput()->with('error', …)`. Sisi admin: `industries_count = 0` di `teachers/index` dan kolom industri kosong di `pembimbings/index` kini badge amber "Belum ditautkan".
+- **C — Kejelasan & responsivitas.** `ScopesStudentsByRole::scopeLabel()` + komponen `ui/scope-note.tsx` menyatakan cakupan data di 5 halaman (Absen, Jurnal, Penilaian, Rapor, Inbox) sehingga pembatasan per-role terbaca, bukan ditebak. Empty state Inbox Persetujuan diganti (dari "Semua pengajuan telah diproses. Kerja bagus!" yang menipu) jadi penjelasan apa yang akan mengisi halaman. **`ui/modal.tsx`**: overlay tanpa `overflow` membuat tombol Simpan tak terjangkau di layar pendek → overlay menggulung + `max-h-[calc(100dvh-2rem)]` dengan body scroll internal (menutup 7 halaman pemakai Modal, termasuk Panduan PKL). Judul panduan `truncate` → `wrap-break-word`. Kedua tabel `rapor/show.tsx` (satu-satunya tanpa `overflow-x-auto`) dibungkus scroll mendatar + `print:overflow-visible`.
+- **D1/D2 — Kebocoran data lintas jurusan (fatal, dinilai ✔ oleh QA).** `ScopesStudentsByRole` menyamakan `kaprog` dengan admin → `Student::query()` polos; kaprog melihat siswa seluruh sekolah di Penilaian, Monitoring, dan Rapor. Kaprog kini disaring lewat `departemens.user_id`. Di `StudentController`, penelusuran caller menemukan `show`/`edit`/`update`/`destroy`/`export` **tanpa otorisasi sama sekali** (route model binding polos) — ditambah guard `authorizeStudent()` di keempat aksi per-siswa, `index` memakai `scopedStudents()`, dan `StudentsExport` menerima query yang sudah dibatasi.
+- **D3 — Route tanpa halaman.** `PATCH industries/{industry}/coordinates` mengizinkan guru (policy sudah benar) tapi tidak ada halaman yang bisa ia buka. `industries.index` & `industries.show` dipindah ke grup `admin|kaprog|guru` dengan `scopedIndustries()` (guru → `teacher_id` miliknya, index & show), prop `can.manage`/`can.updateCoordinates`, dan blok **"Atur titik & radius absensi"** ber-`MapPicker` di `industries/show.tsx`. Create/edit/delete/import-export tetap admin & kaprog.
+- **CI:** memperbaiki 2 error PHPStan yang sudah merah di `main` (`ParentController`/`PembimbingController`): validasi `in_array` terpisah dari `$genderAliases` membuat indeks tak terjamin — `$genderAliases` dijadikan satu-satunya whitelist via `?? null`.
+- **Tests (+7 file/kasus):** `AccountNoticeTest` (6), `KaprogScopeTest` (5), `IndustryTest` +2 (cakupan & larangan kelola untuk guru), `RaporTest` +1 (orangtua hanya anaknya), `AttendanceMonitorTest` +1 (`scopeLabel` per role), `PembimbingTest` +1 (filter gender alias — sebelumnya tanpa test), `CertificateTemplateTest` diubah dari assert 403 → assert pesan error, 2 test `*_forbidden_for_empty_departemen` diubah ke empty state.
+- ✅ **Pint + PHPStan 0 error + 349/349 passed + 1463 assertions.** `npm run build` + `types:check` + `lint` + `format` lolos.
+
+---
+
 ## 📍 Current step
-**Manajemen peran Wakasek & Kaprog lengkap.** Admin dapat CRUD akun Wakasek & Kaprog (kaprog + penautan program keahlian). Wakasek punya dashboard analitik (keuangan/kuota/partisipasi/per-jurusan). Kaprog punya dashboard scoped + fitur **Plotting & Penempatan** siswa ke industri. Seluruh 19 modul blueprint (M0.1–M6.1) sudah rampung sebelumnya.
+**Tindak lanjut UAT selesai (segmen A–D).** Seluruh temuan penguji sudah diverifikasi terhadap kode dan diperbaiki, termasuk dua kebocoran data lintas jurusan yang luput dari penguji. CI kembali hijau (PHPStan sempat merah di `main`).
+
+**Perlu tindakan operasional, bukan kode:** akun guru/pembimbing di server produksi harus ditautkan ke industri (Data Industri → set Guru Pembimbing & Pembimbing Industri). Tanpa itu 13 langkah ✖ pada formulir QA tetap kosong — bedanya kini sistem menerangkan sebabnya lewat spanduk `accountNotice`.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik
-1. **Manajemen Jadwal monitoring (anti-bentrok)** — fitur blueprint kaprog yang belum ada: menyusun jadwal monitoring guru tanpa bentrok jadwal mengajar (butuh subsistem penjadwalan).
-2. Penyempurnaan PWA (offline fallback page, audit Lighthouse) atau iterasi fitur lain sesuai kebutuhan.
+1. **Tautkan akun penguji ke industri lalu jalankan UAT ulang** untuk 2 peran yang gagal (Guru Pembimbing 9/14, Pembimbing Industri 3/14) — memverifikasi bahwa sisa ✖ memang murni masalah data.
+2. **Audit scoping menyeluruh untuk kaprog** — D1/D2 memperbaiki Data Siswa & surface berbasis `scopedStudents`, tapi master data lain (`teachers`, `pembimbings`, `parents`, `classes`, `industries`) masih global untuk kaprog; perlu diputuskan mana yang memang harus lintas jurusan.
+3. **Manajemen Jadwal monitoring (anti-bentrok)** — fitur blueprint kaprog yang belum ada: menyusun jadwal monitoring guru tanpa bentrok jadwal mengajar (butuh subsistem penjadwalan).

@@ -84,6 +84,29 @@ class AttendanceMonitorTest extends TestCase
         $this->get('/monitoring/absen')->assertRedirect('/login');
     }
 
+    public function test_scope_label_states_whose_data_is_shown(): void
+    {
+        $s = $this->scenario();
+
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('scopeLabel', 'Menampilkan seluruh siswa di sekolah.')
+            );
+
+        $this->actingAs($s['teacher'])
+            ->get('/monitoring/absen')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('scopeLabel', 'Menampilkan hanya siswa di industri yang Anda bimbing.')
+            );
+
+        $this->actingAs($s['pembimbing'])
+            ->get('/monitoring/absen')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('scopeLabel', 'Menampilkan hanya siswa yang magang di industri Anda.')
+            );
+    }
+
     public function test_wakasek_can_view_monitor(): void
     {
         $this->actingAs($this->user('wakasek'))
@@ -126,14 +149,18 @@ class AttendanceMonitorTest extends TestCase
             );
     }
 
-    public function test_classes_layer_forbidden_for_empty_departemen(): void
+    public function test_classes_layer_renders_empty_state_for_empty_departemen(): void
     {
         $this->scenario();
         $empty = Departemen::factory()->create();
 
         $this->actingAs($this->user('admin'))
             ->get("/monitoring/absen/jurusan/{$empty->id}")
-            ->assertForbidden();
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('attendance-monitor/classes')
+                ->has('classes', 0)
+            );
     }
 
     public function test_students_layer_lists_students(): void

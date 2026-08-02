@@ -24,11 +24,17 @@ class StudentsExport implements FromQuery, ShouldAutoSize, WithEvents, WithHeadi
     use StylesHeadings;
 
     /**
+     * @param  Builder<Student>|null  $base  Query siswa yang sudah dibatasi
+     *                                       cakupan pemanggil; null = seluruh siswa.
+     */
+    public function __construct(private readonly ?Builder $base = null) {}
+
+    /**
      * @return Builder<Student>
      */
     public function query(): Builder
     {
-        return Student::query()
+        return ($this->base ?? Student::query())
             ->where('archived', false)
             ->with([
                 'users:id,email',

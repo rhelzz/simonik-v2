@@ -10,7 +10,12 @@ import {
     Tooltip,
 } from 'chart.js';
 import type { ChartOptions } from 'chart.js';
-import { Building2, CalendarCheck, GraduationCap, NotebookPen } from 'lucide-react';
+import {
+    Building2,
+    CalendarCheck,
+    GraduationCap,
+    NotebookPen,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
@@ -98,7 +103,7 @@ export function HeroGreeting({
                 src="/images/admin-greeting.png"
                 alt=""
                 aria-hidden="true"
-                className="pointer-events-none absolute -right-20 -top-15 hidden h-[230%] max-h-none object-contain object-bottom drop-shadow-2xl sm:block lg:h-[260%]"
+                className="pointer-events-none absolute -top-15 -right-20 hidden h-[230%] max-h-none object-contain object-bottom drop-shadow-2xl sm:block lg:h-[260%]"
             />
             <div className="relative max-w-xl">
                 <p className="text-sm font-medium text-white/70">{today}</p>
@@ -307,7 +312,10 @@ export function AttendanceTrendCards({ data }: { data: ParticipationTrend }) {
             x: {
                 grid: { display: false },
                 border: { display: false },
-                ticks: { color: '#8b8fb3', font: { family: 'Poppins', size: 12 } },
+                ticks: {
+                    color: '#8b8fb3',
+                    font: { family: 'Poppins', size: 12 },
+                },
             },
             y: {
                 beginAtZero: true,
@@ -490,7 +498,9 @@ export function RecentStudentsTable({
                                 <th className="pb-3 font-semibold">Siswa</th>
                                 <th className="pb-3 font-semibold">Kelas</th>
                                 <th className="pb-3 font-semibold">Industri</th>
-                                <th className="pb-3 font-semibold">Bergabung</th>
+                                <th className="pb-3 font-semibold">
+                                    Bergabung
+                                </th>
                                 <th className="pb-3 text-right font-semibold">
                                     Status
                                 </th>

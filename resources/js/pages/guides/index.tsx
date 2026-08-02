@@ -140,7 +140,10 @@ export default function GuidesIndex({ guides, can }: Props) {
                                     <FileText className="size-5" />
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <h3 className="truncate font-semibold text-ink">
+                                    {/* Judul panduan sering panjang; di HP
+                                        dipotong `truncate` sampai tak terbaca.
+                                        Biarkan membungkus ke bawah. */}
+                                    <h3 className="font-semibold wrap-break-word text-ink">
                                         {guide.judul}
                                     </h3>
                                     {guide.deskripsi && (

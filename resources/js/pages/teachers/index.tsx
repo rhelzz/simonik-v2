@@ -7,6 +7,7 @@ import {
     Plus,
     Search,
     Trash2,
+    TriangleAlert,
     Users,
     UsersRound,
     X,
@@ -27,6 +28,7 @@ import { Pagination } from '@/components/ui/pagination';
 import { Select } from '@/components/ui/select';
 import type { SelectOption } from '@/components/ui/select';
 import { AppLayout } from '@/layouts/app-layout';
+import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types';
 
 type Teacher = {
@@ -261,8 +263,29 @@ export default function TeachersIndex({
                                             {teacher.departemen ?? '—'}
                                         </td>
                                         <td className="py-3">
-                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-ink/70">
-                                                <Building2 className="size-3.5" />
+                                            {/* Tanpa industri, guru ini tidak
+                                                akan melihat siswa manapun. */}
+                                            <span
+                                                title={
+                                                    teacher.industries_count ===
+                                                    0
+                                                        ? 'Belum ditugaskan ke industri manapun — akun ini tidak akan melihat siswa, nilai, maupun pengajuan.'
+                                                        : undefined
+                                                }
+                                                className={cn(
+                                                    'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
+                                                    teacher.industries_count ===
+                                                        0
+                                                        ? 'bg-amber-100 text-amber-700'
+                                                        : 'bg-canvas text-ink/70',
+                                                )}
+                                            >
+                                                {teacher.industries_count ===
+                                                0 ? (
+                                                    <TriangleAlert className="size-3.5" />
+                                                ) : (
+                                                    <Building2 className="size-3.5" />
+                                                )}
                                                 {teacher.industries_count}
                                             </span>
                                         </td>

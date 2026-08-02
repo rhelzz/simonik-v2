@@ -22,4 +22,6 @@ export type Auth = {
     user: User | null;
     roles: Role[];
     pendingApprovalsCount?: number;
+    /** Alasan akun guru/pembimbing belum bisa melihat data apa pun. */
+    accountNotice?: string | null;
 };

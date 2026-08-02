@@ -55,6 +55,7 @@ class AssessmentController extends Controller
         return Inertia::render('assessments/index', [
             'departemens' => $departemens,
             'aspectTotal' => AspekProduktif::query()->count(),
+            'scopeLabel' => $this->scopeLabel($user),
         ]);
     }
 
@@ -71,8 +72,6 @@ class AssessmentController extends Controller
             ->selectRaw('class_id, count(*) as total')
             ->groupBy('class_id')
             ->pluck('total', 'class_id');
-
-        abort_if($counts->isEmpty(), 403);
 
         $classes = Classes::query()
             ->whereIn('id', $counts->keys())
@@ -101,8 +100,6 @@ class AssessmentController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         $scoped = $this->scopedStudents($user)->where('class_id', $class->id);
-
-        abort_unless((clone $scoped)->exists(), 403);
 
         $students = $scoped
             ->with(['industries:id,name'])

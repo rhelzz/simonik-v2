@@ -135,7 +135,7 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::resource('students', StudentController::class);
-        Route::resource('industries', IndustryController::class);
+        Route::resource('industries', IndustryController::class)->except(['index', 'show']);
         Route::resource('teachers', TeacherController::class);
         Route::resource('pembimbings', PembimbingController::class);
         Route::resource('parents', ParentController::class)->except('show');
@@ -187,9 +187,12 @@ Route::middleware('auth')->group(function () {
         Route::get('sertifikat', [CertificateController::class, 'index'])->name('certificates.index');
         Route::get('sertifikat/{student}', [CertificateController::class, 'show'])->name('certificates.show');
         Route::get('sertifikat/{student}/{certificate}', [CertificateController::class, 'print'])->name('certificates.print');
+    });
 
-        // Rapor Digital — kompilasi nilai + rekap + QR keaslian, siap cetak.
-        // Penelusuran berjenjang: Jurusan -> Kelas -> Murid -> rapor.
+    // Rapor Digital — kompilasi nilai + rekap + QR keaslian, siap cetak.
+    // Penelusuran berjenjang: Jurusan -> Kelas -> Murid -> rapor.
+    // Orang tua ikut serta: hanya melihat rapor anaknya (dibatasi scopedStudents).
+    Route::middleware('role:admin|kaprog|wakasek|siswa|pembimbing|orangtua')->group(function () {
         Route::get('rapor', [RaporController::class, 'index'])->name('rapor.index');
         Route::get('rapor/jurusan/{departemen}', [RaporController::class, 'classes'])->name('rapor.classes');
         Route::get('rapor/kelas/{class}', [RaporController::class, 'students'])->name('rapor.students');
@@ -239,6 +242,14 @@ Route::middleware('auth')->group(function () {
         Route::get('approvals', [ApprovalController::class, 'index'])->name('approvals.index');
         Route::post('approvals/{approval}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
         Route::post('approvals/{approval}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+    });
+
+    // Daftar & detail industri — guru ikut melihat (dibatasi ke industri
+    // bimbingannya di controller) agar punya halaman untuk mengatur titik
+    // absensi. Membuat/mengubah/menghapus industri tetap admin & kaprog.
+    Route::middleware('role:admin|kaprog|guru')->group(function () {
+        Route::get('industries', [IndustryController::class, 'index'])->name('industries.index');
+        Route::get('industries/{industry}', [IndustryController::class, 'show'])->name('industries.show');
     });
 
     // Update koordinat/radius industri (admin, kaprog, guru, pembimbing).

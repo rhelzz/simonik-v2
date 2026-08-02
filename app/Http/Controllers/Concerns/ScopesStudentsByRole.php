@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use App\Models\Departemen;
 use App\Models\Industry;
 use App\Models\Student;
 use App\Models\User;
@@ -20,8 +21,18 @@ trait ScopesStudentsByRole
      */
     protected function scopedStudents(User $user): Builder
     {
-        if ($user->hasAnyRole(['admin', 'kaprog', 'wakasek'])) {
+        if ($user->hasAnyRole(['admin', 'wakasek'])) {
             return Student::query();
+        }
+
+        // Kaprog hanya berwenang atas program keahlian yang dipimpinnya
+        // (departemens.user_id). Tanpa jurusan sama sekali berarti tanpa data,
+        // bukan seluruh sekolah.
+        if ($user->hasRole('kaprog')) {
+            return Student::query()->whereIn(
+                'departemen_id',
+                Departemen::query()->where('user_id', $user->id)->select('id'),
+            );
         }
 
         if ($user->hasRole('guru')) {
@@ -51,6 +62,25 @@ trait ScopesStudentsByRole
         }
 
         return $this->none();
+    }
+
+    /**
+     * Kalimat yang menerangkan cakupan data yang sedang dilihat.
+     *
+     * Pembatasan per-role terjadi diam-diam di query, sehingga pengguna tidak
+     * punya cara membedakan "dibatasi" dari "datanya memang tidak ada".
+     * Label ini membuat batasannya terbaca di halaman.
+     */
+    protected function scopeLabel(User $user): string
+    {
+        return match (true) {
+            $user->hasAnyRole(['admin', 'wakasek']) => 'Menampilkan seluruh siswa di sekolah.',
+            $user->hasRole('kaprog') => 'Menampilkan siswa pada program keahlian yang Anda pimpin.',
+            $user->hasRole('guru') => 'Menampilkan hanya siswa di industri yang Anda bimbing.',
+            $user->hasRole('pembimbing') => 'Menampilkan hanya siswa yang magang di industri Anda.',
+            $user->hasRole('orangtua') => 'Menampilkan hanya data anak Anda.',
+            default => 'Menampilkan data dalam cakupan akun Anda.',
+        };
     }
 
     /**

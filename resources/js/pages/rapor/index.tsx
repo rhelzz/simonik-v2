@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, FileText, Network } from 'lucide-react';
 import { classes } from '@/actions/App/Http/Controllers/RaporController';
+import { ScopeNote } from '@/components/ui/scope-note';
 import { AppLayout } from '@/layouts/app-layout';
 
 type DepartemenCard = {
@@ -11,9 +12,10 @@ type DepartemenCard = {
 
 type Props = {
     departemens: DepartemenCard[];
+    scopeLabel: string;
 };
 
-export default function RaporIndex({ departemens }: Props) {
+export default function RaporIndex({ departemens, scopeLabel }: Props) {
     return (
         <AppLayout title="Rapor Digital">
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
@@ -29,6 +31,7 @@ export default function RaporIndex({ departemens }: Props) {
                             Pilih jurusan untuk menelusuri kelas, murid, lalu
                             rapor yang dicetak.
                         </p>
+                        <ScopeNote label={scopeLabel} />
                     </div>
                 </div>
 

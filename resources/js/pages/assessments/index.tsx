@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, ClipboardList, Network } from 'lucide-react';
 import { classes } from '@/actions/App/Http/Controllers/AssessmentController';
+import { ScopeNote } from '@/components/ui/scope-note';
 import { AppLayout } from '@/layouts/app-layout';
 
 type DepartemenCard = {
@@ -12,9 +13,14 @@ type DepartemenCard = {
 type Props = {
     departemens: DepartemenCard[];
     aspectTotal: number;
+    scopeLabel: string;
 };
 
-export default function AssessmentsIndex({ departemens, aspectTotal }: Props) {
+export default function AssessmentsIndex({
+    departemens,
+    aspectTotal,
+    scopeLabel,
+}: Props) {
     return (
         <AppLayout title="Rekap Penilaian">
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
@@ -30,6 +36,7 @@ export default function AssessmentsIndex({ departemens, aspectTotal }: Props) {
                             Pilih jurusan untuk menelusuri kelas, murid, lalu
                             rekap nilai · {aspectTotal} aspek penilaian.
                         </p>
+                        <ScopeNote label={scopeLabel} />
                     </div>
                 </div>
 

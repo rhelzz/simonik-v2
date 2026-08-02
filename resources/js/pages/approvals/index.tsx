@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     CheckCircle,
     XCircle,
@@ -12,6 +12,7 @@ import {
     reject,
 } from '@/actions/App/Http/Controllers/ApprovalController';
 import { Pagination } from '@/components/ui/pagination';
+import { ScopeNote } from '@/components/ui/scope-note';
 import { AppLayout } from '@/layouts/app-layout';
 import type { Paginated } from '@/types';
 
@@ -31,9 +32,14 @@ type ApprovalItem = {
 type Props = {
     approvals: Paginated<ApprovalItem>;
     statusFilter: 'pending' | 'history';
+    scopeLabel: string;
 };
 
-export default function ApprovalsIndex({ approvals, statusFilter }: Props) {
+export default function ApprovalsIndex({
+    approvals,
+    statusFilter,
+    scopeLabel,
+}: Props) {
     const isPendingTab = statusFilter === 'pending';
 
     return (
@@ -48,6 +54,7 @@ export default function ApprovalsIndex({ approvals, statusFilter }: Props) {
                         Proses pengajuan WFA, Libur, dan Sakit/Izin siswa dalam
                         cakupan Anda.
                     </p>
+                    <ScopeNote label={scopeLabel} />
                 </div>
 
                 {/* Tabs */}
@@ -82,12 +89,15 @@ export default function ApprovalsIndex({ approvals, statusFilter }: Props) {
                         </span>
                         <h3 className="text-base font-bold text-ink">
                             {isPendingTab
-                                ? 'Antrian Kosong'
+                                ? 'Belum ada pengajuan menunggu'
                                 : 'Tidak ada riwayat'}
                         </h3>
-                        <p className="mt-1 max-w-sm text-sm text-muted">
+                        {/* Antrian kosong dulu terbaca sebagai "fitur setujui/
+                            tolak tidak ada". Terangkan apa yang akan muncul
+                            di sini dan dari mana asalnya. */}
+                        <p className="mt-1 max-w-md text-sm text-muted">
                             {isPendingTab
-                                ? 'Semua pengajuan telah diproses. Kerja bagus!'
+                                ? 'Halaman ini terisi otomatis ketika siswa dalam cakupan Anda mengajukan absen dari luar lokasi (WFA), libur, atau sakit/izin. Tombol Setujui dan Tolak beserta kolom catatan akan muncul pada tiap pengajuan yang masuk.'
                                 : 'Anda belum pernah menyetujui atau menolak pengajuan apapun.'}
                         </p>
                     </div>
@@ -116,29 +126,26 @@ function ApprovalCard({
     item: ApprovalItem;
     isPendingTab: boolean;
 }) {
-    const approveForm = useForm({ note: '' });
-    const rejectForm = useForm({ note: '' });
     const [note, setNote] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
 
-    function handleApprove() {
-        approveForm.setData('note', note);
-        approveForm.post(approve(item.id).url, {
-            onSuccess: () => {
-                setNote('');
+    /**
+     * Kirim keputusan beserta catatannya. Catatan diambil langsung dari state
+     * saat submit — `useForm().setData()` baru berlaku di render berikutnya,
+     * sehingga catatan selalu terkirim kosong bila memakai form helper.
+     */
+    function decide(url: string) {
+        setIsProcessing(true);
+        router.post(
+            url,
+            { note },
+            {
+                preserveScroll: true,
+                onSuccess: () => setNote(''),
+                onFinish: () => setIsProcessing(false),
             },
-        });
+        );
     }
-
-    function handleReject() {
-        rejectForm.setData('note', note);
-        rejectForm.post(reject(item.id).url, {
-            onSuccess: () => {
-                setNote('');
-            },
-        });
-    }
-
-    const isProcessing = approveForm.processing || rejectForm.processing;
 
     return (
         <div className="flex flex-col justify-between gap-4 rounded-2xl border border-line bg-surface p-5 shadow-sm transition hover:shadow-md md:flex-row md:items-start">
@@ -223,7 +230,7 @@ function ApprovalCard({
                     <div className="flex gap-2">
                         <button
                             type="button"
-                            onClick={handleApprove}
+                            onClick={() => decide(approve(item.id).url)}
                             disabled={isProcessing}
                             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-positive px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-positive/90 disabled:opacity-50"
                         >
@@ -232,7 +239,7 @@ function ApprovalCard({
                         </button>
                         <button
                             type="button"
-                            onClick={handleReject}
+                            onClick={() => decide(reject(item.id).url)}
                             disabled={isProcessing}
                             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-50"
                         >

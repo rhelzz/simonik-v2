@@ -56,7 +56,14 @@ class CertificateTemplateController extends Controller
     {
         $data = $request->validated();
         $industryId = $this->ownedIndustryId($request->user());
-        abort_if($request->user()->hasRole('pembimbing') && $industryId === null, 403);
+
+        // Template pembimbing selalu milik satu industri. Tanpa tautan industri
+        // template tidak punya pemilik — jelaskan sebabnya, jangan 403 mentah.
+        if ($request->user()->hasRole('pembimbing') && $industryId === null) {
+            return back()
+                ->withInput()
+                ->with('error', 'Template tidak dapat disimpan karena akun Anda belum ditautkan ke industri manapun. Hubungi admin atau Kepala Program terlebih dahulu.');
+        }
 
         $template = CertificateTemplate::create([
             'name' => $data['name'],

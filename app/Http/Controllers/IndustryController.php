@@ -11,7 +11,9 @@ use App\Imports\IndustryImport;
 use App\Models\Industry;
 use App\Models\Pembimbing;
 use App\Models\Teacher;
+use App\Models\User;
 use App\Support\ImportTemplates;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -46,7 +48,11 @@ class IndustryController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
 
-        $industries = Industry::query()
+        /** @var User $user */
+        $user = $request->user();
+        $canManage = $user->hasAnyRole(['admin', 'kaprog']);
+
+        $industries = $this->scopedIndustries($user)
             ->with([
                 'pembimbingNormatif:id,name',
                 'teachers:id,name',
@@ -69,6 +75,7 @@ class IndustryController extends Controller
         return Inertia::render('industries/index', [
             'industries' => $industries,
             'filters' => ['search' => $search],
+            'can' => ['manage' => $canManage],
         ]);
     }
 
@@ -97,8 +104,13 @@ class IndustryController extends Controller
     /**
      * Detail industri beserta relasi & daftar siswa PKL.
      */
-    public function show(Industry $industry): Response
+    public function show(Request $request, Industry $industry): Response
     {
+        /** @var User $user */
+        $user = $request->user();
+
+        abort_unless($this->scopedIndustries($user)->whereKey($industry->id)->exists(), 403);
+
         $industry->load([
             'teachers:id,name',
             'pembimbingNormatif:id,name,no_hp',
@@ -132,7 +144,32 @@ class IndustryController extends Controller
                 'status_pkl' => $s->status_pkl,
                 'class' => $s->classes?->name,
             ]),
+            'can' => [
+                'manage' => $user->hasAnyRole(['admin', 'kaprog']),
+                'updateCoordinates' => $user->can('updateCoordinates', $industry),
+            ],
         ]);
+    }
+
+    /**
+     * Industri dalam cakupan pemanggil.
+     *
+     * Guru pembimbing hanya berhak atas industri yang dibimbingnya — tanpa ini
+     * ia bisa membuka industri manapun lewat id di URL.
+     *
+     * @return Builder<Industry>
+     */
+    private function scopedIndustries(User $user): Builder
+    {
+        if ($user->hasRole('guru')) {
+            $teacherId = $user->teachers?->id;
+
+            return $teacherId === null
+                ? Industry::query()->whereRaw('1 = 0')
+                : Industry::query()->where('teacher_id', $teacherId);
+        }
+
+        return Industry::query();
     }
 
     /**

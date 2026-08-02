@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\StudentsExport;
 use App\Exports\StudentsTemplateExport;
+use App\Http\Controllers\Concerns\ScopesStudentsByRole;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Imports\StudentsImport;
@@ -27,6 +28,23 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class StudentController extends Controller
 {
+    use ScopesStudentsByRole;
+
+    /**
+     * Pastikan siswa berada dalam cakupan pemanggil.
+     *
+     * Semua aksi per-siswa memakai route model binding, sehingga tanpa
+     * penjagaan ini seorang kaprog bisa membuka siswa jurusan lain hanya
+     * dengan menebak id di URL.
+     */
+    private function authorizeStudent(Request $request, Student $student): void
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        abort_unless($this->scopedStudents($user)->whereKey($student->id)->exists(), 403);
+    }
+
     /**
      * Daftar siswa dengan pencarian & filter kelas.
      */
@@ -39,7 +57,10 @@ class StudentController extends Controller
         $validStatuses = ['belum', 'proses', 'selesai'];
         $statusPkl = in_array($statusPkl, $validStatuses, true) ? $statusPkl : '';
 
-        $students = Student::query()
+        /** @var User $user */
+        $user = $request->user();
+
+        $students = $this->scopedStudents($user)
             ->where('archived', false)
             ->with(['classes:id,name', 'users:id,email', 'industries:id,name'])
             ->when($search !== '', function ($query) use ($search): void {
@@ -120,8 +141,10 @@ class StudentController extends Controller
     /**
      * Form edit siswa.
      */
-    public function edit(Student $student): Response
+    public function edit(Request $request, Student $student): Response
     {
+        $this->authorizeStudent($request, $student);
+
         $student->load('users:id,name,email');
 
         return Inertia::render('students/edit', [
@@ -154,6 +177,8 @@ class StudentController extends Controller
      */
     public function update(UpdateStudentRequest $request, Student $student): RedirectResponse
     {
+        $this->authorizeStudent($request, $student);
+
         $data = $request->validated();
 
         DB::transaction(function () use ($request, $student, $data): void {
@@ -186,8 +211,10 @@ class StudentController extends Controller
     /**
      * Detail siswa lengkap dengan relasi.
      */
-    public function show(Student $student): Response
+    public function show(Request $request, Student $student): Response
     {
+        $this->authorizeStudent($request, $student);
+
         $student->load([
             'users:id,name,email',
             'classes:id,name',
@@ -231,8 +258,10 @@ class StudentController extends Controller
     /**
      * Hapus siswa beserta akunnya.
      */
-    public function destroy(Student $student): RedirectResponse
+    public function destroy(Request $request, Student $student): RedirectResponse
     {
+        $this->authorizeStudent($request, $student);
+
         DB::transaction(function () use ($student): void {
             $this->deleteImage($student);
             // Menghapus user akan cascade ke record siswa (FK onDelete cascade).
@@ -247,9 +276,12 @@ class StudentController extends Controller
     /**
      * Unduh seluruh siswa aktif sebagai berkas Excel.
      */
-    public function export(): BinaryFileResponse
+    public function export(Request $request): BinaryFileResponse
     {
-        return Excel::download(new StudentsExport, 'data-siswa.xlsx');
+        /** @var User $user */
+        $user = $request->user();
+
+        return Excel::download(new StudentsExport($this->scopedStudents($user)), 'data-siswa.xlsx');
     }
 
     /**

@@ -294,7 +294,7 @@ class CertificateTemplateTest extends TestCase
         $this->assertSame($industry->id, $template->industry_id);
     }
 
-    public function test_pembimbing_without_industry_cannot_create(): void
+    public function test_pembimbing_without_industry_gets_explained_rejection(): void
     {
         Storage::fake('public');
         $user = $this->user('pembimbing');
@@ -305,7 +305,10 @@ class CertificateTemplateTest extends TestCase
                 'background' => UploadedFile::fake()->image('bg.png'),
                 'anchors' => json_encode($this->anchors()),
             ])
-            ->assertForbidden();
+            ->assertRedirect()
+            ->assertSessionHas('error', fn (string $message) => str_contains($message, 'belum ditautkan ke industri'));
+
+        $this->assertDatabaseCount('certificate_templates', 0);
     }
 
     public function test_pembimbing_only_sees_own_industry_templates(): void

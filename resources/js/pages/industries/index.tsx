@@ -29,11 +29,13 @@ type IndustryRow = {
 type IndustriesIndexProps = {
     industries: Paginated<IndustryRow>;
     filters: { search: string };
+    can: { manage: boolean };
 };
 
 export default function IndustriesIndex({
     industries,
     filters,
+    can,
 }: IndustriesIndexProps) {
     const [search, setSearch] = useState(filters.search);
 
@@ -76,21 +78,23 @@ export default function IndustriesIndex({
                             {industries.total} industri terdaftar
                         </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                        <ImportExportBar
-                            exportUrl={exportMethod.url()}
-                            templateUrl={template.url()}
-                            importUrl={importMethod.url()}
-                            entityLabel="industri"
-                        />
-                        <Link
-                            href={create.url()}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
-                        >
-                            <Plus className="size-4" />
-                            Tambah industri
-                        </Link>
-                    </div>
+                    {can.manage && (
+                        <div className="flex flex-wrap items-center gap-2">
+                            <ImportExportBar
+                                exportUrl={exportMethod.url()}
+                                templateUrl={template.url()}
+                                importUrl={importMethod.url()}
+                                entityLabel="industri"
+                            />
+                            <Link
+                                href={create.url()}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                            >
+                                <Plus className="size-4" />
+                                Tambah industri
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 {/* Filters */}
@@ -215,23 +219,29 @@ export default function IndustriesIndex({
                                                 >
                                                     <Eye className="size-4" />
                                                 </Link>
-                                                <Link
-                                                    href={edit.url(industry.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Edit ${industry.name}`}
-                                                >
-                                                    <Pencil className="size-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        remove(industry)
-                                                    }
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
-                                                    aria-label={`Hapus ${industry.name}`}
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </button>
+                                                {can.manage && (
+                                                    <>
+                                                        <Link
+                                                            href={edit.url(
+                                                                industry.id,
+                                                            )}
+                                                            className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                            aria-label={`Edit ${industry.name}`}
+                                                        >
+                                                            <Pencil className="size-4" />
+                                                        </Link>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                remove(industry)
+                                                            }
+                                                            className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
+                                                            aria-label={`Hapus ${industry.name}`}
+                                                        >
+                                                            <Trash2 className="size-4" />
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

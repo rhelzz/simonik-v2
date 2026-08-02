@@ -16,7 +16,7 @@ export function AppLayout({
     children: ReactNode;
 }) {
     const [mobileOpen, setMobileOpen] = useState(false);
-    const { flash } = usePage<SharedData>().props;
+    const { auth, flash } = usePage<SharedData>().props;
 
     return (
         <div className="min-h-screen bg-canvas text-ink">
@@ -66,6 +66,14 @@ export function AppLayout({
                         title={title}
                         onOpenSidebar={() => setMobileOpen(true)}
                     />
+                    {/* Akun guru/pembimbing yang belum tertaut industri: semua
+                        halaman akan tampil kosong, jadi sebutkan sebabnya. */}
+                    {auth.accountNotice && (
+                        <div className="flex items-start gap-2 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+                            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+                            {auth.accountNotice}
+                        </div>
+                    )}
                     {flash.success && (
                         <div className="flex items-center gap-2 rounded-2xl bg-positive/10 px-4 py-3 text-sm font-medium text-positive">
                             <CheckCircle2 className="size-4 shrink-0" />

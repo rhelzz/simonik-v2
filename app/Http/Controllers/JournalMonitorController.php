@@ -49,6 +49,7 @@ class JournalMonitorController extends Controller
 
         return Inertia::render('journal-monitor/index', [
             'departemens' => $departemens,
+            'scopeLabel' => $this->scopeLabel($user),
         ]);
     }
 
@@ -66,8 +67,6 @@ class JournalMonitorController extends Controller
             ->selectRaw('class_id, count(*) as total')
             ->groupBy('class_id')
             ->pluck('total', 'class_id');
-
-        abort_if($counts->isEmpty(), 403);
 
         $classes = Classes::query()
             ->whereIn('id', $counts->keys())
@@ -96,8 +95,6 @@ class JournalMonitorController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         $scoped = $this->scopedStudents($user)->where('class_id', $class->id);
-
-        abort_unless((clone $scoped)->exists(), 403);
 
         $students = $scoped
             ->withCount('activities')

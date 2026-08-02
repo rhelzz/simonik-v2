@@ -193,36 +193,38 @@ export default function RaporShow({
                                     Belum ada nilai sidang.
                                 </p>
                             ) : (
-                                <table className="mt-2 w-full border-collapse">
-                                    <thead>
-                                        <tr className="bg-black/5 text-left text-xs">
-                                            <th className="border border-black/20 px-2 py-1.5">
-                                                Aspek
-                                            </th>
-                                            <th className="w-20 border border-black/20 px-2 py-1.5 text-center">
-                                                Nilai
-                                            </th>
-                                            <th className="w-16 border border-black/20 px-2 py-1.5 text-center">
-                                                Grade
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {sidang.scores.map((row, i) => (
-                                            <tr key={i}>
-                                                <td className="border border-black/20 px-2 py-1.5">
-                                                    {row.aspek}
-                                                </td>
-                                                <td className="border border-black/20 px-2 py-1.5 text-center font-semibold">
-                                                    {row.nilai}
-                                                </td>
-                                                <td className="border border-black/20 px-2 py-1.5 text-center">
-                                                    {row.grade ?? '—'}
-                                                </td>
+                                <div className="mt-2 overflow-x-auto print:overflow-visible">
+                                    <table className="w-full min-w-md border-collapse print:min-w-0">
+                                        <thead>
+                                            <tr className="bg-black/5 text-left text-xs">
+                                                <th className="border border-black/20 px-2 py-1.5">
+                                                    Aspek
+                                                </th>
+                                                <th className="w-20 border border-black/20 px-2 py-1.5 text-center">
+                                                    Nilai
+                                                </th>
+                                                <th className="w-16 border border-black/20 px-2 py-1.5 text-center">
+                                                    Grade
+                                                </th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {sidang.scores.map((row, i) => (
+                                                <tr key={i}>
+                                                    <td className="border border-black/20 px-2 py-1.5">
+                                                        {row.aspek}
+                                                    </td>
+                                                    <td className="border border-black/20 px-2 py-1.5 text-center font-semibold">
+                                                        {row.nilai}
+                                                    </td>
+                                                    <td className="border border-black/20 px-2 py-1.5 text-center">
+                                                        {row.grade ?? '—'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             )}
                             {(sidang.penguji1 || sidang.penguji2) && (
                                 <p className="mt-1.5 text-xs text-black/70">
@@ -333,48 +335,50 @@ function ScoreTable({ title, rows }: { title: string; rows: AspectRow[] }) {
                     Belum ada aspek penilaian.
                 </p>
             ) : (
-                <table className="mt-2 w-full border-collapse">
-                    <thead>
-                        <tr className="bg-black/5 text-left text-xs">
-                            <th className="w-8 border border-black/20 px-2 py-1.5 text-center">
-                                No
-                            </th>
-                            <th className="border border-black/20 px-2 py-1.5">
-                                Kemampuan / Kompetensi
-                            </th>
-                            <th className="w-16 border border-black/20 px-2 py-1.5 text-center">
-                                Nilai
-                            </th>
-                            <th className="w-14 border border-black/20 px-2 py-1.5 text-center">
-                                Grade
-                            </th>
-                            <th className="w-24 border border-black/20 px-2 py-1.5">
-                                Keterangan
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {rows.map((row) => (
-                            <tr key={row.id}>
-                                <td className="border border-black/20 px-2 py-1.5 text-center">
-                                    {row.no}
-                                </td>
-                                <td className="border border-black/20 px-2 py-1.5">
-                                    {row.kemampuan}
-                                </td>
-                                <td className="border border-black/20 px-2 py-1.5 text-center font-semibold">
-                                    {row.score ?? '—'}
-                                </td>
-                                <td className="border border-black/20 px-2 py-1.5 text-center">
-                                    {row.grade ?? '—'}
-                                </td>
-                                <td className="border border-black/20 px-2 py-1.5 text-xs">
-                                    {row.qualification ?? '—'}
-                                </td>
+                <div className="mt-2 overflow-x-auto print:overflow-visible">
+                    <table className="w-full min-w-md border-collapse print:min-w-0">
+                        <thead>
+                            <tr className="bg-black/5 text-left text-xs">
+                                <th className="w-8 border border-black/20 px-2 py-1.5 text-center">
+                                    No
+                                </th>
+                                <th className="border border-black/20 px-2 py-1.5">
+                                    Kemampuan / Kompetensi
+                                </th>
+                                <th className="w-16 border border-black/20 px-2 py-1.5 text-center">
+                                    Nilai
+                                </th>
+                                <th className="w-14 border border-black/20 px-2 py-1.5 text-center">
+                                    Grade
+                                </th>
+                                <th className="w-24 border border-black/20 px-2 py-1.5">
+                                    Keterangan
+                                </th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {rows.map((row) => (
+                                <tr key={row.id}>
+                                    <td className="border border-black/20 px-2 py-1.5 text-center">
+                                        {row.no}
+                                    </td>
+                                    <td className="border border-black/20 px-2 py-1.5">
+                                        {row.kemampuan}
+                                    </td>
+                                    <td className="border border-black/20 px-2 py-1.5 text-center font-semibold">
+                                        {row.score ?? '—'}
+                                    </td>
+                                    <td className="border border-black/20 px-2 py-1.5 text-center">
+                                        {row.grade ?? '—'}
+                                    </td>
+                                    <td className="border border-black/20 px-2 py-1.5 text-xs">
+                                        {row.qualification ?? '—'}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </section>
     );

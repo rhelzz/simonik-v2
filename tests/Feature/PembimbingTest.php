@@ -7,6 +7,7 @@ use App\Models\Pembimbing;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PembimbingTest extends TestCase
@@ -53,6 +54,33 @@ class PembimbingTest extends TestCase
         $pembimbing->assignRole('pembimbing');
 
         $this->actingAs($pembimbing)->get('/pembimbings')->assertForbidden();
+    }
+
+    public function test_gender_filter_matches_aliases_and_ignores_junk(): void
+    {
+        Pembimbing::factory()->create(['name' => 'Pria L', 'gender' => 'L']);
+        Pembimbing::factory()->create(['name' => 'Pria male', 'gender' => 'male']);
+        Pembimbing::factory()->create(['name' => 'Wanita P', 'gender' => 'P']);
+
+        $admin = $this->admin();
+
+        // 'L' juga menjaring varian 'male'/'m'/'l' dari sumber data lain.
+        $this->actingAs($admin)
+            ->get('/pembimbings?gender=L')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('pembimbings.data', 2)
+                ->where('filters.gender', 'L')
+            );
+
+        // Nilai di luar whitelist diabaikan, bukan bikin error.
+        $this->actingAs($admin)
+            ->get('/pembimbings?gender=xyz')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('pembimbings.data', 3)
+                ->where('filters.gender', null)
+            );
     }
 
     public function test_admin_can_view_pembimbing_list(): void

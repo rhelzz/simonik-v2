@@ -111,14 +111,18 @@ class JournalMonitorTest extends TestCase
             );
     }
 
-    public function test_classes_layer_forbidden_for_empty_departemen(): void
+    public function test_classes_layer_renders_empty_state_for_empty_departemen(): void
     {
         $this->scenario();
         $empty = Departemen::factory()->create();
 
         $this->actingAs($this->user('admin'))
             ->get("/monitoring/jurnal/jurusan/{$empty->id}")
-            ->assertForbidden();
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('journal-monitor/classes')
+                ->has('classes', 0)
+            );
     }
 
     public function test_students_layer_lists_students(): void

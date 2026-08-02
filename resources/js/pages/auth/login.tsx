@@ -1,7 +1,14 @@
-import { Form, Head, Link } from '@inertiajs/react';
-import { ArrowRight, Eye, EyeOff, LoaderCircle, Lock, Mail } from 'lucide-react';
-import {  useEffect, useState } from 'react';
-import type {ReactNode} from 'react';
+import { Form, Head } from '@inertiajs/react';
+import {
+    ArrowRight,
+    Eye,
+    EyeOff,
+    LoaderCircle,
+    Lock,
+    Mail,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { store } from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 
 /** Bordered box with a leading icon, a small floating label, and the field below. */
@@ -20,7 +27,7 @@ function Field({
 }) {
     return (
         <div>
-            <div className="group flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-2.5 transition-all focus-within:border-primary focus-within:shadow-lg focus-within:shadow-primary/10 focus-within:ring-2 focus-within:ring-primary/15">
+            <div className="group flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-2.5 transition-all focus-within:border-primary focus-within:shadow-lg focus-within:ring-2 focus-within:shadow-primary/10 focus-within:ring-primary/15">
                 <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary transition-colors group-focus-within:bg-primary group-focus-within:text-white">
                     {icon}
                 </span>
@@ -55,7 +62,6 @@ export default function Login({ status }: { status?: string }) {
         window.setTimeout(() => setShowWelcome(false), 500);
     };
 
-
     // Auto-advance to the form after a short greeting.
     useEffect(() => {
         const timer = window.setTimeout(dismissWelcome, 3200);
@@ -81,10 +87,10 @@ export default function Login({ status }: { status?: string }) {
                     }`}
                 >
                     {/* soft decorative circles */}
-                    <span className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-white/10" />
+                    <span className="pointer-events-none absolute -top-16 -right-16 size-48 rounded-full bg-white/10" />
                     <span className="pointer-events-none absolute -bottom-20 -left-16 size-56 rounded-full bg-white/5" />
 
-                    <div className="animate-welcome-pop flex items-center gap-3">
+                    <div className="flex animate-welcome-pop items-center gap-3">
                         <span className="grid size-12 place-items-center rounded-full bg-white/20">
                             <span className="size-5 rounded-full bg-white" />
                         </span>
@@ -96,12 +102,12 @@ export default function Login({ status }: { status?: string }) {
                     <img
                         src="/images/login-illustration.png"
                         alt="Ilustrasi selamat datang SIMONIK"
-                        className="animate-welcome-float pointer-events-none mt-8 w-64 max-w-[70%] drop-shadow-2xl"
+                        className="pointer-events-none mt-8 w-64 max-w-[70%] animate-welcome-float drop-shadow-2xl"
                         style={{ animationDelay: '0.3s' }}
                     />
 
                     <h2
-                        className="animate-welcome-rise mt-6 text-3xl font-extrabold leading-tight"
+                        className="mt-6 animate-welcome-rise text-3xl leading-tight font-extrabold"
                         style={{ animationDelay: '0.15s' }}
                     >
                         Kelola PKL
@@ -109,7 +115,7 @@ export default function Login({ status }: { status?: string }) {
                         dengan mudah
                     </h2>
                     <p
-                        className="animate-welcome-rise mt-3 max-w-xs text-sm text-white/75"
+                        className="mt-3 max-w-xs animate-welcome-rise text-sm text-white/75"
                         style={{ animationDelay: '0.3s' }}
                     >
                         Selamat datang kembali. Pantau seluruh kegiatan Praktik
@@ -120,13 +126,16 @@ export default function Login({ status }: { status?: string }) {
                         type="button"
                         onClick={dismissWelcome}
                         style={{ animationDelay: '0.5s' }}
-                        className="animate-welcome-rise mt-8 flex items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-semibold text-primary shadow-lg shadow-black/10 transition-transform active:scale-95"
+                        className="mt-8 flex animate-welcome-rise items-center gap-2 rounded-full bg-white px-7 py-3 text-sm font-semibold text-primary shadow-lg shadow-black/10 transition-transform active:scale-95"
                     >
                         Mulai
                         <ArrowRight className="size-4" />
                     </button>
 
-                    <span className="animate-welcome-rise absolute bottom-8 text-xs text-white/50" style={{ animationDelay: '0.7s' }}>
+                    <span
+                        className="absolute bottom-8 animate-welcome-rise text-xs text-white/50"
+                        style={{ animationDelay: '0.7s' }}
+                    >
                         Ketuk di mana saja untuk melanjutkan
                     </span>
                 </div>
@@ -135,13 +144,13 @@ export default function Login({ status }: { status?: string }) {
             {/* decorative page background */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 {/* soft glows for depth */}
-                <div className="absolute -left-40 -top-40 size-128 rounded-full bg-white/10 blur-3xl" />
-                <div className="absolute -bottom-48 -right-40 size-144 rounded-full bg-white/10 blur-3xl" />
-                <div className="absolute right-1/4 top-10 size-64 rounded-full bg-accent/10 blur-3xl" />
+                <div className="absolute -top-40 -left-40 size-128 rounded-full bg-white/10 blur-3xl" />
+                <div className="absolute -right-40 -bottom-48 size-144 rounded-full bg-white/10 blur-3xl" />
+                <div className="absolute top-10 right-1/4 size-64 rounded-full bg-accent/10 blur-3xl" />
 
                 {/* flowing wave lines — top-right cluster */}
                 <svg
-                    className="absolute -right-20 -top-24 h-144 w-xl text-white/15"
+                    className="absolute -top-24 -right-20 h-144 w-xl text-white/15"
                     viewBox="0 0 500 500"
                     fill="none"
                     preserveAspectRatio="xMidYMid meet"
@@ -174,14 +183,14 @@ export default function Login({ status }: { status?: string }) {
                 </svg>
 
                 {/* scattered floating circles */}
-                <span className="absolute left-16 top-24 size-3 rounded-full bg-white/50" />
-                <span className="absolute left-1/3 top-12 size-2 rounded-full bg-white/40" />
-                <span className="absolute right-24 top-32 size-4 rounded-full bg-white/40" />
+                <span className="absolute top-24 left-16 size-3 rounded-full bg-white/50" />
+                <span className="absolute top-12 left-1/3 size-2 rounded-full bg-white/40" />
+                <span className="absolute top-32 right-24 size-4 rounded-full bg-white/40" />
                 <span className="absolute right-1/3 bottom-16 size-2.5 rounded-full bg-white/50" />
                 <span className="absolute bottom-24 left-24 size-3 rounded-full bg-white/40" />
-                <span className="absolute bottom-1/3 right-16 size-2 rounded-full bg-white/50" />
-                <span className="absolute left-1/2 bottom-10 size-2.5 rounded-full bg-accent/50" />
-                <span className="absolute right-10 top-1/2 size-3 rounded-full bg-white/30" />
+                <span className="absolute right-16 bottom-1/3 size-2 rounded-full bg-white/50" />
+                <span className="absolute bottom-10 left-1/2 size-2.5 rounded-full bg-accent/50" />
+                <span className="absolute top-1/2 right-10 size-3 rounded-full bg-white/30" />
             </div>
 
             <div className="relative w-full max-w-4xl overflow-hidden rounded-4xl bg-surface shadow-xl shadow-ink/10">
@@ -214,33 +223,36 @@ export default function Login({ status }: { status?: string }) {
                             />
                         </svg>
                         {/* decorative circles */}
-                        <span className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-white/10" />
-                        <span className="pointer-events-none absolute right-8 top-24 size-3 rounded-full bg-white/40" />
-                        <span className="pointer-events-none absolute bottom-16 right-10 size-6 rounded-full bg-white/20" />
+                        <span className="pointer-events-none absolute -top-10 -right-10 size-40 rounded-full bg-white/10" />
+                        <span className="pointer-events-none absolute top-24 right-8 size-3 rounded-full bg-white/40" />
+                        <span className="pointer-events-none absolute right-10 bottom-16 size-6 rounded-full bg-white/20" />
                         <span className="pointer-events-none absolute -bottom-12 -left-12 size-44 rounded-full bg-white/5" />
-                        <span className="pointer-events-none absolute left-8 top-1/2 size-2 rounded-full bg-white/40" />
+                        <span className="pointer-events-none absolute top-1/2 left-8 size-2 rounded-full bg-white/40" />
 
                         <div className="relative flex items-center gap-3">
                             <span className="grid size-9 place-items-center rounded-full bg-white/20">
                                 <span className="size-4 rounded-full bg-white" />
                             </span>
-                            <span className="text-lg font-semibold">SIMONIK</span>
+                            <span className="text-lg font-semibold">
+                                SIMONIK
+                            </span>
                         </div>
 
                         <div className="relative">
-                            <h2 className="text-3xl font-extrabold leading-tight">
+                            <h2 className="text-3xl leading-tight font-extrabold">
                                 Kelola PKL
                                 <br />
                                 dengan mudah
                             </h2>
                             <p className="mt-3 max-w-xs text-sm text-white/70">
-                                Selamat datang kembali. Pantau dan kelola seluruh
-                                kegiatan Praktik Kerja Lapangan dalam satu tempat.
+                                Selamat datang kembali. Pantau dan kelola
+                                seluruh kegiatan Praktik Kerja Lapangan dalam
+                                satu tempat.
                             </p>
                         </div>
 
                         {/* illustration — fixed-height frame; image can grow without resizing the container */}
-                        <div className="relative -mx-10 -mb-10 mt-4 h-56 overflow-hidden">
+                        <div className="relative -mx-10 mt-4 -mb-10 h-56 overflow-hidden">
                             <img
                                 src="/images/login-illustration.png"
                                 alt="Ilustrasi login SIMONIK"
@@ -337,22 +349,14 @@ export default function Login({ status }: { status?: string }) {
                                         />
                                     </Field>
 
-                                    <div className="flex items-center justify-between">
-                                        <label className="flex items-center gap-2 text-sm text-ink/80">
-                                            <input
-                                                type="checkbox"
-                                                name="remember"
-                                                className="size-4 rounded border-line text-primary focus:ring-primary/20"
-                                            />
-                                            Ingat saya
-                                        </label>
-                                        <Link
-                                            href="#"
-                                            className="text-sm font-medium text-primary hover:underline"
-                                        >
-                                            Lupa password?
-                                        </Link>
-                                    </div>
+                                    <label className="flex items-center gap-2 text-sm text-ink/80">
+                                        <input
+                                            type="checkbox"
+                                            name="remember"
+                                            className="size-4 rounded border-line text-primary focus:ring-primary/20"
+                                        />
+                                        Ingat saya
+                                    </label>
 
                                     <button
                                         type="submit"
@@ -369,13 +373,9 @@ export default function Login({ status }: { status?: string }) {
                         </Form>
 
                         <p className="mt-8 text-center text-sm text-muted">
-                            Belum punya akun?{' '}
-                            <Link
-                                href="#"
-                                className="font-semibold text-primary hover:underline"
-                            >
-                                Hubungi admin
-                            </Link>
+                            Belum punya akun? Akun dibuat oleh admin sekolah —
+                            hubungi Kaprog atau Wakasek Humas untuk mendapatkan
+                            akses.
                         </p>
                     </div>
                 </div>

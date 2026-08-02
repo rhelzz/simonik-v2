@@ -6,6 +6,7 @@ use App\Models\Activity;
 use App\Models\AspekProduktif;
 use App\Models\Attendance;
 use App\Models\Evaluation;
+use App\Models\Parents;
 use App\Models\SidangAspect;
 use App\Models\SidangResult;
 use App\Models\SidangScore;
@@ -54,6 +55,25 @@ class RaporTest extends TestCase
         $this->actingAs($siswa)
             ->get('/rapor')
             ->assertRedirect("/rapor/{$student->id}");
+    }
+
+    public function test_orangtua_sees_only_own_children_in_rapor(): void
+    {
+        $ortuUser = $this->user('orangtua');
+        $parent = Parents::factory()->create(['user_id' => $ortuUser->id]);
+        $child = Student::factory()->create(['parent_id' => $parent->id]);
+        $other = Student::factory()->create();
+
+        $this->actingAs($ortuUser)
+            ->get('/rapor')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('rapor/index')
+                ->has('departemens', 1)
+            );
+
+        $this->actingAs($ortuUser)->get("/rapor/{$child->id}")->assertOk();
+        $this->actingAs($ortuUser)->get("/rapor/{$other->id}")->assertForbidden();
     }
 
     public function test_admin_can_view_department_layer(): void

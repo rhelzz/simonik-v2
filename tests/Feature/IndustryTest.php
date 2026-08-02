@@ -9,6 +9,7 @@ use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class IndustryTest extends TestCase
@@ -60,6 +61,49 @@ class IndustryTest extends TestCase
         $siswa->assignRole('siswa');
 
         $this->actingAs($siswa)->get('/industries')->assertForbidden();
+    }
+
+    /**
+     * Guru pembimbing berwenang menentukan titik absensi industri bimbingannya,
+     * tapi sebelumnya tidak punya halaman apa pun untuk membukanya.
+     */
+    public function test_guru_sees_only_industries_it_supervises(): void
+    {
+        $guruUser = User::factory()->create();
+        $guruUser->assignRole('guru');
+        $teacher = Teacher::factory()->create(['user_id' => $guruUser->id]);
+
+        $own = Industry::factory()->create(['teacher_id' => $teacher->id]);
+        $foreign = Industry::factory()->create();
+
+        $this->actingAs($guruUser)
+            ->get('/industries')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('industries.data', 1)
+                ->where('industries.data.0.id', $own->id)
+                ->where('can.manage', false)
+            );
+
+        $this->actingAs($guruUser)
+            ->get("/industries/{$own->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('can.updateCoordinates', true));
+
+        $this->actingAs($guruUser)->get("/industries/{$foreign->id}")->assertForbidden();
+    }
+
+    public function test_guru_cannot_create_or_delete_industries(): void
+    {
+        $guruUser = User::factory()->create();
+        $guruUser->assignRole('guru');
+        Teacher::factory()->create(['user_id' => $guruUser->id]);
+
+        $industry = Industry::factory()->create();
+
+        $this->actingAs($guruUser)->get('/industries/create')->assertForbidden();
+        $this->actingAs($guruUser)->post('/industries', $this->validPayload())->assertForbidden();
+        $this->actingAs($guruUser)->delete("/industries/{$industry->id}")->assertForbidden();
     }
 
     public function test_admin_can_view_industry_list(): void

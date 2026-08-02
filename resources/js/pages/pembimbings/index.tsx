@@ -6,6 +6,7 @@ import {
     Plus,
     Search,
     Trash2,
+    TriangleAlert,
     UsersRound,
     Venus,
     X,
@@ -249,7 +250,17 @@ export default function PembimbingsIndex({
                                             </div>
                                         </td>
                                         <td className="py-3 text-ink/80">
-                                            {pembimbing.industry ?? '—'}
+                                            {/* Tanpa industri, akun ini tidak
+                                                bisa memakai fitur apa pun. */}
+                                            {pembimbing.industry ?? (
+                                                <span
+                                                    title="Belum ditautkan ke industri manapun — akun ini tidak akan melihat anak magang, penilaian, maupun pengajuan."
+                                                    className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                                                >
+                                                    <TriangleAlert className="size-3.5" />
+                                                    Belum ditautkan
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="py-3">
                                             <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-ink/70">

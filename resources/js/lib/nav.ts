@@ -176,7 +176,7 @@ export const navSections: NavSection[] = [
                 label: 'Data Industri',
                 icon: Building2,
                 href: industriesIndex.url(),
-                roles: ['admin', 'kaprog'],
+                roles: ['admin', 'kaprog', 'guru'],
             },
             {
                 label: 'Industri Saya',
@@ -292,7 +292,7 @@ export const navSections: NavSection[] = [
                 label: 'Rapor Digital',
                 icon: FileText,
                 href: raporIndex.url(),
-                roles: ['admin', 'wakasek', 'kaprog', 'siswa'],
+                roles: ['admin', 'wakasek', 'kaprog', 'siswa', 'orangtua'],
             },
         ],
     },

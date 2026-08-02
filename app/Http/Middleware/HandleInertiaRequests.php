@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Approval;
+use App\Models\Industry;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -53,11 +54,55 @@ class HandleInertiaRequests extends Middleware
                         ->where('status', Approval::STATUS_PENDING)
                         ->count();
                 },
+                'accountNotice' => fn () => $this->accountNotice($request),
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
         ];
+    }
+
+    /**
+     * Peringatan bahwa akun guru/pembimbing belum tertaut ke industri manapun.
+     *
+     * Tanpa tautan ini `ScopesStudentsByRole` mengembalikan query kosong, jadi
+     * seluruh halaman (murid, nilai, absen, inbox persetujuan, sertifikat)
+     * tampil kosong dan terbaca seperti fiturnya belum jadi. Ditampilkan
+     * sebagai spanduk global agar penyebabnya jelas, bukan ditebak.
+     */
+    private function accountNotice(Request $request): ?string
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return null;
+        }
+
+        if ($user->hasRole('guru')) {
+            $teacherId = $user->teachers?->id;
+
+            if ($teacherId === null) {
+                return 'Akun Anda belum memiliki data Guru Pembimbing. Hubungi admin sekolah agar akun ini dilengkapi, karena tanpa itu daftar siswa bimbingan, nilai, dan inbox persetujuan akan tetap kosong.';
+            }
+
+            if (! Industry::query()->where('teacher_id', $teacherId)->exists()) {
+                return 'Anda belum ditugaskan sebagai guru pembimbing di industri manapun. Hubungi admin atau Kepala Program untuk menetapkan industri bimbingan Anda — sampai itu dilakukan, daftar siswa, nilai, absensi, dan inbox persetujuan akan kosong.';
+            }
+        }
+
+        if ($user->hasRole('pembimbing')) {
+            $pembimbingId = $user->pembimbing?->id;
+
+            if ($pembimbingId === null) {
+                return 'Akun Anda belum memiliki data Pembimbing Industri. Hubungi admin sekolah agar akun ini dilengkapi, karena tanpa itu profil industri dan daftar anak magang tidak dapat ditampilkan.';
+            }
+
+            if (! Industry::query()->where('pembimbing_id', $pembimbingId)->exists()) {
+                return 'Akun Anda belum ditautkan ke industri manapun. Hubungi admin atau Kepala Program untuk menetapkan industri Anda — sampai itu dilakukan, profil industri, titik absensi, jam kerja, daftar anak magang, penilaian, dan sertifikat tidak dapat dipakai.';
+            }
+        }
+
+        return null;
     }
 }

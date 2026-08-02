@@ -80,7 +80,7 @@ export function Hero() {
                     </div>
 
                     {/* Floating verification card overlapping the image */}
-                    <div className="absolute -bottom-5 -left-4 w-56 rounded-2xl bg-surface p-4 shadow-xl shadow-primary/10 sm:w-64 sm:-left-8">
+                    <div className="absolute -bottom-5 -left-4 w-56 rounded-2xl bg-surface p-4 shadow-xl shadow-primary/10 sm:-left-8 sm:w-64">
                         <div className="flex items-center gap-3">
                             <span className="grid size-10 shrink-0 place-items-center rounded-full bg-positive/15 text-positive">
                                 <BadgeCheck className="size-5" />

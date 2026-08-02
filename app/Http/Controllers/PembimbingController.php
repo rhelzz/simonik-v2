@@ -44,15 +44,16 @@ class PembimbingController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
-        $gender = (string) $request->query('gender', '');
-        $gender = in_array($gender, ['L', 'P'], true) ? $gender : '';
-
         // Nilai gender bisa bervariasi antar-sumber data (L/P vs male/female);
-        // padankan keduanya saat memfilter.
+        // padankan keduanya saat memfilter. Daftar ini sekaligus jadi whitelist:
+        // nilai di luar kunci berarti tidak ada filter gender.
         $genderAliases = [
             'L' => ['L', 'l', 'male', 'm'],
             'P' => ['P', 'p', 'female', 'f'],
         ];
+
+        $gender = (string) $request->query('gender', '');
+        $aliases = $genderAliases[$gender] ?? null;
 
         // Pembimbing industri terikat ke satu PT (industries.pembimbing_id);
         // siswa diturunkan lewat PT itu (hasManyThrough).
@@ -65,7 +66,7 @@ class PembimbingController extends Controller
                         ->orWhere('no_hp', 'like', "%{$search}%");
                 });
             })
-            ->when($gender !== '', fn ($query) => $query->whereIn('gender', $genderAliases[$gender]))
+            ->when($aliases !== null, fn ($query) => $query->whereIn('gender', $aliases))
             ->latest()
             ->paginate(10)
             ->withQueryString()
@@ -87,7 +88,7 @@ class PembimbingController extends Controller
             'pembimbings' => $pembimbings,
             'filters' => [
                 'search' => $search,
-                'gender' => $gender !== '' ? $gender : null,
+                'gender' => $aliases !== null ? $gender : null,
             ],
         ]);
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\ApproveRequest;
+use App\Http\Controllers\Concerns\ScopesStudentsByRole;
 use App\Models\Approval;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class ApprovalController extends Controller
 {
+    use ScopesStudentsByRole;
+
     public function __construct(private readonly ApproveRequest $action) {}
 
     /**
@@ -86,6 +89,7 @@ class ApprovalController extends Controller
         return Inertia::render('approvals/index', [
             'approvals' => $approvals,
             'statusFilter' => $status,
+            'scopeLabel' => $this->scopeLabel($user),
         ]);
     }
 

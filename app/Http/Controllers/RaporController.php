@@ -68,6 +68,7 @@ class RaporController extends Controller
 
         return Inertia::render('rapor/index', [
             'departemens' => $departemens,
+            'scopeLabel' => $this->scopeLabel($user),
         ]);
     }
 
@@ -85,8 +86,6 @@ class RaporController extends Controller
             ->selectRaw('class_id, count(*) as total')
             ->groupBy('class_id')
             ->pluck('total', 'class_id');
-
-        abort_if($counts->isEmpty(), 403);
 
         $classes = Classes::query()
             ->whereIn('id', $counts->keys())
@@ -117,8 +116,6 @@ class RaporController extends Controller
         $scoped = $this->scopedStudents($user)
             ->where('archived', false)
             ->where('class_id', $class->id);
-
-        abort_unless((clone $scoped)->exists(), 403);
 
         $students = $scoped
             ->with(['industries:id,name'])

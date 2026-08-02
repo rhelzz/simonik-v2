@@ -1,6 +1,12 @@
-import { Link } from '@inertiajs/react';
-import { ArrowLeft, Pencil } from 'lucide-react';
-import { edit, index } from '@/actions/App/Http/Controllers/IndustryController';
+import { Link, router } from '@inertiajs/react';
+import { ArrowLeft, MapPin, Pencil } from 'lucide-react';
+import { useState } from 'react';
+import {
+    edit,
+    index,
+    updateCoordinates,
+} from '@/actions/App/Http/Controllers/IndustryController';
+import { MapPicker } from '@/components/map-picker';
 import { MapViewer } from '@/components/map-viewer';
 import { AppLayout } from '@/layouts/app-layout';
 
@@ -27,7 +33,109 @@ type IndustryShowProps = {
         status_pkl: string;
         class: string | null;
     }>;
+    can: { manage: boolean; updateCoordinates: boolean };
 };
+
+/**
+ * Atur titik & radius absensi langsung dari halaman detail.
+ *
+ * Guru pembimbing tidak punya akses ke form edit industri (itu milik
+ * admin/kaprog), padahal ia berwenang menentukan titik absensi industri
+ * bimbingannya. Blok ini memberi satu-satunya bagian yang boleh ia ubah.
+ */
+function CoordinateEditor({
+    industry,
+}: {
+    industry: IndustryShowProps['industry'];
+}) {
+    const [lat, setLat] = useState(industry.latitude || '-6.914744');
+    const [lng, setLng] = useState(industry.longitude || '107.609810');
+    const [radius, setRadius] = useState(industry.radius || 100);
+    const [saving, setSaving] = useState(false);
+
+    function save() {
+        setSaving(true);
+        router.patch(
+            updateCoordinates.url(industry.id),
+            { latitude: lat, longitude: lng, radius },
+            {
+                preserveScroll: true,
+                onFinish: () => setSaving(false),
+            },
+        );
+    }
+
+    return (
+        <div className="mt-6 rounded-2xl border border-line p-4">
+            <h3 className="text-sm font-bold text-ink">
+                Atur titik & radius absensi
+            </h3>
+            <p className="mt-0.5 text-xs text-muted">
+                Geser penanda di peta, atau isi koordinat langsung. Siswa hanya
+                bisa absen di dalam radius ini.
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <label className="text-xs font-medium text-muted">
+                    Latitude
+                    <input
+                        value={lat}
+                        onChange={(event) => setLat(event.target.value)}
+                        className={coordinateInputClass}
+                    />
+                </label>
+                <label className="text-xs font-medium text-muted">
+                    Longitude
+                    <input
+                        value={lng}
+                        onChange={(event) => setLng(event.target.value)}
+                        className={coordinateInputClass}
+                    />
+                </label>
+                <label className="text-xs font-medium text-muted">
+                    Radius (meter)
+                    <input
+                        type="number"
+                        min={10}
+                        max={5000}
+                        value={radius}
+                        onChange={(event) =>
+                            setRadius(Number(event.target.value))
+                        }
+                        className={coordinateInputClass}
+                    />
+                </label>
+            </div>
+
+            <div className="mt-4">
+                <MapPicker
+                    latitude={lat}
+                    longitude={lng}
+                    radius={radius}
+                    onLocationChange={(newLat, newLng) => {
+                        setLat(newLat.toFixed(6));
+                        setLng(newLng.toFixed(6));
+                    }}
+                />
+            </div>
+
+            <div className="mt-4 flex justify-end">
+                <button
+                    type="button"
+                    onClick={save}
+                    disabled={saving}
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
+                >
+                    <MapPin className="size-4" />
+                    Simpan titik absensi
+                </button>
+            </div>
+        </div>
+    );
+}
+
+const coordinateInputClass =
+    'mt-1 w-full rounded-xl border border-line bg-canvas px-3 py-2 text-sm font-normal text-ink focus:border-primary focus:outline-none';
 
 const statusLabels: Record<string, string> = {
     belum: 'Belum mulai',
@@ -61,6 +169,7 @@ function DetailItem({
 export default function IndustryShow({
     industry,
     students,
+    can,
 }: IndustryShowProps) {
     return (
         <AppLayout title={`Detail Industri - ${industry.name}`}>
@@ -74,13 +183,15 @@ export default function IndustryShow({
                         <ArrowLeft className="size-4" />
                         Kembali
                     </Link>
-                    <Link
-                        href={edit.url(industry.id)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
-                    >
-                        <Pencil className="size-4" />
-                        Edit
-                    </Link>
+                    {can.manage && (
+                        <Link
+                            href={edit.url(industry.id)}
+                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                        >
+                            <Pencil className="size-4" />
+                            Edit
+                        </Link>
+                    )}
                 </div>
 
                 {/* Informasi Industri */}
@@ -116,14 +227,19 @@ export default function IndustryShow({
                             }
                         />
                     </div>
-                    {industry.latitude && industry.longitude && (
-                        <div className="mt-6">
-                            <MapViewer
-                                latitude={industry.latitude}
-                                longitude={industry.longitude}
-                                radius={industry.radius}
-                            />
-                        </div>
+                    {can.updateCoordinates ? (
+                        <CoordinateEditor industry={industry} />
+                    ) : (
+                        industry.latitude &&
+                        industry.longitude && (
+                            <div className="mt-6">
+                                <MapViewer
+                                    latitude={industry.latitude}
+                                    longitude={industry.longitude}
+                                    radius={industry.radius}
+                                />
+                            </div>
+                        )
                     )}
                 </section>
 

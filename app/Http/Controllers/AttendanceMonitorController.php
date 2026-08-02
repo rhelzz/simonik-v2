@@ -48,6 +48,7 @@ class AttendanceMonitorController extends Controller
 
         return Inertia::render('attendance-monitor/index', [
             'departemens' => $departemens,
+            'scopeLabel' => $this->scopeLabel($user),
         ]);
     }
 
@@ -65,8 +66,6 @@ class AttendanceMonitorController extends Controller
             ->selectRaw('class_id, count(*) as total')
             ->groupBy('class_id')
             ->pluck('total', 'class_id');
-
-        abort_if($counts->isEmpty(), 403);
 
         $classes = Classes::query()
             ->whereIn('id', $counts->keys())
@@ -95,8 +94,6 @@ class AttendanceMonitorController extends Controller
         $search = trim((string) $request->query('search', ''));
 
         $scoped = $this->scopedStudents($user)->where('class_id', $class->id);
-
-        abort_unless((clone $scoped)->exists(), 403);
 
         $students = $scoped
             ->withCount('attendances')
