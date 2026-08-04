@@ -27,23 +27,23 @@ class UpdateStudentRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($student->user_id)],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
 
-            // Profil siswa
-            'nis' => ['required', 'string', 'max:50'],
-            'placeOfBirth' => ['required', 'string', 'max:255'],
-            'dateOfBirth' => ['required', 'date'],
-            'gender' => ['required', Rule::in(['L', 'P'])],
-            'bloodType' => ['required', Rule::in(['A', 'B', 'AB', 'O'])],
-            'alamat' => ['required', 'string'],
+            // Profil siswa — opsional, siswa melengkapi sendiri setelah login.
+            'nis' => ['nullable', 'string', 'max:255'],
+            'placeOfBirth' => ['nullable', 'string', 'max:255'],
+            'dateOfBirth' => ['nullable', 'date'],
+            'gender' => ['nullable', Rule::in(['L', 'P'])],
+            'bloodType' => ['nullable', Rule::in(['A', 'B', 'AB', 'O'])],
+            'alamat' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
-            'status_pkl' => ['required', Rule::in(['belum', 'proses', 'selesai'])],
+            'status_pkl' => ['nullable', Rule::in(['belum', 'proses', 'selesai'])],
             'pkl_start' => ['nullable', 'date'],
             'pkl_end' => ['nullable', 'date', 'after_or_equal:pkl_start'],
 
             // Relasi
-            'class_id' => ['required', Rule::exists('classes', 'id')],
-            'industri_id' => ['required', Rule::exists('industries', 'id')],
-            'departemen_id' => ['required', Rule::exists('departemens', 'id')],
-            'parent_id' => ['required', Rule::exists('parents', 'id')],
+            'class_id' => ['nullable', Rule::exists('classes', 'id')],
+            'industri_id' => ['nullable', Rule::exists('industries', 'id')],
+            'departemen_id' => ['nullable', Rule::exists('departemens', 'id')],
+            'parent_id' => ['nullable', Rule::exists('parents', 'id')],
             'p_k_l_period_id' => ['nullable', Rule::exists('p_k_l_periods', 'id')],
         ];
     }

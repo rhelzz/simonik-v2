@@ -515,14 +515,27 @@ Verifikasi seluruh laporan ✖ pada formulir uji coba QA terhadap kode. Hasil tr
 
 ---
 
-## 📍 Current step
-**Tindak lanjut UAT selesai (segmen A–D).** Seluruh temuan penguji sudah diverifikasi terhadap kode dan diperbaiki, termasuk dua kebocoran data lintas jurusan yang luput dari penguji. CI kembali hijau (PHPStan sempat merah di `main`).
+### 45. Onboarding tanpa gesekan — impor siswa minimal, WFA tanpa verifikasi, ganti kata sandi 3 peran
 
-**Perlu tindakan operasional, bukan kode:** akun guru/pembimbing di server produksi harus ditautkan ke industri (Data Industri → set Guru Pembimbing & Pembimbing Industri). Tanpa itu 13 langkah ✖ pada formulir QA tetap kosong — bedanya kini sistem menerangkan sebabnya lewat spanduk `accountNotice`.
+Tiga temuan lapangan dari pemakaian nyata (bukan UAT terjadwal). Benang merahnya sama: sistem terlalu kaku untuk kondisi sekolah yang datanya belum lengkap.
+
+- **Impor siswa hanya butuh Nama + Email.** Wakasek gagal impor berjam-jam karena setiap baris ditolak: nama industri di berkasnya tidak persis sama dengan master data, dan 8 kolom lain wajib diisi (sampai golongan darah) sehingga harus disebar lewat Google Form dulu. Migration `make_student_profile_fields_nullable` melonggarkan `nis`, `placeOfBirth`, `dateOfBirth`, `gender`, `bloodType`, `alamat` + 4 FK relasi. `StudentsImport`: `requireRef()` (fatal) → `noteRef()` (peringatan, kolom dikosongkan, impor jalan terus); NIS tak lagi dibatasi `max:50` (jumlah digit NIS beda-beda per angkatan); golongan darah kosong / `-` → null. `Store/UpdateStudentRequest` + `student-form` ikut dilonggarkan (bintang merah tinggal Nama/Email/Kata sandi, golongan darah dapat opsi "— Tidak tahu"). Rencana lanjutan: siswa melengkapi sendiri saat login pertama.
+- **FK `students` CASCADE → SET NULL.** Konsekuensi teknis dari FK yang jadi nullable (MySQL menolak `change()` pada kolom ber-FK, jadi constraint dilepas-pasang). Sekaligus menghapus bom waktu: menghapus satu Kelas tak lagi ikut menghapus seluruh siswanya. Praktiknya tak berubah — keempat `destroy()` sudah menolak penghapusan selama masih ada siswa; komentar "cascade" yang jadi menyesatkan diperbarui.
+- **Absen WFA tanpa persetujuan.** `Approval::initiate()` dilepas dari `checkIn`. Kalau industri siswa belum punya guru/pembimbing, approval-nya tak akan pernah bisa diproses siapa pun → absen nyangkut `pending` selamanya dan tampak "gagal". Ambang tolak `gps_accuracy > 100` kini **hanya berlaku untuk WFO** (di sana akurasi menentukan validitas geofencing); di WFA akurasi tak menggate apa pun — indoor/WiFi-location wajar tembus 100 m — cukup ditandai `is_suspect` untuk audit. Berlaku untuk absen masuk & pulang.
+- **Ganti kata sandi pembimbing/guru/orang tua tidak tersimpan.** Form edit memajang "Kata sandi baru" dan mengirimnya, tapi `Update{Pembimbing,Teacher,Parent}Request` tak punya rule `password` sama sekali → dibuang diam-diam oleh `validated()`, dan `update()` hanya menyentuh `name` + `email`. Pesan sukses tetap muncul. Ditambal di 3 controller + 3 request (`['nullable', 'confirmed', Password::defaults()]`, pola `KaprogController`) + 3 form (field **Konfirmasi kata sandi** muncul begitu diketik, lengkap indikator cocok/tidak — tanpa itu rule `confirmed` justru selalu gagal). Kaprog, wakasek, dan siswa sudah benar sejak awal.
+- **Tests (+6):** `StudentTest` — relasi tak dikenal kini tersimpan dengan kolom kosong (dulu menguji penolakan), impor hanya nama+email; `AttendanceTest` — WFA tanpa approval, WFA akurasi 250 m diterima & ter-flag; `PembimbingTest` — ganti kata sandi berhasil + tak berubah bila dikosongkan; `TeacherTest`/`ParentTest` — ganti kata sandi berhasil.
+- ✅ **Pint + PHPStan 0 error + 355/355 passed + 1478 assertions.** `eslint` + `prettier` + `types:check` lolos. `php artisan migrate` sukses di DB berisi data (bukan `fresh`).
+
+---
+
+## 📍 Current step
+**Tiga pengganjal onboarding di lapangan sudah dibereskan.** Impor siswa tak lagi menuntut data lengkap, absen WFA sah tanpa menunggu siapa pun, dan ganti kata sandi 3 peran benar-benar tersimpan.
+
+**Catatan deploy (migrasi aman untuk data yang sudah ada, tidak perlu `fresh`):** `down()` sengaja kosong — mengembalikan NOT NULL akan gagal begitu ada satu siswa berkolom kosong, jadi mundur hanya lewat backup DB. Wajib `npm run build` (banyak perubahan di sisi React). Kata sandi pembimbing/guru/orang tua yang sempat diganti sebelum tambalan ini tidak pernah tersimpan — perlu di-set ulang.
 
 ---
 
 ## ⏭️ Next step — opsi terbaik
-1. **Tautkan akun penguji ke industri lalu jalankan UAT ulang** untuk 2 peran yang gagal (Guru Pembimbing 9/14, Pembimbing Industri 3/14) — memverifikasi bahwa sisa ✖ memang murni masalah data.
-2. **Audit scoping menyeluruh untuk kaprog** — D1/D2 memperbaiki Data Siswa & surface berbasis `scopedStudents`, tapi master data lain (`teachers`, `pembimbings`, `parents`, `classes`, `industries`) masih global untuk kaprog; perlu diputuskan mana yang memang harus lintas jurusan.
-3. **Manajemen Jadwal monitoring (anti-bentrok)** — fitur blueprint kaprog yang belum ada: menyusun jadwal monitoring guru tanpa bentrok jadwal mengajar (butuh subsistem penjadwalan).
+1. **Wajib lengkapi profil saat login pertama** — pasangan dari impor minimal: middleware + halaman "lengkapi data" untuk siswa yang kolomnya masih kosong. Tanpa ini data profil berpotensi kosong selamanya.
+2. **Bersihkan approval WFA yang menggantung** — bila di produksi masih ada `Approval` ber-`approvable_type = Attendance` berstatus `pending`, badge notifikasi menghitungnya selamanya karena aturan persetujuannya sudah dihapus (0 di lokal, belum dikerjakan).
+3. **Audit scoping menyeluruh untuk kaprog** — master data lain (`teachers`, `pembimbings`, `parents`, `classes`, `industries`) masih global untuk kaprog; perlu diputuskan mana yang memang harus lintas jurusan.

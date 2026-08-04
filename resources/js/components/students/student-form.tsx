@@ -26,20 +26,20 @@ export type StudentOptions = {
 export type StudentDefaults = {
     name?: string;
     email?: string;
-    nis?: string;
-    placeOfBirth?: string;
-    dateOfBirth?: string;
-    gender?: string;
-    bloodType?: string;
-    alamat?: string;
+    nis?: string | null;
+    placeOfBirth?: string | null;
+    dateOfBirth?: string | null;
+    gender?: string | null;
+    bloodType?: string | null;
+    alamat?: string | null;
     image?: string | null;
     status_pkl?: string;
     pkl_start?: string | null;
     pkl_end?: string | null;
-    class_id?: number;
-    industri_id?: number;
-    departemen_id?: number;
-    parent_id?: number;
+    class_id?: number | null;
+    industri_id?: number | null;
+    departemen_id?: number | null;
+    parent_id?: number | null;
     p_k_l_period_id?: number | null;
 };
 
@@ -167,10 +167,11 @@ export function StudentForm({
         { value: 'L', label: 'Laki-laki' },
         { value: 'P', label: 'Perempuan' },
     ];
-    const bloodOptions: SelectOption[] = ['A', 'B', 'AB', 'O'].map((t) => ({
-        value: t,
-        label: t,
-    }));
+    // Tidak semua siswa tahu golongan darahnya — sediakan opsi kosong.
+    const bloodOptions: SelectOption[] = [
+        { value: '', label: '— Tidak tahu' },
+        ...['A', 'B', 'AB', 'O'].map((t) => ({ value: t, label: t })),
+    ];
     const statusOptions: SelectOption[] = [
         { value: 'belum', label: 'Belum mulai' },
         { value: 'proses', label: 'Berjalan' },
@@ -422,56 +423,42 @@ export function StudentForm({
                         title="Data diri"
                         description="Identitas siswa sesuai dokumen resmi."
                     >
-                        <Field
-                            label="NIS"
-                            htmlFor="nis"
-                            error={errors.nis}
-                            required
-                        >
+                        <Field label="NIS" htmlFor="nis" error={errors.nis}>
                             <input
                                 id="nis"
                                 name="nis"
-                                defaultValue={student?.nis}
+                                defaultValue={student?.nis ?? ''}
                                 placeholder="Nomor Induk Siswa"
                                 className={inputClass}
-                                required
                             />
                         </Field>
                         <Field
                             label="Tempat lahir"
                             htmlFor="placeOfBirth"
                             error={errors.placeOfBirth}
-                            required
                         >
                             <input
                                 id="placeOfBirth"
                                 name="placeOfBirth"
-                                defaultValue={student?.placeOfBirth}
+                                defaultValue={student?.placeOfBirth ?? ''}
                                 placeholder="cth. Jakarta"
                                 className={inputClass}
-                                required
                             />
                         </Field>
                         <Field
                             label="Tanggal lahir"
                             htmlFor="dateOfBirth"
                             error={errors.dateOfBirth}
-                            required
                         >
                             <input
                                 id="dateOfBirth"
                                 name="dateOfBirth"
                                 type="date"
-                                defaultValue={student?.dateOfBirth}
+                                defaultValue={student?.dateOfBirth ?? ''}
                                 className={inputClass}
-                                required
                             />
                         </Field>
-                        <Field
-                            label="Jenis kelamin"
-                            error={errors.gender}
-                            required
-                        >
+                        <Field label="Jenis kelamin" error={errors.gender}>
                             <Select
                                 name="gender"
                                 ariaLabel="Jenis kelamin"
@@ -481,18 +468,14 @@ export function StudentForm({
                                 placeholder="Pilih jenis kelamin…"
                             />
                         </Field>
-                        <Field
-                            label="Golongan darah"
-                            error={errors.bloodType}
-                            required
-                        >
+                        <Field label="Golongan darah" error={errors.bloodType}>
                             <Select
                                 name="bloodType"
                                 ariaLabel="Golongan darah"
                                 value={bloodType}
                                 options={bloodOptions}
                                 onChange={setBloodType}
-                                placeholder="Pilih golongan…"
+                                placeholder="— Tidak tahu"
                             />
                         </Field>
                         <Field
@@ -514,16 +497,14 @@ export function StudentForm({
                             htmlFor="alamat"
                             error={errors.alamat}
                             full
-                            required
                         >
                             <textarea
                                 id="alamat"
                                 name="alamat"
                                 rows={2}
-                                defaultValue={student?.alamat}
+                                defaultValue={student?.alamat ?? ''}
                                 placeholder="Alamat tempat tinggal siswa"
                                 className={inputClass}
-                                required
                             />
                         </Field>
                     </Section>
@@ -533,11 +514,7 @@ export function StudentForm({
                         title="PKL & penempatan"
                         description="Status, periode, dan lokasi Praktik Kerja Lapangan."
                     >
-                        <Field
-                            label="Status PKL"
-                            error={errors.status_pkl}
-                            required
-                        >
+                        <Field label="Status PKL" error={errors.status_pkl}>
                             <Select
                                 name="status_pkl"
                                 ariaLabel="Status PKL"
@@ -585,11 +562,7 @@ export function StudentForm({
                                 className={inputClass}
                             />
                         </Field>
-                        <Field
-                            label="Jurusan"
-                            error={errors.departemen_id}
-                            required
-                        >
+                        <Field label="Jurusan" error={errors.departemen_id}>
                             <Select
                                 name="departemen_id"
                                 ariaLabel="Jurusan"
@@ -605,7 +578,6 @@ export function StudentForm({
                         <Field
                             label="Kelas"
                             error={errors.class_id}
-                            required
                             hint={
                                 departemenId
                                     ? undefined
@@ -626,11 +598,7 @@ export function StudentForm({
                                 }
                             />
                         </Field>
-                        <Field
-                            label="Industri"
-                            error={errors.industri_id}
-                            required
-                        >
+                        <Field label="Industri" error={errors.industri_id}>
                             <Select
                                 name="industri_id"
                                 ariaLabel="Industri"
@@ -643,7 +611,6 @@ export function StudentForm({
                         <Field
                             label="Orang tua / wali"
                             error={errors.parent_id}
-                            required
                         >
                             <Select
                                 name="parent_id"

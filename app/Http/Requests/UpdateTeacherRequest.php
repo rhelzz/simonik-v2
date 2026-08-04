@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Teacher;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UpdateTeacherRequest extends FormRequest
 {
@@ -25,6 +26,7 @@ class UpdateTeacherRequest extends FormRequest
             // Akun login guru
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($teacher->user_id)],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
 
             // Profil guru
             'no_hp' => ['required', 'string', 'max:50'],

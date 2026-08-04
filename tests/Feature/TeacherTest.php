@@ -9,6 +9,7 @@ use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class TeacherTest extends TestCase
@@ -73,6 +74,25 @@ class TeacherTest extends TestCase
 
         $user = User::where('email', 'hadi@simonik.test')->firstOrFail();
         $this->assertTrue($user->hasRole('guru'));
+    }
+
+    public function test_admin_can_change_teacher_password(): void
+    {
+        $teacher = Teacher::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->put("/teachers/{$teacher->id}", [
+                'name' => $teacher->name,
+                'email' => $teacher->users->email,
+                'no_hp' => '089999999999',
+                'departemen_id' => $teacher->departemen_id,
+                'password' => 'RahasiaBaru123',
+                'password_confirmation' => 'RahasiaBaru123',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertTrue(Hash::check('RahasiaBaru123', $teacher->users->refresh()->password));
     }
 
     public function test_admin_can_update_a_teacher(): void

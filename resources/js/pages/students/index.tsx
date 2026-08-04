@@ -468,7 +468,7 @@ export default function StudentsIndex({
                         Unggah berkas Excel sesuai template. Setiap akun siswa
                         dibuat dengan kata sandi default{' '}
                         <span className="font-semibold text-ink">password</span>
-                        .
+                        . Hanya kolom Nama & Email yang wajib diisi.
                     </p>
 
                     <a

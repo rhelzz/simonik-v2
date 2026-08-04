@@ -185,7 +185,7 @@ class StudentTest extends TestCase
         $this->assertTrue(Hash::check('password', $user->password));
     }
 
-    public function test_import_rejects_unknown_relation_and_saves_nothing(): void
+    public function test_import_keeps_unknown_relation_empty_instead_of_failing(): void
     {
         Classes::factory()->create(['name' => 'XI RPL 1']);
 
@@ -196,9 +196,40 @@ class StudentTest extends TestCase
 
         $this->actingAs($this->admin())
             ->post('/students/import', ['file' => $file])
-            ->assertSessionHasErrors();
+            ->assertSessionHas('success');
 
-        $this->assertDatabaseMissing('users', ['email' => 'siti@contoh.sch.id']);
+        $user = User::where('email', 'siti@contoh.sch.id')->firstOrFail();
+
+        $this->assertDatabaseHas('students', [
+            'user_id' => $user->id,
+            'class_id' => null,
+            'departemen_id' => null,
+            'industri_id' => null,
+            'parent_id' => null,
+        ]);
+    }
+
+    public function test_import_only_requires_name_and_email(): void
+    {
+        $csv = "Nama,NIS,Email,Jenis Kelamin,Tempat Lahir,Tanggal Lahir,Golongan Darah,Alamat,Kelas,Jurusan,Industri,Orang Tua,Status PKL,PKL Mulai,PKL Selesai,Periode\n"
+            .'Rian,,rian@contoh.sch.id,,,,,,,,,,,,,'."\n";
+
+        $file = UploadedFile::fake()->createWithContent('import.csv', $csv);
+
+        $this->actingAs($this->admin())
+            ->post('/students/import', ['file' => $file])
+            ->assertSessionHas('success');
+
+        $user = User::where('email', 'rian@contoh.sch.id')->firstOrFail();
+
+        $this->assertDatabaseHas('students', [
+            'user_id' => $user->id,
+            'name' => 'Rian',
+            'nis' => null,
+            'dateOfBirth' => null,
+            'bloodType' => null,
+            'status_pkl' => 'belum',
+        ]);
     }
 
     public function test_export_maps_gender_and_status_to_readable_labels(): void

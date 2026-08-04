@@ -32,6 +32,9 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
     /** @var array<string, string> pesan galat per-baris (kosong bila sukses) */
     public array $errors = [];
 
+    /** @var array<int, string> catatan non-fatal (mis. relasi tak dikenal → dikosongkan) */
+    public array $warnings = [];
+
     /** Jumlah siswa yang berhasil diimpor. */
     public int $created = 0;
 
@@ -61,7 +64,8 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
             $email = mb_strtolower($get('email'));
             $nis = $get('nis');
             $gender = $this->gender($get('jenis_kelamin'));
-            $bloodType = mb_strtoupper($get('golongan_darah'));
+            // "-" dipakai untuk siswa yang tidak tahu golongan darahnya.
+            $bloodType = $this->nullify(mb_strtoupper($get('golongan_darah')));
             $status = $this->status($get('status_pkl'));
             $dob = $this->date($row['tanggal_lahir'] ?? null);
 
@@ -72,13 +76,15 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
 
             $rowErrors = [];
 
-            // Relasi yang tidak dikenal — pesan spesifik agar mudah diperbaiki.
-            $this->requireRef($rowErrors, 'Kelas', $get('kelas'), $classId);
-            $this->requireRef($rowErrors, 'Jurusan', $get('jurusan'), $departemenId);
-            $this->requireRef($rowErrors, 'Industri', $get('industri'), $industriId);
-            $this->requireRef($rowErrors, 'Orang Tua', $get('orang_tua'), $parentId);
+            // Relasi tidak wajib: bila namanya tak dikenal, dikosongkan dan
+            // dicatat sebagai peringatan — impor tetap jalan, siswa melengkapi
+            // sendiri setelah login.
+            $this->noteRef($line, 'Kelas', $get('kelas'), $classId);
+            $this->noteRef($line, 'Jurusan', $get('jurusan'), $departemenId);
+            $this->noteRef($line, 'Industri', $get('industri'), $industriId);
+            $this->noteRef($line, 'Orang Tua', $get('orang_tua'), $parentId);
 
-            if ($gender === null) {
+            if ($get('jenis_kelamin') !== '' && $gender === null) {
                 $rowErrors[] = 'Jenis Kelamin harus "Laki-laki"/"L" atau "Perempuan"/"P".';
             }
 
@@ -111,13 +117,15 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
                     'pkl_selesai' => $this->date($row['pkl_selesai'] ?? null),
                 ],
                 [
+                    // Hanya nama & email yang wajib — sisanya dilengkapi siswa
+                    // sendiri setelah login.
                     'name' => ['required', 'string', 'max:255'],
                     'email' => ['required', 'email', 'max:255'],
-                    'nis' => ['required', 'string', 'max:50'],
-                    'tempat_lahir' => ['required', 'string', 'max:255'],
-                    'tanggal_lahir' => ['required', 'date'],
-                    'golongan_darah' => ['required', 'in:A,B,AB,O'],
-                    'alamat' => ['required', 'string'],
+                    'nis' => ['nullable', 'string', 'max:255'],
+                    'tempat_lahir' => ['nullable', 'string', 'max:255'],
+                    'tanggal_lahir' => ['nullable', 'date'],
+                    'golongan_darah' => ['nullable', 'in:A,B,AB,O'],
+                    'alamat' => ['nullable', 'string'],
                     'pkl_selesai' => ['nullable', 'date', 'after_or_equal:pkl_mulai'],
                 ],
                 [
@@ -150,12 +158,12 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
                 ],
                 'profile' => [
                     'name' => $get('nama'),
-                    'nis' => $nis,
-                    'placeOfBirth' => $get('tempat_lahir'),
+                    'nis' => $this->nullify($nis),
+                    'placeOfBirth' => $this->nullify($get('tempat_lahir')),
                     'dateOfBirth' => $dob,
                     'gender' => $gender,
                     'bloodType' => $bloodType,
-                    'alamat' => $get('alamat'),
+                    'alamat' => $this->nullify($get('alamat')),
                     'status_pkl' => $status,
                     'pkl_start' => $this->date($row['pkl_mulai'] ?? null),
                     'pkl_end' => $this->date($row['pkl_selesai'] ?? null),
@@ -208,21 +216,20 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
         return $map;
     }
 
-    /**
-     * Tambahkan galat bila relasi diisi tapi tak dikenal, atau kosong.
-     *
-     * @param  array<int, string>  $errors
-     */
-    private function requireRef(array &$errors, string $label, string $value, ?int $resolved): void
+    /** Teks kosong / "-" dianggap belum diisi. */
+    private function nullify(string $value): ?string
     {
-        if ($value === '') {
-            $errors[] = "{$label} wajib diisi.";
+        return ($value === '' || $value === '-') ? null : $value;
+    }
 
-            return;
-        }
-
-        if ($resolved === null) {
-            $errors[] = "{$label} \"{$value}\" tidak ditemukan.";
+    /**
+     * Catat peringatan bila relasi diisi tapi namanya tak dikenal. Tidak
+     * menggagalkan impor — kolomnya sekadar dibiarkan kosong.
+     */
+    private function noteRef(int $line, string $label, string $value, ?int $resolved): void
+    {
+        if ($value !== '' && $resolved === null) {
+            $this->warnings[] = "Baris {$line}: {$label} \"{$value}\" tidak ditemukan, dikosongkan.";
         }
     }
 

@@ -213,7 +213,8 @@ class IndustryController extends Controller
      */
     public function destroy(Industry $industry): RedirectResponse
     {
-        // FK students.industri_id cascade — tolak hapus bila masih ada siswa ditempatkan.
+        // FK students.industri_id nullOnDelete — tolak hapus agar penempatan
+        // siswa tidak diam-diam terlepas.
         if ($industry->students()->exists()) {
             return back()->with('error', 'Industri tidak bisa dihapus karena masih menjadi tempat PKL siswa.');
         }

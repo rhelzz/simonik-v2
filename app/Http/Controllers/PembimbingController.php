@@ -159,6 +159,7 @@ class PembimbingController extends Controller
             $pembimbing->user?->update([
                 'name' => $data['name'],
                 'email' => $data['email'],
+                ...empty($data['password']) ? [] : ['password' => Hash::make($data['password'])],
             ]);
 
             $pembimbing->update([

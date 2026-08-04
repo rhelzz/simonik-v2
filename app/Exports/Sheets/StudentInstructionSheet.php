@@ -36,17 +36,17 @@ class StudentInstructionSheet implements FromArray, WithColumnWidths, WithEvents
             ['', '', ''],
             ['Kolom', 'Wajib', 'Cara mengisi'],
             ['Nama', 'Wajib', 'Nama lengkap siswa.'],
-            ['NIS', 'Wajib', 'Nomor Induk Siswa. Harus unik, tidak boleh sama dengan siswa lain.'],
             ['Email', 'Wajib', 'Email unik untuk akun login siswa.'],
-            ['Jenis Kelamin', 'Wajib', 'Isi "Laki-laki" atau "Perempuan" (boleh juga L / P).'],
-            ['Tempat Lahir', 'Wajib', 'Kota/kabupaten kelahiran.'],
-            ['Tanggal Lahir', 'Wajib', 'Format YYYY-MM-DD, contoh 2008-05-14.'],
-            ['Golongan Darah', 'Wajib', 'Isi salah satu: A, B, AB, atau O.'],
-            ['Alamat', 'Wajib', 'Alamat tempat tinggal lengkap.'],
-            ['Kelas', 'Wajib', 'Ketik sama persis dengan salah satu nama di sheet "Referensi".'],
-            ['Jurusan', 'Wajib', 'Ketik sama persis dengan salah satu nama di sheet "Referensi".'],
-            ['Industri', 'Wajib', 'Ketik sama persis dengan salah satu nama di sheet "Referensi".'],
-            ['Orang Tua', 'Wajib', 'Ketik sama persis dengan salah satu nama di sheet "Referensi".'],
+            ['NIS', 'Opsional', 'Nomor Induk Siswa (panjang bebas). Tidak boleh sama dengan siswa lain.'],
+            ['Jenis Kelamin', 'Opsional', 'Isi "Laki-laki" atau "Perempuan" (boleh juga L / P).'],
+            ['Tempat Lahir', 'Opsional', 'Kota/kabupaten kelahiran.'],
+            ['Tanggal Lahir', 'Opsional', 'Format YYYY-MM-DD, contoh 2008-05-14.'],
+            ['Golongan Darah', 'Opsional', 'Isi A, B, AB, atau O. Kosongkan / isi "-" bila tidak tahu.'],
+            ['Alamat', 'Opsional', 'Alamat tempat tinggal lengkap.'],
+            ['Kelas', 'Opsional', 'Ketik sama persis dengan salah satu nama di sheet "Referensi".'],
+            ['Jurusan', 'Opsional', 'Ketik sama persis dengan salah satu nama di sheet "Referensi".'],
+            ['Industri', 'Opsional', 'Ketik sama persis dengan salah satu nama di sheet "Referensi".'],
+            ['Orang Tua', 'Opsional', 'Ketik sama persis dengan salah satu nama di sheet "Referensi".'],
             ['Status PKL', 'Opsional', 'Belum, Proses, atau Selesai. Dikosongkan = Belum.'],
             ['PKL Mulai', 'Opsional', 'Format YYYY-MM-DD. Boleh dikosongkan.'],
             ['PKL Selesai', 'Opsional', 'Format YYYY-MM-DD, tidak boleh lebih awal dari PKL Mulai.'],
@@ -57,6 +57,8 @@ class StudentInstructionSheet implements FromArray, WithColumnWidths, WithEvents
                 '',
                 'Setiap akun siswa dibuat dengan kata sandi default "'.StudentsImport::DEFAULT_PASSWORD.'". '
                     .'Isi data mulai baris ke-2 pada sheet "Data Siswa" (baris ke-1 adalah judul kolom, jangan diubah). '
+                    .'Hanya Nama & Email yang wajib — kolom lain boleh dikosongkan dan dilengkapi siswa setelah login. '
+                    .'Nama Kelas/Jurusan/Industri/Orang Tua yang tidak dikenal akan dikosongkan, bukan menggagalkan impor. '
                     .'Jika ada satu baris yang salah, seluruh impor dibatalkan dan tidak ada data yang tersimpan.',
             ],
         ];

@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class ParentTest extends TestCase
@@ -73,6 +74,26 @@ class ParentTest extends TestCase
 
         $user = User::where('email', 'andi@simonik.test')->firstOrFail();
         $this->assertTrue($user->hasRole('orangtua'));
+    }
+
+    public function test_admin_can_change_parent_password(): void
+    {
+        $parent = Parents::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->put("/parents/{$parent->id}", [
+                'nama' => $parent->nama,
+                'email' => $parent->users->email,
+                'gender' => 'P',
+                'alamat' => $parent->alamat,
+                'occupation' => 'Guru',
+                'phoneNumber' => '089999999999',
+                'password' => 'RahasiaBaru123',
+                'password_confirmation' => 'RahasiaBaru123',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertTrue(Hash::check('RahasiaBaru123', $parent->users->refresh()->password));
     }
 
     public function test_admin_can_update_a_parent(): void

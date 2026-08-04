@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Approval;
 use App\Models\Attendance;
 use App\Models\Industry;
 use App\Models\Student;
@@ -372,7 +371,7 @@ class AttendanceTest extends TestCase
         $this->assertTrue($attendance->is_suspect);
     }
 
-    public function test_student_check_in_wfa_mode_bypasses_geofencing_and_creates_approval(): void
+    public function test_student_check_in_wfa_mode_bypasses_geofencing_without_approval(): void
     {
         Storage::fake('public');
         $siswa = $this->siswa();
@@ -405,12 +404,34 @@ class AttendanceTest extends TestCase
 
         $attendance = Attendance::orderByDesc('id')->first();
 
-        // Memastikan record approval terbuat secara otomatis dan berstatus pending
-        $this->assertDatabaseHas('approvals', [
+        // WFA langsung sah — tidak ada approval yang dibuat.
+        $this->assertDatabaseMissing('approvals', [
             'approvable_type' => Attendance::class,
             'approvable_id' => $attendance->id,
-            'status' => Approval::STATUS_PENDING,
         ]);
+    }
+
+    public function test_student_check_in_wfa_accepts_poor_gps_accuracy_but_flags_it(): void
+    {
+        Storage::fake('public');
+        $siswa = $this->siswa();
+
+        Student::factory()->create(['user_id' => $siswa->id]);
+
+        // Akurasi 250m (indoor / WiFi-location) tidak boleh menolak WFA.
+        $this->actingAs($siswa)
+            ->post('/absen/masuk', [
+                'image' => UploadedFile::fake()->image('selfie.jpg'),
+                'latitude' => '-6.914744',
+                'longitude' => '107.609810',
+                'gps_accuracy' => 250.0,
+                'mode' => 'wfa',
+            ])
+            ->assertSessionHas('success');
+
+        $attendance = Attendance::orderByDesc('id')->first();
+        $this->assertSame('wfa', $attendance->mode);
+        $this->assertTrue($attendance->is_suspect);
     }
 
     public function test_student_check_out_wfa_mode_bypasses_geofencing(): void

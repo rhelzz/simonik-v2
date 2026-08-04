@@ -7,6 +7,7 @@ use App\Models\Pembimbing;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -125,6 +126,43 @@ class PembimbingTest extends TestCase
             'id' => $pembimbing->user_id,
             'email' => 'baru@simonik.test',
         ]);
+    }
+
+    public function test_admin_can_change_pembimbing_password(): void
+    {
+        $pembimbing = Pembimbing::factory()->create();
+
+        $this->actingAs($this->admin())
+            ->put("/pembimbings/{$pembimbing->id}", [
+                'name' => $pembimbing->name,
+                'email' => $pembimbing->user->email,
+                'no_hp' => '089999999999',
+                'gender' => 'L',
+                'password' => 'RahasiaBaru123',
+                'password_confirmation' => 'RahasiaBaru123',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertTrue(Hash::check('RahasiaBaru123', $pembimbing->user->refresh()->password));
+    }
+
+    public function test_pembimbing_password_unchanged_when_left_blank(): void
+    {
+        $pembimbing = Pembimbing::factory()->create();
+        $before = $pembimbing->user->password;
+
+        $this->actingAs($this->admin())
+            ->put("/pembimbings/{$pembimbing->id}", [
+                'name' => $pembimbing->name,
+                'email' => $pembimbing->user->email,
+                'no_hp' => '089999999999',
+                'gender' => 'L',
+                'password' => '',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame($before, $pembimbing->user->refresh()->password);
     }
 
     public function test_admin_can_delete_a_pembimbing_and_its_account(): void

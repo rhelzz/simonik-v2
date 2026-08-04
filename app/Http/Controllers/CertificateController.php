@@ -345,9 +345,9 @@ class CertificateController extends Controller
 
         return [
             'nama' => $student->name,
-            'nis' => $student->nis,
+            'nis' => $student->nis ?? '-',
             'nomor' => sprintf('PKL/%d/%04d', $end->year, $student->id),
-            'industri' => $student->industries->name,
+            'industri' => $student->industries->name ?? '-',
             'tanggal' => $end->translatedFormat('d F Y'),
         ];
     }

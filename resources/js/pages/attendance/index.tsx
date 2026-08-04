@@ -598,9 +598,8 @@ function CheckInPanel() {
                 <div className="space-y-1 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs text-primary">
                     <p className="font-bold">Mode Kerja dari Mana Saja (WFA)</p>
                     <p className="leading-relaxed text-muted">
-                        Geofencing dibebaskan. Absensi WFA Anda memerlukan
-                        persetujuan dari Pembimbing Industri atau Guru
-                        Pembimbing sebelum sah.
+                        Geofencing dibebaskan — absen langsung tercatat tanpa
+                        menunggu persetujuan. Isi keterangan lokasi bila perlu.
                     </p>
                 </div>
             )}

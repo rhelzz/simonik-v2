@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Pembimbing;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UpdatePembimbingRequest extends FormRequest
 {
@@ -25,6 +26,7 @@ class UpdatePembimbingRequest extends FormRequest
             // Akun login pembimbing
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($pembimbing->user_id)],
+            'password' => ['nullable', 'confirmed', Password::defaults()],
 
             // Profil pembimbing
             'no_hp' => ['required', 'string', 'max:50'],

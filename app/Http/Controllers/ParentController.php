@@ -161,6 +161,7 @@ class ParentController extends Controller
             $parent->users?->update([
                 'name' => $data['nama'],
                 'email' => $data['email'],
+                ...empty($data['password']) ? [] : ['password' => Hash::make($data['password'])],
             ]);
 
             $parent->update([
@@ -182,7 +183,8 @@ class ParentController extends Controller
      */
     public function destroy(Parents $parent): RedirectResponse
     {
-        // FK students.parent_id cascade — tolak hapus bila masih punya anak (siswa) terdaftar.
+        // FK students.parent_id nullOnDelete — tolak hapus agar tautan anak
+        // (siswa) tidak diam-diam terlepas.
         if ($parent->students()->exists()) {
             return back()->with('error', 'Orang tua tidak bisa dihapus karena masih terhubung dengan siswa.');
         }

@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AbsenceRequest;
 use App\Http\Requests\CheckInRequest;
 use App\Http\Requests\CheckOutRequest;
-use App\Models\Approval;
 use App\Models\Attendance;
 use App\Models\User;
 use App\Services\BadgeAwarder;
@@ -64,13 +63,17 @@ class AttendanceController extends Controller
         }
 
         $validated = $request->validated();
+        // WFA langsung sah tanpa persetujuan: kondisi di lapangan terlalu
+        // beragam, dan approval yang menggantung membuat absen tampak gagal.
         $mode = $validated['mode'] ?? 'wfo';
 
-        // Heuristic 1: Tolak gps_accuracy di atas 100 meter (ambang)
+        // Heuristic 1: akurasi GPS buruk hanya menggagalkan WFO — di sana
+        // akurasi menentukan validitas geofencing. Di WFA tidak menggate apa
+        // pun (indoor / WiFi-location wajar tembus 100m), cukup ditandai.
         $gpsAccuracy = (float) $validated['gps_accuracy'];
-        if ($gpsAccuracy > 100) {
+        if ($mode === 'wfo' && $gpsAccuracy > 100) {
             return back()->withErrors([
-                'latitude' => 'Akurasi GPS terlalu rendah ('.round($gpsAccuracy).'m). Pastikan GPS Anda aktif dan berada di ruang terbuka.',
+                'latitude' => 'Akurasi GPS terlalu rendah ('.round($gpsAccuracy).'m). Pastikan GPS Anda aktif dan berada di ruang terbuka, atau pilih mode WFA.',
             ])->with('error', 'Absen ditolak: Akurasi GPS tidak memadai.');
         }
 
@@ -146,10 +149,6 @@ class AttendanceController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        if ($mode === 'wfa') {
-            Approval::initiate($attendance);
-        }
-
         /** @var User $user */
         $user = $request->user();
         $this->badgeAwarder->checkAndAward($user);
@@ -191,9 +190,9 @@ class AttendanceController extends Controller
 
         $validated = $request->validated();
 
-        // Heuristic 1: Tolak gps_accuracy di atas 100 meter (ambang)
+        // Sama seperti absen masuk: ambang akurasi hanya berlaku untuk WFO.
         $gpsAccuracy = (float) $validated['gps_accuracy'];
-        if ($gpsAccuracy > 100) {
+        if ($today->mode === 'wfo' && $gpsAccuracy > 100) {
             return back()->withErrors([
                 'latitude' => 'Akurasi GPS terlalu rendah ('.round($gpsAccuracy).'m). Pastikan GPS Anda aktif dan berada di ruang terbuka.',
             ])->with('error', 'Absen pulang ditolak: Akurasi GPS tidak memadai.');

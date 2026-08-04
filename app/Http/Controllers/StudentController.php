@@ -154,7 +154,7 @@ class StudentController extends Controller
                 'email' => $student->users?->email,
                 'nis' => $student->nis,
                 'placeOfBirth' => $student->placeOfBirth,
-                'dateOfBirth' => $student->dateOfBirth->format('Y-m-d'),
+                'dateOfBirth' => $student->dateOfBirth?->format('Y-m-d'),
                 'gender' => $student->gender,
                 'bloodType' => $student->bloodType,
                 'alamat' => $student->alamat,
@@ -237,7 +237,7 @@ class StudentController extends Controller
                 'nis' => $student->nis,
                 'gender' => $student->gender,
                 'placeOfBirth' => $student->placeOfBirth,
-                'dateOfBirth' => $student->dateOfBirth->format('d F Y'),
+                'dateOfBirth' => $student->dateOfBirth?->format('d F Y'),
                 'bloodType' => $student->bloodType,
                 'alamat' => $student->alamat,
                 'status_pkl' => $student->status_pkl,
@@ -309,9 +309,15 @@ class StudentController extends Controller
             throw ValidationException::withMessages($import->errors);
         }
 
+        $message = "{$import->created} siswa berhasil diimpor. Kata sandi default tiap akun: password";
+
+        if ($import->warnings !== []) {
+            $message .= ' ('.count($import->warnings).' kolom relasi dikosongkan karena namanya tidak dikenal.)';
+        }
+
         return redirect()
             ->route('students.index')
-            ->with('success', "{$import->created} siswa berhasil diimpor. Kata sandi default tiap akun: password");
+            ->with('success', $message);
     }
 
     /**
@@ -324,19 +330,19 @@ class StudentController extends Controller
     {
         return [
             'name' => $data['name'],
-            'nis' => $data['nis'],
-            'placeOfBirth' => $data['placeOfBirth'],
-            'dateOfBirth' => $data['dateOfBirth'],
-            'gender' => $data['gender'],
-            'bloodType' => $data['bloodType'],
-            'alamat' => $data['alamat'],
-            'status_pkl' => $data['status_pkl'],
+            'nis' => $data['nis'] ?? null,
+            'placeOfBirth' => $data['placeOfBirth'] ?? null,
+            'dateOfBirth' => $data['dateOfBirth'] ?? null,
+            'gender' => $data['gender'] ?? null,
+            'bloodType' => $data['bloodType'] ?? null,
+            'alamat' => $data['alamat'] ?? null,
+            'status_pkl' => $data['status_pkl'] ?? 'belum',
             'pkl_start' => $data['pkl_start'] ?? null,
             'pkl_end' => $data['pkl_end'] ?? null,
-            'class_id' => $data['class_id'],
-            'industri_id' => $data['industri_id'],
-            'departemen_id' => $data['departemen_id'],
-            'parent_id' => $data['parent_id'],
+            'class_id' => $data['class_id'] ?? null,
+            'industri_id' => $data['industri_id'] ?? null,
+            'departemen_id' => $data['departemen_id'] ?? null,
+            'parent_id' => $data['parent_id'] ?? null,
             'p_k_l_period_id' => $data['p_k_l_period_id'] ?? null,
         ];
     }

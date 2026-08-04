@@ -17,17 +17,17 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $user_id
  * @property string $name
- * @property string $nis
- * @property string $placeOfBirth
- * @property Carbon $dateOfBirth
- * @property string $gender
- * @property string $bloodType
- * @property string $alamat
- * @property string $image
- * @property int $class_id
- * @property int $industri_id
- * @property int $departemen_id
- * @property int $parent_id
+ * @property string|null $nis
+ * @property string|null $placeOfBirth
+ * @property Carbon|null $dateOfBirth
+ * @property string|null $gender
+ * @property string|null $bloodType
+ * @property string|null $alamat
+ * @property string|null $image
+ * @property int|null $class_id
+ * @property int|null $industri_id
+ * @property int|null $departemen_id
+ * @property int|null $parent_id
  * @property bool $archived
  * @property string $status_pkl
  * @property string|null $sertifikat_url
@@ -36,6 +36,10 @@ use Illuminate\Support\Carbon;
  * @property int|null $p_k_l_period_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property Classes|null $classes
+ * @property Parents|null $parents
+ * @property Departemen|null $departements
+ * @property Industry|null $industries
  */
 #[Fillable([
     'user_id',

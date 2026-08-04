@@ -150,6 +150,7 @@ class TeacherController extends Controller
             $teacher->users?->update([
                 'name' => $data['name'],
                 'email' => $data['email'],
+                ...empty($data['password']) ? [] : ['password' => Hash::make($data['password'])],
             ]);
 
             $teacher->update([
