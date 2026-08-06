@@ -4,19 +4,27 @@ namespace App\Imports;
 
 use App\Imports\Concerns\ImportsRows;
 use App\Models\Pembimbing;
+use App\Support\ImportDefaults;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * Impor Pembimbing Industri. Kolom: Nama, Email, No HP, Jenis Kelamin (opsional).
  * Membuat akun ber-role `pembimbing` (kata sandi default "password") + profil.
  * Email terdaftar dilewati.
  */
-class PembimbingImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
+class PembimbingImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, WithHeadingRow, WithMultipleSheets
 {
     use ImportsRows;
+
+    public function sheetName(): string
+    {
+        return ImportDefaults::SHEETS['pembimbing'];
+    }
 
     /**
      * @param  Collection<int, Collection<string, mixed>>  $rows

@@ -3,6 +3,7 @@
 namespace App\Exports\Sheets;
 
 use App\Imports\StudentsImport;
+use App\Support\ImportDefaults;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -50,16 +51,23 @@ class StudentInstructionSheet implements FromArray, WithColumnWidths, WithEvents
             ['Status PKL', 'Opsional', 'Belum, Proses, atau Selesai. Dikosongkan = Belum.'],
             ['PKL Mulai', 'Opsional', 'Format YYYY-MM-DD. Boleh dikosongkan.'],
             ['PKL Selesai', 'Opsional', 'Format YYYY-MM-DD, tidak boleh lebih awal dari PKL Mulai.'],
-            ['Periode', 'Opsional', 'Nama periode PKL (jika ada).'],
+            ['', '', ''],
+            [
+                'CONTOH',
+                '',
+                'Budi Santoso | 0012345678 | budi@sekolah.sch.id | Laki-laki | Bandung | 2008-05-14 | O | '
+                    .'Jl. Merdeka No. 1 | XI RPL 1 | Rekayasa Perangkat Lunak | PT Contoh Industri | Santoso | Belum',
+            ],
             ['', '', ''],
             [
                 'CATATAN',
                 '',
                 'Setiap akun siswa dibuat dengan kata sandi default "'.StudentsImport::DEFAULT_PASSWORD.'". '
-                    .'Isi data mulai baris ke-2 pada sheet "Data Siswa" (baris ke-1 adalah judul kolom, jangan diubah). '
+                    .'Isi data mulai baris ke-2 pada sheet "'.ImportDefaults::SHEETS['siswa'].'" (baris ke-1 adalah judul kolom, jangan diubah). '
                     .'Hanya Nama & Email yang wajib — kolom lain boleh dikosongkan dan dilengkapi siswa setelah login. '
                     .'Nama Kelas/Jurusan/Industri/Orang Tua yang tidak dikenal akan dikosongkan, bukan menggagalkan impor. '
-                    .'Jika ada satu baris yang salah, seluruh impor dibatalkan dan tidak ada data yang tersimpan.',
+                    .'Baris yang salah dilaporkan satu per satu; baris lain tetap diimpor. '
+                    .'Email atau NIS yang sudah terdaftar dilewati, tidak ditimpa.',
             ],
         ];
     }

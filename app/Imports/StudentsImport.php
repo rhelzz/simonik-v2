@@ -2,41 +2,38 @@
 
 namespace App\Imports;
 
+use App\Imports\Concerns\ImportsRows;
 use App\Models\Classes;
 use App\Models\Departemen;
 use App\Models\Industry;
 use App\Models\Parents;
 use App\Models\Student;
-use App\Models\User;
-use Illuminate\Support\Carbon;
+use App\Support\ImportDefaults;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * Impor data siswa dari Excel. Relasi (kelas/jurusan/industri/orang tua) diisi
- * dengan NAMA lalu di-resolve ke id. Setiap siswa dibuatkan akun login ber-role
- * `siswa` dengan kata sandi default "password". Bersifat semua-atau-tidak: bila
- * ada baris tak valid, tidak ada satu pun yang disimpan (lihat `$errors`).
+ * dengan NAMA lalu di-resolve ke id; nama yang tak dikenal dikosongkan dan
+ * dicatat sebagai peringatan, bukan menggagalkan baris. Setiap siswa dibuatkan
+ * akun login ber-role `siswa` dengan kata sandi default "password".
+ *
+ * Seperti importer lain: baris tak valid dicatat sebagai gagal, email yang
+ * sudah terdaftar dilewati, dan sisanya tetap diimpor.
  */
-class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
+class StudentsImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, WithHeadingRow, WithMultipleSheets
 {
-    /** Kata sandi default untuk setiap akun siswa hasil impor. */
-    public const DEFAULT_PASSWORD = 'password';
+    use ImportsRows;
 
-    /** @var array<string, string> pesan galat per-baris (kosong bila sukses) */
-    public array $errors = [];
-
-    /** @var array<int, string> catatan non-fatal (mis. relasi tak dikenal → dikosongkan) */
-    public array $warnings = [];
-
-    /** Jumlah siswa yang berhasil diimpor. */
-    public int $created = 0;
+    public function sheetName(): string
+    {
+        return ImportDefaults::SHEETS['siswa'];
+    }
 
     /**
      * @param  Collection<int, Collection<string, mixed>>  $rows
@@ -49,18 +46,17 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
         $industries = $this->lookup(Industry::query()->pluck('id', 'name'));
         $parents = $this->lookup(Parents::query()->pluck('id', 'nama'));
 
-        $existingEmails = User::query()->pluck('email')->map(fn ($e) => mb_strtolower((string) $e))->all();
+        $existing = $this->existingEmails();
         $existingNis = Student::query()->pluck('nis')->map(fn ($n) => (string) $n)->all();
 
-        /** @var array<int, array{account: array<string, mixed>, profile: array<string, mixed>}> $payloads */
-        $payloads = [];
-        $seenEmails = [];
+        $seen = [];
         $seenNis = [];
 
         foreach ($rows as $index => $row) {
             $line = $index + 2; // baris 1 = judul kolom
             $get = fn (string $key): string => trim((string) ($row[$key] ?? ''));
 
+            $name = $get('nama');
             $email = mb_strtolower($get('email'));
             $nis = $get('nis');
             $gender = $this->gender($get('jenis_kelamin'));
@@ -74,7 +70,67 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
             $industriId = $industries[mb_strtolower($get('industri'))] ?? null;
             $parentId = $parents[mb_strtolower($get('orang_tua'))] ?? null;
 
-            $rowErrors = [];
+            if ($name === '' || $email === '') {
+                $this->fail($line, 'Nama dan Email wajib diisi.');
+
+                continue;
+            }
+
+            if (! $this->isEmail($email)) {
+                $this->fail($line, "Email \"{$email}\" tidak valid.");
+
+                continue;
+            }
+
+            if ($get('jenis_kelamin') !== '' && $gender === null) {
+                $this->fail($line, 'Jenis Kelamin harus "Laki-laki"/"L" atau "Perempuan"/"P".');
+
+                continue;
+            }
+
+            if ($status === null) {
+                $this->fail($line, 'Status PKL harus Belum, Proses, atau Selesai.');
+
+                continue;
+            }
+
+            if ($get('tanggal_lahir') !== '' && $dob === null) {
+                $this->fail($line, 'Tanggal Lahir tidak valid (gunakan format YYYY-MM-DD).');
+
+                continue;
+            }
+
+            $validator = Validator::make(
+                [
+                    'golongan_darah' => $bloodType,
+                    'pkl_mulai' => $this->date($row['pkl_mulai'] ?? null),
+                    'pkl_selesai' => $this->date($row['pkl_selesai'] ?? null),
+                ],
+                [
+                    // Hanya nama & email yang wajib — sisanya dilengkapi siswa
+                    // sendiri setelah login.
+                    'golongan_darah' => ['nullable', 'in:A,B,AB,O'],
+                    'pkl_selesai' => ['nullable', 'date', 'after_or_equal:pkl_mulai'],
+                ],
+            );
+
+            if ($validator->fails()) {
+                $this->fail($line, implode(' ', $validator->errors()->all()));
+
+                continue;
+            }
+
+            if (in_array($email, $existing, true) || in_array($email, $seen, true)) {
+                $this->skip($line, "Email {$email} sudah terdaftar.");
+
+                continue;
+            }
+
+            if ($nis !== '' && (in_array($nis, $existingNis, true) || in_array($nis, $seenNis, true))) {
+                $this->skip($line, "NIS {$nis} sudah terdaftar.");
+
+                continue;
+            }
 
             // Relasi tidak wajib: bila namanya tak dikenal, dikosongkan dan
             // dicatat sebagai peringatan — impor tetap jalan, siswa melengkapi
@@ -84,136 +140,34 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
             $this->noteRef($line, 'Industri', $get('industri'), $industriId);
             $this->noteRef($line, 'Orang Tua', $get('orang_tua'), $parentId);
 
-            if ($get('jenis_kelamin') !== '' && $gender === null) {
-                $rowErrors[] = 'Jenis Kelamin harus "Laki-laki"/"L" atau "Perempuan"/"P".';
+            $user = $this->makeUser($name, $email, 'siswa');
+
+            Student::create([
+                'user_id' => $user->id,
+                'name' => $name,
+                'nis' => $this->nullify($nis),
+                'placeOfBirth' => $this->nullify($get('tempat_lahir')),
+                'dateOfBirth' => $dob,
+                'gender' => $gender,
+                'bloodType' => $bloodType,
+                'alamat' => $this->nullify($get('alamat')),
+                'status_pkl' => $status,
+                'pkl_start' => $this->date($row['pkl_mulai'] ?? null),
+                'pkl_end' => $this->date($row['pkl_selesai'] ?? null),
+                'class_id' => $classId,
+                'industri_id' => $industriId,
+                'departemen_id' => $departemenId,
+                'parent_id' => $parentId,
+            ]);
+
+            $seen[] = $email;
+
+            if ($nis !== '') {
+                $seenNis[] = $nis;
             }
 
-            if ($status === null) {
-                $rowErrors[] = 'Status PKL harus Belum, Proses, atau Selesai.';
-            }
-
-            if ($get('tanggal_lahir') !== '' && $dob === null) {
-                $rowErrors[] = 'Tanggal Lahir tidak valid (gunakan format YYYY-MM-DD).';
-            }
-
-            if ($email !== '' && in_array($email, $seenEmails, true)) {
-                $rowErrors[] = "Email {$email} ganda di dalam berkas.";
-            }
-
-            if ($nis !== '' && in_array($nis, $seenNis, true)) {
-                $rowErrors[] = "NIS {$nis} ganda di dalam berkas.";
-            }
-
-            $validator = Validator::make(
-                [
-                    'name' => $get('nama'),
-                    'email' => $email,
-                    'nis' => $nis,
-                    'tempat_lahir' => $get('tempat_lahir'),
-                    'tanggal_lahir' => $dob,
-                    'golongan_darah' => $bloodType,
-                    'alamat' => $get('alamat'),
-                    'pkl_mulai' => $this->date($row['pkl_mulai'] ?? null),
-                    'pkl_selesai' => $this->date($row['pkl_selesai'] ?? null),
-                ],
-                [
-                    // Hanya nama & email yang wajib — sisanya dilengkapi siswa
-                    // sendiri setelah login.
-                    'name' => ['required', 'string', 'max:255'],
-                    'email' => ['required', 'email', 'max:255'],
-                    'nis' => ['nullable', 'string', 'max:255'],
-                    'tempat_lahir' => ['nullable', 'string', 'max:255'],
-                    'tanggal_lahir' => ['nullable', 'date'],
-                    'golongan_darah' => ['nullable', 'in:A,B,AB,O'],
-                    'alamat' => ['nullable', 'string'],
-                    'pkl_selesai' => ['nullable', 'date', 'after_or_equal:pkl_mulai'],
-                ],
-                [
-                    'required' => ':attribute wajib diisi.',
-                    'email' => 'Email tidak valid.',
-                ],
-            );
-
-            foreach ($validator->errors()->all() as $message) {
-                $rowErrors[] = $message;
-            }
-
-            if ($email !== '' && in_array($email, $existingEmails, true)) {
-                $rowErrors[] = "Email {$email} sudah terdaftar.";
-            }
-
-            if ($rowErrors !== []) {
-                $this->errors["row_{$line}"] = "Baris {$line}: ".implode(' ', $rowErrors);
-
-                continue;
-            }
-
-            $seenEmails[] = $email;
-            $seenNis[] = $nis;
-
-            $payloads[] = [
-                'account' => [
-                    'name' => $get('nama'),
-                    'email' => $email,
-                ],
-                'profile' => [
-                    'name' => $get('nama'),
-                    'nis' => $this->nullify($nis),
-                    'placeOfBirth' => $this->nullify($get('tempat_lahir')),
-                    'dateOfBirth' => $dob,
-                    'gender' => $gender,
-                    'bloodType' => $bloodType,
-                    'alamat' => $this->nullify($get('alamat')),
-                    'status_pkl' => $status,
-                    'pkl_start' => $this->date($row['pkl_mulai'] ?? null),
-                    'pkl_end' => $this->date($row['pkl_selesai'] ?? null),
-                    'class_id' => $classId,
-                    'industri_id' => $industriId,
-                    'departemen_id' => $departemenId,
-                    'parent_id' => $parentId,
-                ],
-            ];
+            $this->created++;
         }
-
-        // Semua-atau-tidak: jangan simpan apa pun bila ada baris bermasalah.
-        if ($this->errors !== [] || $payloads === []) {
-            return;
-        }
-
-        DB::transaction(function () use ($payloads): void {
-            foreach ($payloads as $payload) {
-                $user = User::create([
-                    ...$payload['account'],
-                    'password' => Hash::make(self::DEFAULT_PASSWORD),
-                    'email_verified_at' => now(),
-                ]);
-                $user->assignRole('siswa');
-
-                Student::create([
-                    ...$payload['profile'],
-                    'user_id' => $user->id,
-                ]);
-
-                $this->created++;
-            }
-        });
-    }
-
-    /**
-     * Peta nama (huruf kecil) -> id dari koleksi `pluck('id', 'name')`.
-     *
-     * @param  Collection<string, int>  $pairs
-     * @return array<string, int>
-     */
-    private function lookup(Collection $pairs): array
-    {
-        $map = [];
-
-        foreach ($pairs as $name => $id) {
-            $map[mb_strtolower(trim((string) $name))] = (int) $id;
-        }
-
-        return $map;
     }
 
     /** Teks kosong / "-" dianggap belum diisi. */
@@ -229,18 +183,8 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
     private function noteRef(int $line, string $label, string $value, ?int $resolved): void
     {
         if ($value !== '' && $resolved === null) {
-            $this->warnings[] = "Baris {$line}: {$label} \"{$value}\" tidak ditemukan, dikosongkan.";
+            $this->warn($line, "{$label} \"{$value}\" tidak ditemukan, dikosongkan.");
         }
-    }
-
-    /** Normalisasi jenis kelamin ke 'L'/'P'. */
-    private function gender(string $value): ?string
-    {
-        return match (mb_strtolower($value)) {
-            'l', 'laki-laki', 'laki', 'pria', 'male' => 'L',
-            'p', 'perempuan', 'wanita', 'female' => 'P',
-            default => null,
-        };
     }
 
     /** Normalisasi status PKL ke enum belum/proses/selesai. */
@@ -256,23 +200,5 @@ class StudentsImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
             'selesai' => 'selesai',
             default => null,
         };
-    }
-
-    /** Ubah nilai tanggal (serial Excel atau teks) menjadi 'Y-m-d'. */
-    private function date(mixed $value): ?string
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        if (is_numeric($value)) {
-            return ExcelDate::excelToDateTimeObject((float) $value)->format('Y-m-d');
-        }
-
-        try {
-            return Carbon::parse((string) $value)->format('Y-m-d');
-        } catch (\Throwable) {
-            return null;
-        }
     }
 }

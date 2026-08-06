@@ -15,7 +15,7 @@ use Maatwebsite\Excel\Facades\Excel;
 trait HandlesImportExport
 {
     /**
-     * @param  ToCollection&object{created:int, skipped:array<int,string>, failed:array<int,string>}  $import
+     * @param  ToCollection&object{created:int, skipped:array<int,string>, failed:array<int,string>, warnings:array<int,string>, wantedSheet:string}  $import
      */
     protected function runImport(Request $request, ToCollection $import, string $route): RedirectResponse
     {
@@ -25,6 +25,18 @@ trait HandlesImportExport
 
         Excel::import($import, $request->file('file'));
 
+        // Importer hanya membaca sheet datanya (lihat `ImportsRows::sheets()`),
+        // jadi berkas dengan sheet bernama lain menghasilkan 0 baris tanpa
+        // sebab yang terlihat. Nol hasil dalam bentuk apa pun — tak ada yang
+        // dibuat, dilewati, maupun gagal — berarti tidak ada yang terbaca.
+        if ($import->created === 0 && $import->skipped === [] && $import->failed === []) {
+            return redirect()->route($route)->with(
+                'error',
+                'Tidak ada baris data yang terbaca. Pastikan data diisi pada sheet "'
+                    .$import->wantedSheet.'" mulai baris ke-2 — unduh template terbaru bila ragu.',
+            );
+        }
+
         $summary = "{$import->created} data ditambahkan";
 
         if ($import->skipped !== []) {
@@ -33,6 +45,10 @@ trait HandlesImportExport
 
         if ($import->failed !== []) {
             $summary .= ' · '.count($import->failed).' gagal';
+        }
+
+        if ($import->warnings !== []) {
+            $summary .= ' · '.count($import->warnings).' kolom relasi dikosongkan (nama tidak dikenal)';
         }
 
         $redirect = redirect()->route($route);

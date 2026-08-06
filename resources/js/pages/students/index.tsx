@@ -465,10 +465,16 @@ export default function StudentsIndex({
             >
                 <form onSubmit={submitImport} className="space-y-4">
                     <p className="text-sm text-muted">
-                        Unggah berkas Excel sesuai template. Setiap akun siswa
+                        Isi sheet{' '}
+                        <span className="font-semibold text-ink">
+                            Data Siswa
+                        </span>{' '}
+                        pada template, lalu unggah berkasnya. Setiap akun siswa
                         dibuat dengan kata sandi default{' '}
                         <span className="font-semibold text-ink">password</span>
-                        . Hanya kolom Nama & Email yang wajib diisi.
+                        . Hanya kolom Nama & Email yang wajib diisi. Baris yang
+                        salah dilaporkan satu per satu; baris lain tetap
+                        diimpor.
                     </p>
 
                     <a
@@ -483,7 +489,7 @@ export default function StudentsIndex({
                                 Unduh template contoh
                             </span>
                             <span className="block text-xs text-muted">
-                                Berisi contoh pengisian & daftar nilai relasi
+                                Berisi petunjuk pengisian & daftar nilai relasi
                                 yang valid.
                             </span>
                         </span>

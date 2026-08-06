@@ -5,19 +5,27 @@ namespace App\Imports;
 use App\Imports\Concerns\ImportsRows;
 use App\Models\Classes;
 use App\Models\Departemen;
+use App\Support\ImportDefaults;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * Impor Kelas. Kolom: Nama, Jurusan (di-resolve ke id berdasarkan nama). Kelas
  * dengan nama sama pada jurusan yang sama dilewati.
  */
-class ClassImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
+class ClassImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, WithHeadingRow, WithMultipleSheets
 {
     use ImportsRows;
+
+    public function sheetName(): string
+    {
+        return ImportDefaults::SHEETS['kelas'];
+    }
 
     /**
      * @param  Collection<int, Collection<string, mixed>>  $rows

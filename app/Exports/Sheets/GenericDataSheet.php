@@ -11,8 +11,12 @@ use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
 /**
- * Sheet data generik untuk template impor: baris judul kolom + satu baris
- * contoh pengisian, ber-styling seragam.
+ * Sheet data generik untuk template impor: hanya baris judul kolom,
+ * ber-styling seragam.
+ *
+ * Sengaja tanpa baris contoh — importer membaca sheet ini apa adanya, jadi
+ * contoh yang lupa dihapus operator akan ikut tersimpan sebagai data sungguhan.
+ * Contoh pengisian ada di sheet "Petunjuk".
  */
 class GenericDataSheet implements FromArray, ShouldAutoSize, WithEvents, WithHeadings, WithStyles, WithTitle
 {
@@ -20,12 +24,10 @@ class GenericDataSheet implements FromArray, ShouldAutoSize, WithEvents, WithHea
 
     /**
      * @param  array<int, string>  $headings
-     * @param  array<int, string>  $example
      */
     public function __construct(
         private readonly string $sheetTitle,
         private readonly array $headings,
-        private readonly array $example,
     ) {}
 
     public function title(): string
@@ -46,6 +48,6 @@ class GenericDataSheet implements FromArray, ShouldAutoSize, WithEvents, WithHea
      */
     public function array(): array
     {
-        return [$this->example];
+        return [];
     }
 }

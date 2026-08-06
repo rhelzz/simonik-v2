@@ -275,19 +275,34 @@ Enam temuan lapangan baru dipecah jadi 6 fase yang bisa dikirim terpisah, lengka
 - **Fase 1–5** menjawab enam temuan UAT; **Fase 6** (halaman impor dengan pratinjau + tempel/isi-ke-bawah ala Excel) opsional, ditinjau ulang setelah Fase 1 terbukti jalan. Grid spreadsheet penuh ditolak dengan alasan tertulis (lisensi + permukaan bug di jalur yang menulis data master).
 - Tiap fase memuat opsi + pro/kontra **termasuk yang ditolak beserta alasannya**, langkah implementasi, berkas yang disentuh, test, ekspektasi output, dan risiko + mitigasi. Urutan eksekusi 1 → 2 → 4 → 5 → 3 → (6) beserta gerbang verifikasi per fase ada di `docs/v2/README.md`.
 
-## 📍 Current step
-**Roadmap v2 selesai diriset dan ditulis; belum ada kode yang diubah.** Enam masalah UAT sudah punya akar masalah terverifikasi (bukan dugaan) dan rencana per fase di [`docs/v2/`](v2/README.md).
+---
 
-Langkah berikutnya yang sedang dikerjakan: **Fase 1 — perbaikan impor Excel**.
+### 47. Fase 1 v2 — impor Excel akhirnya benar-benar bisa dipakai
+
+Template impor adalah workbook 3 sheet (`Petunjuk` / data / `Referensi`), sedangkan importer dibangun untuk 1 sheet. `Reader::loadSpreadsheet()` menyuapkan **setiap** sheet ke `collection()` yang sama saat importer bukan `WithMultipleSheets`, jadi sheet `Petunjuk` terbaca sebagai data — baris pertamanya (judul besar) jadi nama kolom, semua key hilang, seluruh barisnya invalid. Karena `StudentsImport` *all-or-nothing*, **impor siswa dengan template resmi tidak pernah bisa berhasil sejak awal**.
+
+- **`ImportsRows::sheets()`** memilih sheet data secara eksplisit; nama sheet dipusatkan di `ImportDefaults::SHEETS` dan dipakai dua arah (oleh `ImportTemplates` saat membuat, oleh importer saat membaca) supaya tak bisa menyimpang. 9 importer cukup mendeklarasikan `sheetName()`.
+- **Regresi yang tertangkap saat mengerjakan:** begitu importer jadi `WithMultipleSheets`, 10 test impor CSV langsung merah — CSV dimuat PhpSpreadsheet sebagai sheet bernama `Worksheet`, bukan `Data Siswa`. `sheets()` kini mendaftar dua nama (konstanta `CSV_SHEET`). Asumsi di dokumen fase bahwa "CSV sudah ditangani library" ternyata keliru dan sudah dikoreksi di sana.
+- **Deteksi "tidak ada yang terbaca"** tidak jadi memakai penanda `SkipsUnknownSheets`: karena `sheets()` mendaftar dua nama, salah satunya *selalu* absen. Diganti kondisi yang sebenarnya dipedulikan — nol dibuat, nol dilewati, nol gagal → jelaskan sheet mana yang dicari.
+- **`StudentsImport` disamakan dengan importer lain:** memakai trait `ImportsRows`, berperilaku skip-duplikat (bukan all-or-nothing), `StudentController::import()` memakai `runImport()`. Duplikasi `lookup()`/`gender()`/`date()`/`DEFAULT_PASSWORD` hilang; NIS ganda yang dulu lolos diam-diam kini dilewati dan dilaporkan. `$warnings` pindah ke trait dan ikut diringkas di flash, jadi relasi yang gagal dikenali tak lagi hilang tanpa jejak.
+- **Baris contoh dibuang dari sheet data** (dulu "Budi Santoso" ikut tersimpan bila operator lupa menghapusnya) — beserta parameter `example` di `GenericTemplateExport` dan helper `ImportTemplates::sample()` yang jadi tak terpakai. Contoh pindah ke sheet `Petunjuk`. Kolom `Periode` dihapus dari template siswa: importer tidak pernah membacanya.
+- **Tests (+6, `ImportTemplateRoundTripTest`):** menempuh jalur operator sungguhan — unduh template, isi sheet data, unggah lewat route. Dijalankan terhadap kode sebelum perbaikan: **0/6 lulus**; sesudahnya 6/6. Test impor lama semuanya memakai CSV, dan itulah sebabnya suite selalu hijau meski impor `.xlsx` rusak — CSV satu-satunya jalur yang tak melewati bug ini.
+- ✅ **Pint + PHPStan 0 error + 361/361 passed + 1502 assertions.** `composer ci:check` hijau (eslint + prettier + `tsc`).
+
+**Belum:** verifikasi manual di browser dengan data sekolah sungguhan.
+
+## 📍 Current step
+**Fase 1 v2 selesai — impor Excel bisa dipakai lagi.** Unduh template → isi → unggah kini benar-benar memasukkan data, dan berkas hasil Export juga bisa dipakai sebagai input impor karena nama sheetnya konsisten.
+
+**Sisa satu langkah verifikasi:** buka di browser dengan data sekolah nyata (unduh template siswa, isi 2 baris, unggah) sebelum fase ini ditutup di lapangan.
 
 ---
 
 ## ⏭️ Next step — urutan yang sudah diputuskan
-Urutan wajib **1 → 2 → 4 → 5 → 3 → (6)**, satu fase satu commit (Fase 2 & 4 menyentuh berkas yang sama; digabung akan menyulitkan pelacakan regresi).
+Urutan **1 → 2 → 4 → 5 → 3 → (6)** (lihat [`docs/v2/README.md`](v2/README.md)), satu fase satu commit.
 
-1. **[Fase 1 — Impor Excel](v2/01-FASE-1-IMPOR-EXCEL.md)** ← sedang dikerjakan. Memblokir seluruh onboarding data.
-2. **[Fase 2 — Akun multi-peran](v2/02-FASE-2-AKUN-MULTI-PERAN.md)**. Fase 1 + 2 adalah rilis pertama yang layak dikirim ke sekolah (~9 jam); keduanya bug, sisanya peningkatan.
-3. **[Fase 4 — Domain email](v2/04-FASE-4-EMAIL-DOMAIN.md)**, lalu **[Fase 5 — Industri di Pembimbing](v2/05-FASE-5-INDUSTRI-DI-PEMBIMBING.md)**, lalu **[Fase 3 — Tabel siswa](v2/03-FASE-3-TABEL-SISWA.md)** (nol ketergantungan, boleh paralel).
-4. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** ditinjau ulang setelah Fase 1 jalan, bukan otomatis dikerjakan.
+1. **[Fase 2 — Akun multi-peran](v2/02-FASE-2-AKUN-MULTI-PERAN.md)** ← berikutnya. Nol migrasi: Spatie sudah mendukung multi-peran; yang salah alur create/destroy di 4 controller + urutan pengecekan peran di `DashboardController`. Fase 1 + 2 adalah rilis pertama yang layak dikirim ke sekolah.
+2. **[Fase 4 — Domain email](v2/04-FASE-4-EMAIL-DOMAIN.md)**, lalu **[Fase 5 — Industri di Pembimbing](v2/05-FASE-5-INDUSTRI-DI-PEMBIMBING.md)**, lalu **[Fase 3 — Tabel siswa](v2/03-FASE-3-TABEL-SISWA.md)** (nol ketergantungan, boleh paralel).
+3. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** ditinjau ulang sekarang Fase 1 jalan — kalau operator sudah tidak mengeluh, tunda.
 
 Tiga opsi lama masih berlaku dan belum dikerjakan: wajib lengkapi profil saat login pertama, bersihkan approval WFA menggantung, audit scoping kaprog untuk master data lain.

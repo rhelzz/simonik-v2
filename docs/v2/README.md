@@ -25,7 +25,7 @@ Aturan main:
 
 | Fase | Masalah UAT | Sifat | Risiko | Estimasi |
 |------|-------------|-------|--------|----------|
-| [Fase 1](01-FASE-1-IMPOR-EXCEL.md) | #1 Impor Excel selalu gagal, bahkan dengan template resmi | **Bug kritis** | Rendah | ~3 jam |
+| [Fase 1](01-FASE-1-IMPOR-EXCEL.md) | #1 Impor Excel selalu gagal, bahkan dengan template resmi | **Bug kritis** | Rendah | ✅ **selesai** |
 | [Fase 2](02-FASE-2-AKUN-MULTI-PERAN.md) | #2 Akun bentrok: kaprog + guru pembimbing tidak bisa login | **Bug arsitektural** | Sedang | ~6 jam |
 | [Fase 3](03-FASE-3-TABEL-SISWA.md) | #3 Select & select-all untuk hapus massal · #4 Jarak kolom tabel siswa | Fitur + UI | Rendah | ~4 jam |
 | [Fase 4](04-FASE-4-EMAIL-DOMAIN.md) | #5 Seragamkan email ke `@simonik.local` | Konvensi + UX | Rendah | ~3 jam |
@@ -41,12 +41,12 @@ tidak ketahuan yang mana penyebabnya.
 
 | Urutan | Fase | Kenapa di posisi ini | Gerbang sebelum lanjut |
 |:--:|---|---|---|
-| **1** | Fase 1 — Impor Excel | Memblokir seluruh onboarding data. Selama ini rusak, tidak ada gunanya memoles apa pun di sekitarnya | Unduh template siswa → isi 2 baris → unggah → data masuk. Diverifikasi **manual di browser**, bukan hanya test |
-| **2** | Fase 2 — Multi-peran | Bug kedua yang menghambat pemakaian nyata. Mengubah alur pembuatan akun yang jadi fondasi Fase 4 & 5 | Guru yang dijadikan kaprog bisa login dan melihat kedua menu; mencabut peran kaprog tidak menghapus akunnya |
-| **3** | Fase 4 — Domain email | Menempel pada alur pembuatan akun yang **baru saja** dirapikan Fase 2. Dikerjakan sebelum Fase 2 = menulis dua kali | Akun baru dari form & impor otomatis `@simonik.local`; akun lama tidak tersentuh |
-| **4** | Fase 5 — Industri di Pembimbing | Form pembimbing sudah disentuh Fase 2 & 4. Datang terakhir supaya form itu hanya ditulis ulang sekali | Tambah pembimbing + pilih industri dalam satu form; banner "belum ditautkan" hilang |
-| **5** | Fase 3 — Tabel siswa | Murni frontend + satu endpoint, **nol ketergantungan** ke fase lain. Ditaruh akhir bukan karena tidak penting, tapi karena bisa ditunda tanpa memblokir apa pun | Hapus massal menghormati scoping kaprog; kolom tabel tidak berdempetan di 1366px |
-| **6** | Fase 6 — Halaman impor | **Opsional.** Tinjau ulang setelah Fase 1 jalan — kalau operator sudah tidak mengeluh, tunda | — |
+| ~~1~~ ✅ | Fase 1 — Impor Excel | Memblokir seluruh onboarding data. Selama ini rusak, tidak ada gunanya memoles apa pun di sekitarnya | Unduh template siswa → isi 2 baris → unggah → data masuk. Diverifikasi **manual di browser**, bukan hanya test |
+| **1** | Fase 2 — Multi-peran ← berikutnya | Bug kedua yang menghambat pemakaian nyata. Mengubah alur pembuatan akun yang jadi fondasi Fase 4 & 5 | Guru yang dijadikan kaprog bisa login dan melihat kedua menu; mencabut peran kaprog tidak menghapus akunnya |
+| **2** | Fase 4 — Domain email | Menempel pada alur pembuatan akun yang **baru saja** dirapikan Fase 2. Dikerjakan sebelum Fase 2 = menulis dua kali | Akun baru dari form & impor otomatis `@simonik.local`; akun lama tidak tersentuh |
+| **3** | Fase 5 — Industri di Pembimbing | Form pembimbing sudah disentuh Fase 2 & 4. Datang terakhir supaya form itu hanya ditulis ulang sekali | Tambah pembimbing + pilih industri dalam satu form; banner "belum ditautkan" hilang |
+| **4** | Fase 3 — Tabel siswa | Murni frontend + satu endpoint, **nol ketergantungan** ke fase lain. Ditaruh akhir bukan karena tidak penting, tapi karena bisa ditunda tanpa memblokir apa pun | Hapus massal menghormati scoping kaprog; kolom tabel tidak berdempetan di 1366px |
+| **5** | Fase 6 — Halaman impor | **Opsional.** Tinjau ulang setelah Fase 1 jalan — kalau operator sudah tidak mengeluh, tunda | — |
 
 ### Catatan penjadwalan
 

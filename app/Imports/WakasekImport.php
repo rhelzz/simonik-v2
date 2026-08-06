@@ -3,18 +3,26 @@
 namespace App\Imports;
 
 use App\Imports\Concerns\ImportsRows;
+use App\Support\ImportDefaults;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * Impor Wakasek. Kolom: Nama, Email. Membuat akun ber-role `wakasek` dengan
  * kata sandi default "password". Email yang sudah terdaftar dilewati.
  */
-class WakasekImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
+class WakasekImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, WithHeadingRow, WithMultipleSheets
 {
     use ImportsRows;
+
+    public function sheetName(): string
+    {
+        return ImportDefaults::SHEETS['wakasek'];
+    }
 
     /**
      * @param  Collection<int, Collection<string, mixed>>  $rows

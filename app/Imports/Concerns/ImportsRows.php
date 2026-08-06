@@ -20,6 +20,9 @@ trait ImportsRows
     /** Kata sandi default setiap akun hasil impor. */
     public const DEFAULT_PASSWORD = ImportDefaults::PASSWORD;
 
+    /** Nama sheet tunggal yang dipakai PhpSpreadsheet saat memuat CSV. */
+    private const CSV_SHEET = 'Worksheet';
+
     public int $created = 0;
 
     /** @var array<int, string> */
@@ -27,6 +30,53 @@ trait ImportsRows
 
     /** @var array<int, string> */
     public array $failed = [];
+
+    /**
+     * Catatan non-fatal: barisnya tetap diimpor, tapi ada nilai yang tidak
+     * bisa dipakai (mis. nama relasi tak dikenal → kolomnya dikosongkan).
+     *
+     * @var array<int, string>
+     */
+    public array $warnings = [];
+
+    /** Nama sheet yang dicari, direkam agar pesan galat bisa menyebutkannya. */
+    public string $wantedSheet = '';
+
+    /**
+     * Baca hanya sheet data; sheet "Petunjuk" dan "Referensi" pada template
+     * diabaikan. Tanpa ini Laravel Excel menyuapkan *setiap* sheet ke
+     * `collection()` yang sama, sehingga baris petunjuk ikut divalidasi
+     * sebagai data dan seluruh impor tampak gagal.
+     *
+     * @return array<string, $this>
+     */
+    public function sheets(): array
+    {
+        $this->wantedSheet = $this->sheetName();
+
+        return [
+            $this->wantedSheet => $this,
+            // Berkas CSV tidak punya sheet bernama: PhpSpreadsheet memuatnya
+            // sebagai satu sheet berjudul "Worksheet". Tanpa baris ini seluruh
+            // impor CSV berhenti terbaca.
+            self::CSV_SHEET => $this,
+        ];
+    }
+
+    /**
+     * Sheet yang didaftarkan `sheets()` tidak ada di berkas — dilewati, bukan
+     * dianggap galat. `sheets()` sengaja mendaftar dua kemungkinan (sheet data
+     * dan sheet CSV), jadi salah satunya memang selalu absen.
+     */
+    public function onUnknownSheet($sheetName): void
+    {
+        // Sengaja tidak melakukan apa-apa: "tidak ada yang terbaca" dideteksi
+        // dari hasil impor yang kosong (lihat `HandlesImportExport::runImport`),
+        // bukan dari sheet mana yang kebetulan absen.
+    }
+
+    /** Nama sheet data yang dibaca importer ini (lihat `ImportDefaults::SHEETS`). */
+    abstract public function sheetName(): string;
 
     protected function skip(int $line, string $message): void
     {
@@ -36,6 +86,11 @@ trait ImportsRows
     protected function fail(int $line, string $message): void
     {
         $this->failed[] = "Baris {$line}: {$message}";
+    }
+
+    protected function warn(int $line, string $message): void
+    {
+        $this->warnings[] = "Baris {$line}: {$message}";
     }
 
     /**

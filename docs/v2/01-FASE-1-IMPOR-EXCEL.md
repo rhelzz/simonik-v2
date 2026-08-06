@@ -1,7 +1,11 @@
 # Fase 1 — Memperbaiki Impor Excel (Masalah UAT #1)
 
-**Status:** belum dikerjakan · **Prioritas:** P0 (memblokir onboarding data) ·
+**Status:** ✅ **SELESAI** · **Prioritas:** P0 (memblokir onboarding data) ·
 **Risiko regresi:** rendah · **Perkiraan:** ~3 jam
+
+> **Hasil & penyimpangan dari rencana** — lihat [§9](#9-hasil-implementasi) di bawah.
+> Dua hal dikerjakan berbeda dari yang direncanakan, satu di antaranya karena
+> asumsi di dokumen ini terbukti keliru.
 
 ---
 
@@ -285,3 +289,74 @@ ini justru terjadi **di antara** export dan import, jadi test yang memanggil
 | Perubahan all-or-nothing → sebagian bisa mengejutkan operator | Sebutkan di sheet Petunjuk, di modal impor UI, dan di catatan rilis |
 | CSV tidak punya sheet | Sudah ditangani library (`['Worksheet' => $import]`); tambahkan satu test CSV untuk mengunci perilaku ini |
 | Refactor `StudentsImport` menyentuh jalur yang sudah dipakai produksi | Test §6 dijalankan sebelum & sesudah; perilaku per-baris (validasi, resolusi relasi, warning) **tidak diubah** — hanya cara galat diakumulasi |
+
+---
+
+## 9. Hasil implementasi
+
+Selesai pada commit yang sama dengan catatan ini. `composer ci:check` hijau:
+Pint, PHPStan 0 error, **361/361 test lulus**, eslint + prettier + `tsc` lolos.
+
+### Bukti bahwa perbaikannya nyata
+
+`tests/Feature/ImportTemplateRoundTripTest.php` (6 test) menempuh jalur operator
+sungguhan: unduh template → isi sheet data → unggah lewat route. Dijalankan
+terhadap kode **sebelum** perbaikan, hasilnya **0 dari 6 lulus**; sesudahnya
+6 dari 6. Ini pemeriksaan yang sengaja dilakukan — test yang hanya hijau di
+kode baru belum tentu menguji apa pun.
+
+Test impor yang sudah ada semuanya memakai CSV, dan itulah sebabnya suite
+selalu hijau meski impor `.xlsx` tidak pernah bisa berhasil sejak awal: CSV
+adalah satu-satunya jalur yang tidak melewati bug ini.
+
+### Dua penyimpangan dari rencana
+
+**1. Asumsi CSV di §8 ternyata salah — dan sempat memicu regresi.**
+Dokumen ini menyatakan "CSV tidak punya sheet, sudah ditangani library".
+Kenyataannya begitu importer menjadi `WithMultipleSheets`, Laravel Excel
+mencari sheet bernama `Data Siswa` di berkas CSV — sementara PhpSpreadsheet
+memuat CSV sebagai satu sheet berjudul `Worksheet`. Akibatnya **10 test impor
+CSV langsung merah** pada percobaan pertama.
+
+Perbaikannya: `sheets()` mendaftarkan dua nama sekaligus — sheet data dan
+`Worksheet` untuk jalur CSV. Konstanta `ImportsRows::CSV_SHEET` menamai
+perilaku itu agar tidak terbaca seperti angka ajaib.
+
+**2. Deteksi "sheet tidak ditemukan" diganti, bukan seperti di §4.2.**
+Rencana awal memakai `SkipsUnknownSheets` untuk menandai berkas tak dikenal.
+Setelah `sheets()` mendaftarkan dua nama, salah satu **selalu** absen (xlsx tak
+punya `Worksheet`; CSV tak punya `Data Siswa`), jadi penanda itu ikut menyala
+untuk berkas yang baik-baik saja — menghitung berapa sheet yang absen juga
+terbukti rapuh saat diuji.
+
+Kondisi yang sebenarnya dipedulikan jauh lebih sederhana dan tidak bergantung
+pada mekanisme internal library: **tidak ada hasil apa pun** — nol dibuat, nol
+dilewati, nol gagal. `onUnknownSheet()` kini sengaja tidak melakukan apa-apa,
+dengan komentar yang menjelaskan alasannya.
+
+### Yang berubah dibanding §4
+
+- **Baris contoh dihapus dari sheet data**, dan parameter `example` pada
+  `GenericTemplateExport` ikut dibuang (tidak ada lagi pemakainya), beserta
+  helper `ImportTemplates::sample()`. Contoh pengisian pindah ke sheet
+  `Petunjuk` sebagai baris `CONTOH` — kolom "Cara mengisi" di sana memang sudah
+  memuat contoh per kolom, jadi tidak perlu kolom baru.
+- **Kolom `Periode` dihapus** dari template siswa (importer tidak pernah
+  membacanya).
+- **`StudentsImport` kini memakai `ImportsRows`** dan berperilaku skip-duplikat
+  seperti modul lain; `StudentController::import()` memakai `runImport()`.
+  Duplikasi `lookup()`/`gender()`/`date()`/`DEFAULT_PASSWORD` hilang. NIS ganda
+  yang dulu lolos diam-diam kini dilewati dan dilaporkan.
+- **`$warnings` dipindah ke trait** dan ikut diringkas di flash
+  (`"… · 3 kolom relasi dikosongkan (nama tidak dikenal)"`), sehingga relasi
+  yang gagal dikenali tidak lagi hilang tanpa jejak.
+- **Teks yang menjanjikan perilaku lama diperbarui**: sheet `Petunjuk` dan modal
+  impor di `students/index.tsx` tidak lagi menyebut "seluruh impor dibatalkan".
+
+### Belum diverifikasi
+
+Verifikasi manual di browser dengan data sekolah sungguhan **belum dilakukan** —
+jalur HTTP-nya sudah ditempuh test, tapi gerbang di
+[README](README.md#urutan-eksekusi) meminta pemeriksaan manual juga. Lakukan
+sebelum menutup fase ini di lapangan: unduh template siswa, isi 2 baris,
+unggah, pastikan datanya masuk.

@@ -6,10 +6,13 @@ use App\Imports\Concerns\ImportsRows;
 use App\Models\Industry;
 use App\Models\Pembimbing;
 use App\Models\Teacher;
+use App\Support\ImportDefaults;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * Impor Industri. Kolom wajib: Nama, Bidang, Alamat, Longitude, Latitude.
@@ -17,9 +20,14 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
  * Pembimbing & Pembimbing Industri (di-resolve ke id berdasarkan nama). Industri
  * dengan nama sama dilewati.
  */
-class IndustryImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
+class IndustryImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, WithHeadingRow, WithMultipleSheets
 {
     use ImportsRows;
+
+    public function sheetName(): string
+    {
+        return ImportDefaults::SHEETS['industri'];
+    }
 
     /**
      * @param  Collection<int, Collection<string, mixed>>  $rows

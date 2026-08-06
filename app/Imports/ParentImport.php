@@ -4,19 +4,27 @@ namespace App\Imports;
 
 use App\Imports\Concerns\ImportsRows;
 use App\Models\Parents;
+use App\Support\ImportDefaults;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * Impor Orang Tua. Kolom: Nama, Email, Jenis Kelamin, Alamat, Pekerjaan, No HP.
  * Membuat akun ber-role `orangtua` (kata sandi default "password") + profil.
  * Email terdaftar dilewati.
  */
-class ParentImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
+class ParentImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, WithHeadingRow, WithMultipleSheets
 {
     use ImportsRows;
+
+    public function sheetName(): string
+    {
+        return ImportDefaults::SHEETS['orangtua'];
+    }
 
     /**
      * @param  Collection<int, Collection<string, mixed>>  $rows

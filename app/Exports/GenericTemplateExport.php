@@ -9,14 +9,14 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * Template impor generik dari konfigurasi: sheet "Petunjuk", sheet data
- * (judul + contoh), dan (opsional) sheet "Referensi" berisi nilai relasi valid.
+ * (hanya judul kolom), dan (opsional) sheet "Referensi" berisi nilai relasi
+ * valid.
  */
 class GenericTemplateExport implements WithMultipleSheets
 {
     /**
      * @param  array<int, array{0: string, 1: string, 2: string}>  $instructions
      * @param  array<int, string>  $headings
-     * @param  array<int, string>  $example
      * @param  array<string, array<int, string>>  $references  Judul kolom => daftar nilai valid.
      */
     public function __construct(
@@ -25,7 +25,6 @@ class GenericTemplateExport implements WithMultipleSheets
         private readonly string $dataTitle,
         private readonly array $instructions,
         private readonly array $headings,
-        private readonly array $example,
         private readonly array $references = [],
     ) {}
 
@@ -36,7 +35,7 @@ class GenericTemplateExport implements WithMultipleSheets
     {
         $sheets = [
             new GenericInstructionSheet($this->heading, $this->instructions, $this->notes),
-            new GenericDataSheet($this->dataTitle, $this->headings, $this->example),
+            new GenericDataSheet($this->dataTitle, $this->headings),
         ];
 
         if ($this->references !== []) {

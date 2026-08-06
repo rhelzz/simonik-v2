@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\StudentsExport;
 use App\Exports\StudentsTemplateExport;
+use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
@@ -20,7 +21,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -28,6 +28,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class StudentController extends Controller
 {
+    use HandlesImportExport;
     use ScopesStudentsByRole;
 
     /**
@@ -294,30 +295,12 @@ class StudentController extends Controller
 
     /**
      * Impor data siswa dari berkas Excel. Setiap akun dibuat dengan kata sandi
-     * default "password". Bila ada baris tak valid, tidak ada yang disimpan.
+     * default "password". Sama seperti master data lain: baris tak valid
+     * dilaporkan, sisanya tetap diimpor.
      */
     public function import(Request $request): RedirectResponse
     {
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
-        ]);
-
-        $import = new StudentsImport;
-        Excel::import($import, $request->file('file'));
-
-        if ($import->errors !== []) {
-            throw ValidationException::withMessages($import->errors);
-        }
-
-        $message = "{$import->created} siswa berhasil diimpor. Kata sandi default tiap akun: password";
-
-        if ($import->warnings !== []) {
-            $message .= ' ('.count($import->warnings).' kolom relasi dikosongkan karena namanya tidak dikenal.)';
-        }
-
-        return redirect()
-            ->route('students.index')
-            ->with('success', $message);
+        return $this->runImport($request, new StudentsImport, 'students.index');
     }
 
     /**

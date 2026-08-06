@@ -5,19 +5,27 @@ namespace App\Imports;
 use App\Imports\Concerns\ImportsRows;
 use App\Models\Departemen;
 use App\Models\Teacher;
+use App\Support\ImportDefaults;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
  * Impor Guru Pembimbing. Kolom: Nama, Email, No HP, Jurusan. Membuat akun
  * ber-role `guru` (kata sandi default "password") + profil guru. Email terdaftar
  * dilewati.
  */
-class TeacherImport implements SkipsEmptyRows, ToCollection, WithHeadingRow
+class TeacherImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, WithHeadingRow, WithMultipleSheets
 {
     use ImportsRows;
+
+    public function sheetName(): string
+    {
+        return ImportDefaults::SHEETS['guru'];
+    }
 
     /**
      * @param  Collection<int, Collection<string, mixed>>  $rows
