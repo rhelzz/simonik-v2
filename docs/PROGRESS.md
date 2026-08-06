@@ -326,20 +326,32 @@ Tidak ada konvensi terpusat: seeder saja memakai `@simonik.local` **dan** `@simo
 
 **Belum:** command `simonik:normalize-emails` untuk merapikan email lama (sengaja ditunda — mengubah email = mengubah kredensial login), dan verifikasi manual di browser.
 
+---
+
+### 50. Fase 5 v2 — industri bisa ditetapkan langsung dari modul Pembimbing
+
+Relasi pembimbing ↔ industri dimiliki sisi industri (`industries.pembimbing_id`), jadi penugasan sebelumnya hanya bisa lewat modul Data Industri: tambah pembimbing → simpan → pindah modul → cari industrinya → edit → pilih pembimbing. Langkah kedua gampang terlupa, dan pembimbing yang terlanjur "yatim" akan melihat spanduk "akun belum ditautkan ke industri".
+
+- **`industryOptions()` + `syncIndustry()`** menyalin pola `KaprogController::departemenOptions()`/`syncDepartemens()` yang sudah ada — tidak ada pola baru untuk dipelajari, nol migrasi.
+- **Kardinalitas dinyatakan di UI, bukan didiamkan.** `pembimbing_id` kolom tunggal, jadi satu industri hanya menampung satu pembimbing: opsi yang sudah dipegang diberi label `PT Maju Jaya · dipegang Rina`, dan memilihnya memunculkan peringatan bahwa menyimpan akan memindahkannya. **Diperingatkan, bukan dilarang** — melarangnya memaksa operator bolak-balik ke modul Industri untuk melepas dulu, yaitu pekerjaan yang justru sedang dihilangkan.
+- **Kolom `industry_id` baru di `pembimbings` ditolak** (Opsi B): akan ada dua sumber kebenaran untuk relasi yang sama, dan pasti menyimpang begitu satu sisi diubah lewat modul lain. Modul Data Industri tetap bisa menugaskan seperti biasa — keduanya menulis kolom yang sama.
+- Saat menyunting, industri milik pembimbing itu sendiri tidak ditandai sebagai "dipegang orang lain".
+- **Tests (+7, `PembimbingIndustryTest`):** tugaskan saat membuat, industri boleh kosong, ganti industri melepas yang lama, kosongkan melepas penugasan, klaim industri milik orang lain menggeser pemegang lama (perilaku disengaja, dikunci test), penandaan `taken_by` di form tambah, dan pengecualian diri sendiri di form ubah.
+- ✅ **Pint + PHPStan 0 error + 385/385 passed + 1610 assertions.** `composer ci:check` hijau.
+
+**Belum:** verifikasi manual di browser, termasuk memastikan spanduk "akun belum ditautkan" hilang setelah admin menetapkan industri dari modul Pembimbing.
+
 ## 📍 Current step
-**Fase 1, 2, dan 4 v2 selesai.** Impor Excel bisa dipakai lagi, satu orang bisa memegang beberapa jabatan dengan satu login, dan seluruh akun baru memakai satu domain `@simonik.local`.
+**Empat dari lima fase perbaikan UAT selesai (1, 2, 4, 5).** Impor Excel bisa dipakai lagi, satu orang bisa memegang beberapa jabatan dengan satu login, seluruh akun baru memakai domain `@simonik.local`, dan industri bisa ditetapkan langsung dari form pembimbing.
 
-**Catatan deploy:** nol migrasi pada ketiga fase. Wajib `npm run build`. Akun kembar dan email lama **tidak** diubah otomatis — keduanya perlu ditinjau manual bila memang mengganggu.
+**Catatan deploy:** nol migrasi pada keempat fase. Wajib `npm run build`. Akun kembar dan email lama **tidak** diubah otomatis.
 
-**Sisa verifikasi di browser:** (1) unduh template siswa, isi, unggah; (2) tambahkan guru yang ada sebagai kaprog lalu login dengan akunnya; (3) buat akun baru dan pastikan sufiks `@simonik.local` muncul di form.
+**Sisa verifikasi di browser:** (1) unduh template siswa, isi, unggah; (2) tambahkan guru yang ada sebagai kaprog lalu login dengan akunnya; (3) buat akun baru dan pastikan sufiks `@simonik.local` muncul; (4) tetapkan industri dari form pembimbing dan pastikan spanduk "belum ditautkan" hilang.
 
 ---
 
-## ⏭️ Next step — urutan yang sudah diputuskan
-Urutan **1 → 2 → 4 → 5 → 3 → (6)** (lihat [`docs/v2/README.md`](v2/README.md)), satu fase satu commit.
-
-1. **[Fase 5 — Industri di Pembimbing](v2/05-FASE-5-INDUSTRI-DI-PEMBIMBING.md)** ← berikutnya. Dropdown industri di form pembimbing, menulis ke `industries.pembimbing_id`. Nol migrasi; menyalin pola `KaprogController::syncDepartemens()`.
-2. **[Fase 3 — Tabel siswa](v2/03-FASE-3-TABEL-SISWA.md)** — select & select-all untuk hapus massal + jarak kolom. Nol ketergantungan, boleh paralel.
-3. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** ditinjau ulang, bukan otomatis dikerjakan.
+## ⏭️ Next step
+1. **[Fase 3 — Tabel siswa](v2/03-FASE-3-TABEL-SISWA.md)** ← berikutnya, fase terakhir dari enam temuan UAT. Select & select-all untuk hapus massal (endpoint `students/bulk` yang tetap menghormati scoping kaprog) + jarak kolom tabel.
+2. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** — opsional, ditinjau ulang sekarang Fase 1 sudah jalan. Kalau operator sudah tidak mengeluh soal impor, tunda.
 
 Tiga opsi lama masih berlaku dan belum dikerjakan: wajib lengkapi profil saat login pertama, bersihkan approval WFA menggantung, audit scoping kaprog untuk master data lain.

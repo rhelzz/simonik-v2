@@ -1,9 +1,12 @@
 # Fase 5 — Dropdown Industri di Modul Pembimbing Industri (Masalah UAT #6)
 
-**Status:** belum dikerjakan · **Prioritas:** P1 · **Risiko regresi:** rendah ·
+**Status:** ✅ **SELESAI** · **Prioritas:** P1 · **Risiko regresi:** rendah ·
 **Perkiraan:** ~3 jam
+
 **Prasyarat:** Fase 2 & 4 (form pembimbing sudah disentuh keduanya — kerjakan
 berurutan agar tidak menulis ulang form yang sama tiga kali).
+
+> **Hasil implementasi** — lihat [§9](#9-hasil-implementasi).
 
 ---
 
@@ -237,3 +240,48 @@ langkah kedua sehingga pembimbing terdaftar tapi tidak bisa memakai sistem
 | Divergensi dengan modul Data Industri | Keduanya menulis kolom yang sama (`industries.pembimbing_id`); tidak ada kolom duplikat — inilah alasan Opsi B ditolak |
 | Data pembimbing menggantung saat industri dihapus | Perilaku FK sekarang tidak diubah oleh fase ini; verifikasi `onDelete` pada migrasi `industries` sebelum merge dan catat temuannya di sini |
 | Daftar industri panjang bikin dropdown tidak terpakai | **Diverifikasi: `resources/js/components/ui/select.tsx` belum punya pencarian** (props-nya hanya `options`, `value`, `onChange`, `placeholder`, `disabled`). Untuk sekarang cukup urutkan menurut nama — daftar industri satu sekolah realistis berada di puluhan, bukan ratusan. Kalau nanti benar-benar mengganggu, tambahkan input filter **di dalam `Select`** sehingga semua modul ikut kebagian, jangan bikin dropdown khusus untuk halaman ini |
+
+
+---
+
+## 9. Hasil implementasi
+
+`composer ci:check` hijau: Pint, PHPStan 0 error, **385/385 test lulus**
+(+7 dari `PembimbingIndustryTest`), eslint + prettier + `tsc` lolos.
+**Nol migrasi**, sesuai rencana — Opsi A dijalankan apa adanya.
+
+### Yang dikerjakan
+
+- **`PembimbingController::industryOptions()` + `syncIndustry()`**, menyalin
+  pola `KaprogController::departemenOptions()` / `syncDepartemens()` yang sudah
+  ada. Tidak ada pola baru untuk dipelajari.
+- **`industry_id` opsional** di Store/UpdatePembimbingRequest — pembimbing
+  boleh didaftarkan lebih dulu, industrinya menyusul.
+- **Form menandai industri yang sudah dipegang**: label opsi menjadi
+  `PT Maju Jaya · dipegang Rina`, dan memilihnya memunculkan peringatan inline
+  bahwa menyimpan akan memindahkannya. **Diperingatkan, bukan dilarang** —
+  melarangnya memaksa operator bolak-balik ke modul Industri untuk melepas
+  dulu, yaitu pekerjaan yang justru sedang kita hilangkan.
+- Saat **menyunting**, industri milik pembimbing itu sendiri tidak ditandai
+  sebagai "dipegang orang lain" (`$exceptPembimbingId`).
+
+### Catatan
+
+- `Industry::pembimbingNormatif()` adalah nama relasi `belongsTo` yang sudah
+  ada di model — dipakai apa adanya, tidak ditambah relasi baru.
+- Modul Data Industri **tetap** bisa menugaskan pembimbing. Keduanya menulis
+  kolom yang sama (`industries.pembimbing_id`), jadi tidak ada kemungkinan
+  divergensi — inilah alasan Opsi B (kolom `industry_id` baru di `pembimbings`)
+  ditolak.
+
+### Risiko §8 yang belum ditutup
+
+- **Perilaku FK saat industri dihapus** belum diperiksa ulang; fase ini tidak
+  mengubahnya, jadi statusnya sama seperti sebelumnya.
+- **Komponen `Select` masih belum punya pencarian** (sudah diverifikasi pada
+  fase perencanaan). Daftar industri satu sekolah realistis di angka puluhan,
+  jadi dibiarkan; bila nanti mengganggu, tambahkan input filter **di dalam
+  `Select`** supaya semua modul kebagian.
+- **Verifikasi manual di browser** belum dilakukan — termasuk memastikan
+  spanduk "akun belum ditautkan ke industri" hilang setelah admin menetapkan
+  industri dari modul Pembimbing.

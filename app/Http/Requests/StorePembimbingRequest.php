@@ -32,6 +32,10 @@ class StorePembimbingRequest extends FormRequest
             // Profil pembimbing
             'no_hp' => ['required', 'string', 'max:50'],
             'gender' => ['nullable', Rule::in(['L', 'P'])],
+
+            // Industri yang dibimbing. Opsional: pembimbing boleh didaftarkan
+            // lebih dulu, industrinya menyusul.
+            'industry_id' => ['nullable', 'integer', Rule::exists('industries', 'id')],
         ];
     }
 }

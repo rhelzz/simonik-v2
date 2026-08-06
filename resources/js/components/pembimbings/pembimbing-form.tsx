@@ -16,11 +16,19 @@ import { EmailInput, usernameOf } from '@/components/ui/email-input';
 import { Select } from '@/components/ui/select';
 import type { SelectOption } from '@/components/ui/select';
 
+export type IndustryOption = {
+    id: number;
+    name: string;
+    /** Nama pembimbing yang sedang memegang industri ini, bila ada. */
+    taken_by: string | null;
+};
+
 export type PembimbingDefaults = {
     name?: string;
     email?: string;
     no_hp?: string;
     gender?: string | null;
+    industry_id?: number | null;
 };
 
 const inputClass =
@@ -112,6 +120,7 @@ export function PembimbingForm({
     action,
     method,
     candidates = [],
+    industries = [],
     pembimbing,
     submitLabel,
 }: {
@@ -119,6 +128,7 @@ export function PembimbingForm({
     method: 'post' | 'put';
     /** Kandidat akun yang bisa diberi jabatan ini (hanya dipakai saat menambah). */
     candidates?: AccountCandidate[];
+    industries?: IndustryOption[];
     pembimbing?: PembimbingDefaults;
     submitLabel: string;
 }) {
@@ -129,6 +139,9 @@ export function PembimbingForm({
     const [linked, setLinked] = useState<AccountCandidate | null>(null);
 
     const [gender, setGender] = useState(normalizeGender(pembimbing?.gender));
+    const [industryId, setIndustryId] = useState(
+        pembimbing?.industry_id ? String(pembimbing.industry_id) : '',
+    );
     const [email, setEmail] = useState(usernameOf(pembimbing?.email));
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
@@ -138,6 +151,20 @@ export function PembimbingForm({
         password && passwordConfirmation
             ? password === passwordConfirmation
             : null;
+
+    const industryOptions: SelectOption[] = industries.map((industry) => ({
+        value: String(industry.id),
+        label: industry.taken_by
+            ? `${industry.name} · dipegang ${industry.taken_by}`
+            : industry.name,
+    }));
+
+    // Satu industri hanya menampung satu pembimbing, jadi memilih yang sudah
+    // dipegang akan memindahkannya. Diperingatkan, bukan dilarang: melarangnya
+    // memaksa operator bolak-balik ke modul Industri untuk melepas dulu.
+    const takenBy = industries.find(
+        (industry) => String(industry.id) === industryId,
+    )?.taken_by;
 
     const genderOptions: SelectOption[] = [
         { value: 'L', label: 'Laki-laki' },
@@ -406,6 +433,33 @@ export function PembimbingForm({
                                 onChange={setGender}
                                 placeholder="Pilih jenis kelamin…"
                             />
+                        </Field>
+                        <Field
+                            label="Industri yang dibimbing"
+                            error={errors.industry_id}
+                            hint={
+                                takenBy
+                                    ? undefined
+                                    : 'Opsional — boleh ditentukan nanti.'
+                            }
+                            full
+                        >
+                            <Select
+                                name="industry_id"
+                                ariaLabel="Industri yang dibimbing"
+                                value={industryId}
+                                options={industryOptions}
+                                onChange={setIndustryId}
+                                placeholder="— Belum ditentukan —"
+                            />
+                            {takenBy && (
+                                <p className="flex items-start gap-1.5 text-xs font-medium text-warning">
+                                    <AlertCircle className="mt-0.5 size-3.5 shrink-0" />
+                                    Industri ini sedang dipegang {takenBy}.
+                                    Menyimpan akan memindahkannya ke pembimbing
+                                    ini.
+                                </p>
+                            )}
                         </Field>
                     </Section>
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\Concerns\ResolvesRoleAccount;
 use App\Http\Requests\StorePembimbingRequest;
 use App\Http\Requests\UpdatePembimbingRequest;
 use App\Imports\PembimbingImport;
+use App\Models\Industry;
 use App\Models\Pembimbing;
 use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
@@ -101,6 +102,7 @@ class PembimbingController extends Controller
     {
         return Inertia::render('pembimbings/create', [
             'candidates' => $this->accountCandidates($request, 'pembimbing'),
+            'industries' => $this->industryOptions(),
         ]);
     }
 
@@ -114,12 +116,14 @@ class PembimbingController extends Controller
         DB::transaction(function () use ($data): void {
             $user = $this->accountFor($data, 'pembimbing');
 
-            Pembimbing::create([
+            $pembimbing = Pembimbing::create([
                 'user_id' => $user->id,
                 'name' => $user->name,
                 'no_hp' => $data['no_hp'],
                 'gender' => $data['gender'] ?? null,
             ]);
+
+            $this->syncIndustry($pembimbing, $data['industry_id'] ?? null);
         });
 
         return redirect()
@@ -132,7 +136,7 @@ class PembimbingController extends Controller
      */
     public function edit(Pembimbing $pembimbing): Response
     {
-        $pembimbing->load('user:id,email');
+        $pembimbing->load(['user:id,email', 'industry:id,name,pembimbing_id']);
 
         return Inertia::render('pembimbings/edit', [
             'pembimbing' => [
@@ -141,7 +145,9 @@ class PembimbingController extends Controller
                 'email' => $pembimbing->user?->email,
                 'no_hp' => $pembimbing->no_hp,
                 'gender' => $pembimbing->gender,
+                'industry_id' => $pembimbing->industry?->id,
             ],
+            'industries' => $this->industryOptions($pembimbing->id),
         ]);
     }
 
@@ -164,6 +170,8 @@ class PembimbingController extends Controller
                 'no_hp' => $data['no_hp'],
                 'gender' => $data['gender'] ?? null,
             ]);
+
+            $this->syncIndustry($pembimbing, $data['industry_id'] ?? null);
         });
 
         return redirect()
@@ -231,5 +239,49 @@ class PembimbingController extends Controller
         $deleted = $this->detachRole($user, 'pembimbing');
 
         return back()->with('success', $this->detachMessage($user, $deleted, 'Pembimbing industri'));
+    }
+
+    /**
+     * Opsi industri untuk form, menandai yang sudah dipegang pembimbing lain.
+     *
+     * Satu industri hanya menampung satu pembimbing (`industries.pembimbing_id`
+     * kolom tunggal), jadi memilih industri yang sudah dipegang akan menggeser
+     * pemegang lamanya — form perlu mengatakannya, bukan mendiamkannya.
+     *
+     * @return array<int, array{id: int, name: string, taken_by: string|null}>
+     */
+    private function industryOptions(?int $exceptPembimbingId = null): array
+    {
+        return Industry::query()
+            ->with('pembimbingNormatif:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'pembimbing_id'])
+            ->map(fn (Industry $industry): array => [
+                'id' => $industry->id,
+                'name' => $industry->name,
+                'taken_by' => $industry->pembimbing_id !== null && $industry->pembimbing_id !== $exceptPembimbingId
+                    ? $industry->pembimbingNormatif?->name
+                    : null,
+            ])
+            ->all();
+    }
+
+    /**
+     * Tetapkan industri yang dibimbing: klaim yang dipilih, lepas industri lain
+     * yang sebelumnya ia pegang.
+     *
+     * Pembimbing lama pada industri yang diklaim akan tergeser — konsekuensi
+     * kolom tunggal `industries.pembimbing_id`, dan sudah diperingatkan di form.
+     */
+    private function syncIndustry(Pembimbing $pembimbing, ?int $industryId): void
+    {
+        Industry::query()
+            ->where('pembimbing_id', $pembimbing->id)
+            ->when($industryId !== null, fn ($query) => $query->whereKeyNot($industryId))
+            ->update(['pembimbing_id' => null]);
+
+        if ($industryId !== null) {
+            Industry::query()->whereKey($industryId)->update(['pembimbing_id' => $pembimbing->id]);
+        }
     }
 }
