@@ -222,17 +222,19 @@ export default function TeachersIndex({
                         <table className="w-full min-w-lg border-collapse text-left text-sm">
                             <thead>
                                 <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
-                                    <th className="pb-3 font-semibold">Guru</th>
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
+                                        Guru
+                                    </th>
+                                    <th className="px-3 pb-3 font-semibold">
                                         Jurusan
                                     </th>
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
                                         Industri
                                     </th>
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
                                         Siswa
                                     </th>
-                                    <th className="pb-3 text-right font-semibold">
+                                    <th className="px-3 pb-3 text-right font-semibold">
                                         Aksi
                                     </th>
                                 </tr>
@@ -243,7 +245,7 @@ export default function TeachersIndex({
                                         key={teacher.id}
                                         className="group transition-colors hover:bg-canvas/50"
                                     >
-                                        <td className="py-3 pl-2">
+                                        <td className="py-3 pr-3 pl-2">
                                             <div className="flex items-center gap-3">
                                                 <Avatar name={teacher.name} />
                                                 <div className="min-w-0">
@@ -259,10 +261,10 @@ export default function TeachersIndex({
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-3 text-ink/80">
+                                        <td className="px-3 py-3 text-ink/80">
                                             {teacher.departemen ?? '—'}
                                         </td>
-                                        <td className="py-3">
+                                        <td className="px-3 py-3">
                                             {/* Tanpa industri, guru ini tidak
                                                 akan melihat siswa manapun. */}
                                             <span
@@ -289,13 +291,13 @@ export default function TeachersIndex({
                                                 {teacher.industries_count}
                                             </span>
                                         </td>
-                                        <td className="py-3">
+                                        <td className="px-3 py-3">
                                             <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-ink/70">
                                                 <UsersRound className="size-3.5" />
                                                 {teacher.students_count}
                                             </span>
                                         </td>
-                                        <td className="py-3 pr-2">
+                                        <td className="py-3 pr-2 pl-3">
                                             <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                                                 <Link
                                                     href={show.url(teacher.id)}

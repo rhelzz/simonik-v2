@@ -87,9 +87,29 @@ These are distilled from the Laravel Boost guidelines bundled with this project 
 - **Reuse the shared UI patterns** documented in [`docs/UI-PATTERNS.md`](docs/UI-PATTERNS.md) — the custom `Select` dropdown (`@/components/ui/select`, never a native `<select>`), and the list-table / filter / form conventions. Follow it when building any new admin page so styling stays consistent; update the doc when a pattern evolves.
 
 ### Workflow before finishing
-- If you touched PHP, run `vendor/bin/pint --dirty` to auto-format (don't fix style manually, and don't use `--test` to "check only" — just let it fix).
-- Run the affected test(s) with `php artisan test --filter=...`, then offer to run the full suite.
-- Run the full gate that CI enforces: `composer ci:check` (PHP lint + Prettier + `tsc` + tests), or the pieces individually (`composer test`, `npm run lint`, `npm run types:check`).
+
+**Default: check only what you touched.** The full gate is slow and burns tokens;
+run it when it earns its cost, not by reflex.
+
+Scoped checks — do these on every change:
+- **PHP format:** `vendor/bin/pint --dirty` (auto-fix; never fix style by hand, never `--test` to "check only").
+- **Tests:** only the affected ones — `php artisan test --filter=NamaTest --compact`.
+  Keep output small: `--compact`, and pipe through `tail` when it's long.
+- **PHP types:** scope to the files you changed — `vendor/bin/phpstan analyse app/Path/File.php --no-progress`.
+- **Frontend (only if you touched `resources/js/`):** `npx tsc --noEmit`, plus
+  `npx eslint <changed files> --fix` and `npx prettier --write <changed files>`.
+
+**Never redirect command output to `/dev/null`** — a hidden error looks like a
+hang and wastes a whole round trip. Trim with `tail`/`--compact` instead.
+
+Run the **full gate** (`composer ci:check`) only when:
+- finishing a feature/phase that's about to be committed and pushed, **or**
+- the change touched shared code (traits, middleware, `app/Support/`, form
+  requests used by many modules), where a scoped run cannot prove much, **or**
+- the user asks for it.
+
+For small, local edits: scoped checks are enough — say what you ran, and offer
+the full gate instead of running it unprompted.
 
 ### Git & progress workflow
 - **Commit all changes together** when instructed. Don't automatically commit — wait for explicit instruction to stage all modified files and commit together in a single commit. When user says "commit and push", stage everything and create one commit with a descriptive message.

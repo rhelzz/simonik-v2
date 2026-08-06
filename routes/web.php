@@ -106,6 +106,7 @@ Route::middleware('auth')->group(function () {
         Route::get('students/export', [StudentController::class, 'export'])->name('students.export');
         Route::get('students/template', [StudentController::class, 'template'])->name('students.template');
         Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
+        Route::delete('students/bulk', [StudentController::class, 'bulkDestroy'])->name('students.bulk-destroy');
 
         // Impor/ekspor master data lain — literal path didahulukan sebelum resource
         // agar tidak tertangkap route show `{id}`.

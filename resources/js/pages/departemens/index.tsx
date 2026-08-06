@@ -144,13 +144,13 @@ export default function DepartemensIndex({
                         <table className="w-full min-w-lg border-collapse text-left text-sm">
                             <thead>
                                 <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
-                                    <th className="pb-3 pl-2 font-semibold">
+                                    <th className="pr-3 pb-3 pl-2 font-semibold">
                                         Jurusan
                                     </th>
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
                                         Kelas
                                     </th>
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
                                         Siswa
                                     </th>
                                     <th className="pr-2 pb-3 text-right font-semibold">
@@ -164,7 +164,7 @@ export default function DepartemensIndex({
                                         key={departemen.id}
                                         className="group transition-colors hover:bg-canvas/50"
                                     >
-                                        <td className="py-3 pl-2">
+                                        <td className="py-3 pr-3 pl-2">
                                             <div className="flex items-center gap-3">
                                                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
                                                     <FolderTree className="size-4" />
@@ -179,13 +179,13 @@ export default function DepartemensIndex({
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-3 text-ink/80">
+                                        <td className="px-3 py-3 text-ink/80">
                                             {departemen.classes_count}
                                         </td>
-                                        <td className="py-3 text-ink/80">
+                                        <td className="px-3 py-3 text-ink/80">
                                             {departemen.students_count}
                                         </td>
-                                        <td className="py-3 pr-2">
+                                        <td className="py-3 pr-2 pl-3">
                                             <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                                                 <Link
                                                     href={show.url(

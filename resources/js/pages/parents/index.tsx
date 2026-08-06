@@ -204,14 +204,16 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                         <table className="w-full min-w-lg border-collapse text-left text-sm">
                             <thead>
                                 <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
                                         Orang tua
                                     </th>
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
                                         Pekerjaan
                                     </th>
-                                    <th className="pb-3 font-semibold">Anak</th>
-                                    <th className="pb-3 text-right font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
+                                        Anak
+                                    </th>
+                                    <th className="px-3 pb-3 text-right font-semibold">
                                         Aksi
                                     </th>
                                 </tr>
@@ -222,7 +224,7 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                                         key={parent.id}
                                         className="group transition-colors hover:bg-canvas/50"
                                     >
-                                        <td className="py-3 pl-2">
+                                        <td className="py-3 pr-3 pl-2">
                                             <div className="flex items-center gap-3">
                                                 <Avatar name={parent.nama} />
                                                 <div className="min-w-0">
@@ -238,10 +240,10 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-3 text-ink/80">
+                                        <td className="px-3 py-3 text-ink/80">
                                             {parent.occupation}
                                         </td>
-                                        <td className="py-3">
+                                        <td className="px-3 py-3">
                                             {parent.students.length === 0 ? (
                                                 <span className="text-muted">
                                                     —
@@ -261,7 +263,7 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="py-3 pr-2">
+                                        <td className="py-3 pr-2 pl-3">
                                             <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                                                 <Link
                                                     href={edit.url(parent.id)}

@@ -159,17 +159,19 @@ export default function IndustriesIndex({
                         <table className="w-full min-w-160 border-collapse text-left text-sm">
                             <thead>
                                 <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
-                                    <th className="pb-3 pl-2 font-semibold">
+                                    <th className="pr-3 pb-3 pl-2 font-semibold">
                                         Industri
                                     </th>
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
                                         Bidang
                                     </th>
-                                    <th className="pb-3 font-semibold">Guru</th>
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
+                                        Guru
+                                    </th>
+                                    <th className="px-3 pb-3 font-semibold">
                                         Pembimbing
                                     </th>
-                                    <th className="pb-3 font-semibold">
+                                    <th className="px-3 pb-3 font-semibold">
                                         Siswa
                                     </th>
                                     <th className="pr-2 pb-3 text-right font-semibold">
@@ -183,7 +185,7 @@ export default function IndustriesIndex({
                                         key={industry.id}
                                         className="group transition-colors hover:bg-canvas/50"
                                     >
-                                        <td className="py-3 pl-2">
+                                        <td className="py-3 pr-3 pl-2">
                                             <div className="flex items-center gap-3">
                                                 <span className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary">
                                                     <Building2 className="size-4" />
@@ -198,19 +200,19 @@ export default function IndustriesIndex({
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-3 text-ink/80">
+                                        <td className="px-3 py-3 text-ink/80">
                                             {industry.bidang}
                                         </td>
-                                        <td className="py-3 text-ink/80">
+                                        <td className="px-3 py-3 text-ink/80">
                                             {industry.guru ?? '—'}
                                         </td>
-                                        <td className="py-3 text-ink/80">
+                                        <td className="px-3 py-3 text-ink/80">
                                             {industry.pembimbing ?? '—'}
                                         </td>
-                                        <td className="py-3 text-ink/80">
+                                        <td className="px-3 py-3 text-ink/80">
                                             {industry.students_count}
                                         </td>
-                                        <td className="py-3 pr-2">
+                                        <td className="py-3 pr-2 pl-3">
                                             <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
                                                 <Link
                                                     href={show.url(industry.id)}

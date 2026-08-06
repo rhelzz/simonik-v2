@@ -27,7 +27,7 @@ Aturan main:
 |------|-------------|-------|--------|----------|
 | [Fase 1](01-FASE-1-IMPOR-EXCEL.md) | #1 Impor Excel selalu gagal, bahkan dengan template resmi | **Bug kritis** | Rendah | ✅ **selesai** |
 | [Fase 2](02-FASE-2-AKUN-MULTI-PERAN.md) | #2 Akun bentrok: kaprog + guru pembimbing tidak bisa login | **Bug arsitektural** | Sedang | ✅ **selesai** |
-| [Fase 3](03-FASE-3-TABEL-SISWA.md) | #3 Select & select-all untuk hapus massal · #4 Jarak kolom tabel siswa | Fitur + UI | Rendah | ~4 jam |
+| [Fase 3](03-FASE-3-TABEL-SISWA.md) | #3 Select & select-all untuk hapus massal · #4 Jarak kolom tabel siswa | Fitur + UI | Rendah | ✅ **selesai** |
 | [Fase 4](04-FASE-4-EMAIL-DOMAIN.md) | #5 Seragamkan email ke `@simonik.local` | Konvensi + UX | Rendah | ✅ **selesai** |
 | [Fase 5](05-FASE-5-INDUSTRI-DI-PEMBIMBING.md) | #6 Dropdown industri di modul Pembimbing Industri | Fitur | Rendah | ✅ **selesai** |
 | [Fase 6](06-FASE-6-HALAMAN-IMPOR.md) | Halaman impor dengan pratinjau + tempel/isi-ke-bawah ala Excel | UX, **opsional** | Rendah | ~12 jam |
@@ -45,8 +45,8 @@ tidak ketahuan yang mana penyebabnya.
 | ~~2~~ ✅ | Fase 2 — Multi-peran | Bug kedua yang menghambat pemakaian nyata. Mengubah alur pembuatan akun yang jadi fondasi Fase 4 & 5 | Guru yang dijadikan kaprog bisa login dan melihat kedua menu; mencabut peran kaprog tidak menghapus akunnya |
 | ~~3~~ ✅ | Fase 4 — Domain email | Menempel pada alur pembuatan akun yang **baru saja** dirapikan Fase 2. Dikerjakan sebelum Fase 2 = menulis dua kali | Akun baru dari form & impor otomatis `@simonik.local`; akun lama tidak tersentuh |
 | ~~4~~ ✅ | Fase 5 — Industri di Pembimbing | Form pembimbing sudah disentuh Fase 2 & 4. Datang terakhir supaya form itu hanya ditulis ulang sekali | Tambah pembimbing + pilih industri dalam satu form; banner "belum ditautkan" hilang |
-| **1** | Fase 3 — Tabel siswa ← berikutnya | Murni frontend + satu endpoint, **nol ketergantungan** ke fase lain. Ditaruh akhir bukan karena tidak penting, tapi karena bisa ditunda tanpa memblokir apa pun | Hapus massal menghormati scoping kaprog; kolom tabel tidak berdempetan di 1366px |
-| **2** | Fase 6 — Halaman impor | **Opsional.** Tinjau ulang setelah Fase 1 jalan — kalau operator sudah tidak mengeluh, tunda | — |
+| ~~5~~ ✅ | Fase 3 — Tabel siswa | Murni frontend + satu endpoint, **nol ketergantungan** ke fase lain. Ditaruh akhir bukan karena tidak penting, tapi karena bisa ditunda tanpa memblokir apa pun | Hapus massal menghormati scoping kaprog; kolom tabel tidak berdempetan di 1366px |
+| **1** | Fase 6 — Halaman impor ← satu-satunya sisa | **Opsional.** Tinjau ulang setelah Fase 1 jalan — kalau operator sudah tidak mengeluh, tunda | — |
 
 ### Catatan penjadwalan
 

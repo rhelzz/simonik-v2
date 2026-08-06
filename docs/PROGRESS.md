@@ -341,17 +341,37 @@ Relasi pembimbing ↔ industri dimiliki sisi industri (`industries.pembimbing_id
 
 **Belum:** verifikasi manual di browser, termasuk memastikan spanduk "akun belum ditautkan" hilang setelah admin menetapkan industri dari modul Pembimbing.
 
+---
+
+### 51. Fase 3 v2 — pilih & hapus massal siswa, plus jarak kolom tabel
+
+Menghapus satu kelas siswa yang salah impor sebelumnya berarti 40 klik hapus + 40 konfirmasi, tanpa jaminan tidak ada yang terlewat. Kolom tabel juga berdempetan karena seluruh sel hanya memakai `py-3`/`pb-3` tanpa padding mendatar sama sekali.
+
+- **`DELETE students/bulk`** dideklarasikan sebelum `Route::resource`, sesuai preseden `students/export` — kalau urutannya salah, ia terbaca sebagai `students/{student}` dan tak pernah sampai ke `bulkDestroy()`. Dibuktikan test.
+- **Otorisasi tidak dilubangi:** `authorizeStudent()` di-refactor memanggil `canManageStudent()`, satu sumber aturan. Setiap id melewati gerbang yang sama dengan hapus satuan; id di luar cakupan kaprog **dilewati dan dilaporkan**, bukan menggagalkan seluruh operasi. `max:200` mencegah bug frontend menghapus seisi sekolah.
+- **UI:** kolom checkbox + pilih-semua-halaman-ini (`indeterminate` lewat `ref`), action bar `role="status"` menyebut jumlah, konfirmasi lewat `Modal` (bukan `window.confirm`) yang juga menyebut jumlahnya. Select-all lintas halaman sengaja tidak dibuat — satu klik menghapus ratusan baris tanpa operator melihatnya terlalu berisiko.
+- **Penyimpangan dari rencana:** pilihan **diturunkan**, bukan di-reset lewat `useEffect`. Implementasi pertama memakai `useEffect(() => setSelected([]), [...])` dan ditolak ESLint (`react-hooks/set-state-in-effect`); diganti `selected.filter((id) => pageIds.includes(id))`. Hasilnya lebih kuat, bukan sekadar lolos linter: baris yang tidak terlihat **tidak mungkin** ikut terkirim.
+- **Jarak kolom** `px-3` diterapkan ke tabel siswa dan 8 tabel master data lain supaya tidak ada dua gaya spasi. Padding tepi ditulis eksplisit (`pb-3 pr-3 pl-2`) karena menggabung `px-3` dengan `pl-2` membuat hasilnya bergantung pada urutan properti di CSS Tailwind, bukan urutan tulisan di JSX. Pola ini dicatat di `docs/UI-PATTERNS.md`.
+- **Tests (+6, `StudentBulkDestroyTest`):** hapus beberapa sekaligus (akun login ikut terhapus), kaprog tidak bisa menghapus siswa di luar jurusannya, ids kosong ditolak, >200 ditolak, siswa biasa ditolak, dan kelas tidak ikut terhapus.
+- ✅ **Pint + PHPStan 0 error + 391/391 passed + 1627 assertions.** `composer ci:check` hijau.
+
+**Catatan proses:** CLAUDE.md diperbarui — verifikasi kini berlingkup pada yang disentuh (`--filter`, `pint --dirty`, phpstan per berkas, eslint/prettier per berkas); `composer ci:check` penuh hanya saat mau commit, saat menyentuh kode bersama, atau diminta. Output perintah tidak boleh dibuang ke `/dev/null` — galat yang tersembunyi terlihat seperti hang.
+
 ## 📍 Current step
-**Empat dari lima fase perbaikan UAT selesai (1, 2, 4, 5).** Impor Excel bisa dipakai lagi, satu orang bisa memegang beberapa jabatan dengan satu login, seluruh akun baru memakai domain `@simonik.local`, dan industri bisa ditetapkan langsung dari form pembimbing.
+**Seluruh enam temuan UAT selesai (Fase 1, 2, 3, 4, 5).** Impor Excel bisa dipakai lagi, satu orang bisa memegang beberapa jabatan dengan satu login, akun baru seragam `@simonik.local`, industri bisa ditetapkan dari form pembimbing, dan tabel siswa punya hapus massal dengan jarak kolom yang wajar.
 
-**Catatan deploy:** nol migrasi pada keempat fase. Wajib `npm run build`. Akun kembar dan email lama **tidak** diubah otomatis.
+**Catatan deploy:** nol migrasi pada kelima fase. Wajib `npm run build`. Akun kembar dan email lama **tidak** diubah otomatis — keduanya perlu ditinjau manual bila mengganggu.
 
-**Sisa verifikasi di browser:** (1) unduh template siswa, isi, unggah; (2) tambahkan guru yang ada sebagai kaprog lalu login dengan akunnya; (3) buat akun baru dan pastikan sufiks `@simonik.local` muncul; (4) tetapkan industri dari form pembimbing dan pastikan spanduk "belum ditautkan" hilang.
+**Sisa verifikasi di browser** (belum dilakukan sama sekali):
+1. Unduh template siswa → isi 2 baris → unggah → data masuk.
+2. Tambahkan guru yang sudah ada sebagai kaprog → login dengan akunnya → kedua menu terlihat.
+3. Buat akun baru → sufiks `@simonik.local` muncul di form.
+4. Tetapkan industri dari form pembimbing → spanduk "belum ditautkan" hilang.
+5. Pilih beberapa siswa → hapus massal → cek juga tabel di lebar 1366px.
 
 ---
 
 ## ⏭️ Next step
-1. **[Fase 3 — Tabel siswa](v2/03-FASE-3-TABEL-SISWA.md)** ← berikutnya, fase terakhir dari enam temuan UAT. Select & select-all untuk hapus massal (endpoint `students/bulk` yang tetap menghormati scoping kaprog) + jarak kolom tabel.
-2. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** — opsional, ditinjau ulang sekarang Fase 1 sudah jalan. Kalau operator sudah tidak mengeluh soal impor, tunda.
-
-Tiga opsi lama masih berlaku dan belum dikerjakan: wajib lengkapi profil saat login pertama, bersihkan approval WFA menggantung, audit scoping kaprog untuk master data lain.
+1. **Verifikasi manual kelima fase di atas** — ini gerbang yang tersisa sebelum batch UAT ini benar-benar ditutup.
+2. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** — opsional (~12 jam). **Tinjau ulang dulu**: ia menyelesaikan keluhan UX, dan keluhannya mungkin sudah hilang setelah Fase 1. Putuskan dari keluhan nyata, bukan dari rencana.
+3. Tiga opsi lama masih berlaku: wajib lengkapi profil saat login pertama, bersihkan approval WFA menggantung, audit scoping kaprog untuk master data lain.

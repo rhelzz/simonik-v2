@@ -6,6 +6,7 @@ use App\Exports\StudentsExport;
 use App\Exports\StudentsTemplateExport;
 use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
+use App\Http\Requests\BulkDestroyStudentRequest;
 use App\Http\Requests\StoreStudentRequest;
 use App\Http\Requests\UpdateStudentRequest;
 use App\Imports\StudentsImport;
@@ -40,10 +41,21 @@ class StudentController extends Controller
      */
     private function authorizeStudent(Request $request, Student $student): void
     {
+        abort_unless($this->canManageStudent($request, $student), 403);
+    }
+
+    /**
+     * Versi boolean dari penjagaan di atas, dipakai hapus massal agar id di
+     * luar cakupan bisa dilaporkan sebagai "dilewati" alih-alih menggagalkan
+     * seluruh operasi. Satu sumber aturan, bukan dua salinan yang bisa
+     * menyimpang.
+     */
+    private function canManageStudent(Request $request, Student $student): bool
+    {
         /** @var User $user */
         $user = $request->user();
 
-        abort_unless($this->scopedStudents($user)->whereKey($student->id)->exists(), 403);
+        return $this->scopedStudents($user)->whereKey($student->id)->exists();
     }
 
     /**
@@ -272,6 +284,49 @@ class StudentController extends Controller
         return redirect()
             ->route('students.index')
             ->with('success', 'Siswa berhasil dihapus.');
+    }
+
+    /**
+     * Hapus beberapa siswa sekaligus.
+     *
+     * Setiap id tetap melewati gerbang otorisasi yang sama dengan hapus satuan;
+     * id di luar cakupan pemanggil dilewati dan dilaporkan, bukan menggagalkan
+     * seluruh operasi.
+     */
+    public function bulkDestroy(BulkDestroyStudentRequest $request): RedirectResponse
+    {
+        /** @var array<int, int> $ids */
+        $ids = $request->validated('ids');
+
+        $students = Student::query()->whereIn('id', $ids)->get();
+
+        $deleted = 0;
+        $blocked = 0;
+
+        DB::transaction(function () use ($request, $students, &$deleted, &$blocked): void {
+            foreach ($students as $student) {
+                if (! $this->canManageStudent($request, $student)) {
+                    $blocked++;
+
+                    continue;
+                }
+
+                $this->deleteImage($student);
+                // Menghapus user akan melepas record siswa (FK students.user_id).
+                $student->users?->delete();
+                $deleted++;
+            }
+        });
+
+        $message = "{$deleted} siswa berhasil dihapus.";
+
+        if ($blocked > 0) {
+            $message .= " {$blocked} dilewati karena di luar cakupan Anda.";
+        }
+
+        return redirect()
+            ->route('students.index')
+            ->with($deleted > 0 ? 'success' : 'error', $message);
     }
 
     /**

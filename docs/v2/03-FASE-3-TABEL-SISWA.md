@@ -1,7 +1,9 @@
 # Fase 3 — Tabel Data Siswa: Select-All & Jarak Kolom (Masalah UAT #3 dan #4)
 
-**Status:** belum dikerjakan · **Prioritas:** P1 · **Risiko regresi:** rendah ·
+**Status:** ✅ **SELESAI** · **Prioritas:** P1 · **Risiko regresi:** rendah ·
 **Perkiraan:** ~4 jam
+
+> **Hasil implementasi** — lihat [§9](#9-hasil-implementasi).
 
 ---
 
@@ -245,3 +247,59 @@ layar laptop.
 | Route `students/bulk` tertangkap `students/{student}` | Deklarasikan sebelum `Route::resource`, sesuai preseden `students/export` |
 | Gambar profil yatim di storage | `deleteImage()` dipanggil per siswa, sama persis dengan `destroy()` satuan |
 | Padding baru merusak tabel lain | Perubahan CSS murni; verifikasi visual di layar 1366px dan 1920px sebelum merge |
+
+
+---
+
+## 9. Hasil implementasi
+
+`composer ci:check` hijau: Pint, PHPStan 0 error, **391/391 test lulus**
+(+6 dari `StudentBulkDestroyTest`), eslint + prettier + `tsc` lolos.
+Nol migrasi.
+
+### Yang dikerjakan
+
+- **`DELETE students/bulk`** dideklarasikan sebelum `Route::resource`, sesuai
+  preseden `students/export`. Dibuktikan oleh test: kalau urutannya salah,
+  request tidak akan pernah sampai ke `bulkDestroy()`.
+- **`canManageStudent()`** dipakai bersama `authorizeStudent()` — satu sumber
+  aturan otorisasi, bukan dua salinan yang bisa menyimpang. Id di luar cakupan
+  pemanggil **dilewati dan dilaporkan**, bukan menggagalkan seluruh operasi.
+- **`BulkDestroyStudentRequest`** membatasi `max:200` supaya bug frontend tidak
+  bisa menghapus seisi sekolah.
+- **UI**: kolom checkbox + pilih-semua-halaman-ini (`indeterminate` lewat `ref`),
+  action bar `role="status"` yang menyebut jumlah, dan konfirmasi lewat `Modal`
+  (bukan `window.confirm`) yang juga menyebut jumlahnya.
+- **Padding kolom** `px-3` diterapkan ke tabel siswa **dan** 8 tabel master data
+  lain supaya tidak muncul dua gaya spasi. Kolom Kelas & Status diberi lebar
+  tetap + `whitespace-nowrap` agar badge tidak terpotong.
+
+### Penyimpangan dari rencana
+
+**Pilihan diturunkan, bukan di-reset lewat `useEffect`.** Rencana §3 menyebut
+"reset `selected` setiap kali halaman/filter berubah". Implementasi pertama
+memakai `useEffect(() => setSelected([]), [...])` dan **ditolak ESLint**
+(`react-hooks/set-state-in-effect`). Diganti nilai turunan:
+
+```tsx
+const onPage = selected.filter((id) => pageIds.includes(id));
+```
+
+Hasilnya lebih kuat, bukan sekadar lolos linter: pilihan yang tidak terlihat di
+halaman ini **tidak mungkin** ikut terkirim, tanpa bergantung pada efek yang
+berjalan tepat waktu.
+
+**Padding tepi ditulis eksplisit.** Menggabung `px-3` dengan `pl-2`/`pr-2`
+membuat hasilnya bergantung pada urutan properti di CSS Tailwind, bukan urutan
+tulisan di JSX. Kolom tepi memakai `pb-3 pr-3 pl-2` / `pb-3 pl-3 pr-2`.
+
+### Yang sengaja tidak dibuat
+
+- **Select-all lintas halaman** (Opsi C) tetap ditolak: satu klik yang
+  menghapus ratusan baris tanpa operator melihatnya terlalu berisiko.
+- **`canManageStudent()` tidak dinaikkan ke trait `ScopesStudentsByRole`** —
+  hanya `StudentController` yang memakainya. Naikkan saat ada pemakai kedua.
+
+### Belum
+
+Verifikasi manual di browser, termasuk memeriksa tabel di lebar 1366px.

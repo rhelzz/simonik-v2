@@ -20,6 +20,7 @@ import {
 import { useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import {
+    bulkDestroy,
     create,
     destroy,
     edit,
@@ -95,6 +96,41 @@ export default function StudentsIndex({
 }: StudentsIndexProps) {
     const [search, setSearch] = useState(filters.search);
     const [importOpen, setImportOpen] = useState(false);
+    const [selected, setSelected] = useState<number[]>([]);
+    const [bulkOpen, setBulkOpen] = useState(false);
+
+    const pageIds = students.data.map((student) => student.id);
+
+    // Pilihan dibatasi ke baris yang sedang terlihat. Diturunkan, bukan
+    // di-reset lewat efek: begitu halaman atau filter berubah, `pageIds`
+    // berubah dan pilihan lama otomatis tidak terbawa — operator tidak bisa
+    // menghapus baris yang tak dilihatnya.
+    const onPage = selected.filter((id) => pageIds.includes(id));
+    const allChecked = pageIds.length > 0 && onPage.length === pageIds.length;
+    const someChecked = onPage.length > 0 && !allChecked;
+
+    function toggle(id: number) {
+        setSelected((current) =>
+            current.includes(id)
+                ? current.filter((value) => value !== id)
+                : [...current, id],
+        );
+    }
+
+    function toggleAll() {
+        setSelected(allChecked ? [] : pageIds);
+    }
+
+    function removeSelected() {
+        router.delete(bulkDestroy.url(), {
+            data: { ids: onPage },
+            preserveScroll: true,
+            onSuccess: () => {
+                setSelected([]);
+                setBulkOpen(false);
+            },
+        });
+    }
 
     const importForm = useForm<{ file: File | null }>({ file: null });
 
@@ -311,113 +347,176 @@ export default function StudentsIndex({
                         )}
                     </div>
                 ) : (
-                    <div className="mt-4 overflow-x-auto">
-                        <table className="w-full min-w-160 border-collapse text-left text-sm">
-                            <thead>
-                                <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
-                                    <th className="pb-3 font-semibold">
-                                        Siswa
-                                    </th>
-                                    <th className="pb-3 font-semibold">
-                                        Kelas
-                                    </th>
-                                    <th className="pb-3 font-semibold">
-                                        Industri
-                                    </th>
-                                    <th className="pb-3 font-semibold">
-                                        Status PKL
-                                    </th>
-                                    <th className="pb-3 text-right font-semibold">
-                                        Aksi
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-line">
-                                {students.data.map((student) => (
-                                    <tr
-                                        key={student.id}
-                                        className="group transition-colors hover:bg-canvas/50"
+                    <div className="mt-4">
+                        {onPage.length > 0 && (
+                            <div
+                                role="status"
+                                className="mb-3 flex flex-wrap items-center gap-3 rounded-2xl border border-primary/30 bg-primary-soft/40 px-4 py-3"
+                            >
+                                <span className="text-sm font-semibold text-ink">
+                                    {onPage.length} siswa dipilih
+                                </span>
+                                <div className="ml-auto flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelected([])}
+                                        className="rounded-xl px-3 py-2 text-sm font-semibold text-ink/70 transition-colors hover:bg-surface"
                                     >
-                                        <td className="py-3 pl-2">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar
-                                                    name={student.name}
-                                                    image={student.image}
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setBulkOpen(true)}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+                                    >
+                                        <Trash2 className="size-4" />
+                                        Hapus terpilih
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-160 border-collapse text-left text-sm">
+                                <thead>
+                                    <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
+                                        <th className="w-10 pb-3 pl-2">
+                                            <input
+                                                type="checkbox"
+                                                checked={allChecked}
+                                                ref={(node) => {
+                                                    if (node) {
+                                                        node.indeterminate =
+                                                            someChecked;
+                                                    }
+                                                }}
+                                                onChange={toggleAll}
+                                                aria-label="Pilih semua siswa di halaman ini"
+                                                className="size-4 cursor-pointer accent-primary"
+                                            />
+                                        </th>
+                                        <th className="px-3 pb-3 font-semibold">
+                                            Siswa
+                                        </th>
+                                        <th className="w-32 px-3 pb-3 font-semibold whitespace-nowrap">
+                                            Kelas
+                                        </th>
+                                        <th className="px-3 pb-3 font-semibold">
+                                            Industri
+                                        </th>
+                                        <th className="w-36 px-3 pb-3 font-semibold whitespace-nowrap">
+                                            Status PKL
+                                        </th>
+                                        <th className="px-3 pr-2 pb-3 text-right font-semibold">
+                                            Aksi
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-line">
+                                    {students.data.map((student) => (
+                                        <tr
+                                            key={student.id}
+                                            className="group transition-colors hover:bg-canvas/50"
+                                        >
+                                            <td className="py-3 pl-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={onPage.includes(
+                                                        student.id,
+                                                    )}
+                                                    onChange={() =>
+                                                        toggle(student.id)
+                                                    }
+                                                    aria-label={`Pilih ${student.name}`}
+                                                    className="size-4 cursor-pointer accent-primary"
                                                 />
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-semibold text-ink">
-                                                        {student.name}
-                                                    </p>
-                                                    <p className="truncate text-xs text-muted">
-                                                        NIS {student.nis}
-                                                        {student.email
-                                                            ? ` · ${student.email}`
-                                                            : ''}
-                                                    </p>
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar
+                                                        name={student.name}
+                                                        image={student.image}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="truncate font-semibold text-ink">
+                                                            {student.name}
+                                                        </p>
+                                                        <p className="truncate text-xs text-muted">
+                                                            NIS {student.nis}
+                                                            {student.email
+                                                                ? ` · ${student.email}`
+                                                                : ''}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-3 text-ink/80">
-                                            {student.class ?? '—'}
-                                        </td>
-                                        <td className="py-3 text-ink/80">
-                                            {student.industri ?? '—'}
-                                        </td>
-                                        <td className="py-3">
-                                            <span
-                                                className={cn(
-                                                    'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
-                                                    statusStyles[
-                                                        student.status_pkl
-                                                    ],
-                                                )}
-                                            >
-                                                <Dot
-                                                    className={
-                                                        statusDot[
+                                            </td>
+                                            <td className="px-3 py-3 whitespace-nowrap text-ink/80">
+                                                {student.class ?? '—'}
+                                            </td>
+                                            <td className="px-3 py-3 text-ink/80">
+                                                {student.industri ?? '—'}
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                <span
+                                                    className={cn(
+                                                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
+                                                        statusStyles[
+                                                            student.status_pkl
+                                                        ],
+                                                    )}
+                                                >
+                                                    <Dot
+                                                        className={
+                                                            statusDot[
+                                                                student
+                                                                    .status_pkl
+                                                            ]
+                                                        }
+                                                    />
+                                                    {
+                                                        statusLabels[
                                                             student.status_pkl
                                                         ]
                                                     }
-                                                />
-                                                {
-                                                    statusLabels[
-                                                        student.status_pkl
-                                                    ]
-                                                }
-                                            </span>
-                                        </td>
-                                        <td className="py-3 pr-2">
-                                            <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                                                <Link
-                                                    href={show.url(student.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Lihat detail ${student.name}`}
-                                                >
-                                                    <Eye className="size-4" />
-                                                </Link>
-                                                <Link
-                                                    href={edit.url(student.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Edit ${student.name}`}
-                                                >
-                                                    <Pencil className="size-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        remove(student)
-                                                    }
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
-                                                    aria-label={`Hapus ${student.name}`}
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                                </span>
+                                            </td>
+                                            <td className="py-3 pr-2 pl-3">
+                                                <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                                                    <Link
+                                                        href={show.url(
+                                                            student.id,
+                                                        )}
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                        aria-label={`Lihat detail ${student.name}`}
+                                                    >
+                                                        <Eye className="size-4" />
+                                                    </Link>
+                                                    <Link
+                                                        href={edit.url(
+                                                            student.id,
+                                                        )}
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                        aria-label={`Edit ${student.name}`}
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            remove(student)
+                                                        }
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
+                                                        aria-label={`Hapus ${student.name}`}
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
 
@@ -457,6 +556,39 @@ export default function StudentsIndex({
                     </div>
                 )}
             </section>
+
+            <Modal
+                open={bulkOpen}
+                onClose={() => setBulkOpen(false)}
+                title="Hapus siswa terpilih"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-muted">
+                        <span className="font-semibold text-ink">
+                            {onPage.length} siswa
+                        </span>{' '}
+                        akan dihapus beserta akun loginnya. Tindakan ini tidak
+                        bisa dibatalkan.
+                    </p>
+                    <div className="flex items-center justify-end gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setBulkOpen(false)}
+                            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-ink/70 transition-colors hover:bg-canvas"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="button"
+                            onClick={removeSelected}
+                            className="inline-flex items-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+                        >
+                            <Trash2 className="size-4" />
+                            Hapus {onPage.length} siswa
+                        </button>
+                    </div>
+                </div>
+            </Modal>
 
             <Modal
                 open={importOpen}

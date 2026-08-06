@@ -122,6 +122,42 @@ Pola dari [`students/index.tsx`](../resources/js/pages/students/index.tsx). Stru
 - **Badge status**: pill `rounded-full px-2.5 py-1 text-xs font-semibold` + titik warna, warna dari peta status (`bg-*/15 text-*`).
 - **Kolom aksi**: ikon-ikon (`Eye`/`Pencil`/`Trash2`) rata kanan, `opacity-60 group-hover:opacity-100`; hover destruktif `hover:bg-red-50 hover:text-red-500`.
 
+#### Padding sel (baku)
+
+- Sel tengah: `px-3 pb-3` (header) dan `px-3 py-3` (body). **Tanpa `px-*` kolom
+  saling menempel** begitu `min-w-160` tercapai — itu keluhan nyata dari UAT.
+- Sel tepi: tulis eksplisit `pb-3 pr-3 pl-2` / `pb-3 pl-3 pr-2` (dan `py-3`
+  untuk body). Jangan menggabung `px-3` dengan `pl-2`/`pr-2` — keduanya
+  mengatur properti yang sama dan hasilnya bergantung pada urutan CSS Tailwind,
+  bukan urutan tulisan.
+- Kolom bernilai pendek (Kelas, Status): beri lebar tetap + `whitespace-nowrap`
+  supaya badge tidak terpotong dan tidak membungkus jadi dua baris. Kolom
+  bernama panjang (Industri) dibiarkan membungkus.
+- Jangan menaikkan `min-w-160` untuk mengatasi kolom sempit — itu hanya
+  memindahkan masalah ke scrollbar mendatar.
+
+#### Pilih & hapus massal
+
+Pola di `pages/students/index.tsx`:
+
+- Kolom checkbox paling kiri (`w-10`), header berisi checkbox **pilih semua
+  halaman ini** dengan `indeterminate` disetel lewat `ref` (tidak ada propnya
+  di React).
+- Pilihan **diturunkan**, bukan di-reset lewat `useEffect`:
+  `const onPage = selected.filter((id) => pageIds.includes(id))`. Begitu halaman
+  atau filter berubah, pilihan lama otomatis tidak terbawa — operator tidak bisa
+  menghapus baris yang tidak dilihatnya. (`setState` di dalam efek juga ditolak
+  ESLint.)
+- Bila ada yang terpilih: action bar di atas tabel, `role="status"`, menyebut
+  jumlahnya + tombol **Batal** dan **Hapus terpilih**.
+- Konfirmasi lewat komponen `Modal`, **bukan** `window.confirm`, dan wajib
+  menyebut jumlahnya (`Hapus 12 siswa`).
+- Aksesibilitas: setiap checkbox baris punya `aria-label` bernama entitasnya;
+  checkbox header `aria-label="Pilih semua … di halaman ini"`.
+- **Select-all lintas halaman sengaja tidak dibuat** — satu klik yang menghapus
+  ratusan baris tanpa operator melihatnya terlalu berisiko. Tambahkan hanya bila
+  memang diminta, sebagai langkah kedua yang eksplisit.
+
 ### Empty state
 
 Kotak `border border-dashed border-line` + ikon, pesan, dan tombol **Reset filter** bila sedang memfilter.
