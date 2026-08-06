@@ -37,7 +37,7 @@ class PembimbingImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollecti
         foreach ($rows as $index => $row) {
             $line = $index + 2;
             $name = trim((string) ($row['nama'] ?? ''));
-            $email = mb_strtolower(trim((string) ($row['email'] ?? '')));
+            $email = $this->email($row['email'] ?? '');
             $noHp = trim((string) ($row['no_hp'] ?? ''));
             $genderRaw = trim((string) ($row['jenis_kelamin'] ?? ''));
 

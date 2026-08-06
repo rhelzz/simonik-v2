@@ -82,13 +82,13 @@ class DataImportExportTest extends TestCase
 
     public function test_import_wakasek_creates_account_with_default_password(): void
     {
-        $csv = "Nama,Email\nAndi Wijaya,andi@sekolah.sch.id\n";
+        $csv = "Nama,Email\nAndi Wijaya,andi@simonik.local\n";
 
         $this->actingAs($this->admin())
             ->post('/wakaseks/import', ['file' => $this->csv($csv)])
             ->assertRedirect(route('wakaseks.index'));
 
-        $user = User::where('email', 'andi@sekolah.sch.id')->firstOrFail();
+        $user = User::where('email', 'andi@simonik.local')->firstOrFail();
         $this->assertTrue($user->hasRole('wakasek'));
         $this->assertTrue(Hash::check('password', $user->password));
     }
@@ -97,12 +97,12 @@ class DataImportExportTest extends TestCase
     {
         $dep = Departemen::factory()->create(['name' => 'Teknik Mesin']);
 
-        $csv = "Nama,Email,Jurusan\nRina,rina@sekolah.sch.id,Teknik Mesin\n";
+        $csv = "Nama,Email,Jurusan\nRina,rina@simonik.local,Teknik Mesin\n";
 
         $this->actingAs($this->admin())
             ->post('/kaprogs/import', ['file' => $this->csv($csv)]);
 
-        $user = User::where('email', 'rina@sekolah.sch.id')->firstOrFail();
+        $user = User::where('email', 'rina@simonik.local')->firstOrFail();
         $this->assertTrue($user->hasRole('kaprog'));
         $this->assertSame($user->id, $dep->refresh()->user_id);
     }
@@ -111,12 +111,12 @@ class DataImportExportTest extends TestCase
     {
         $dep = Departemen::factory()->create(['name' => 'Teknik Mesin']);
 
-        $csv = "Nama,Email,No HP,Jurusan\nSiti Aminah,siti@sekolah.sch.id,081234567890,Teknik Mesin\n";
+        $csv = "Nama,Email,No HP,Jurusan\nSiti Aminah,siti@simonik.local,081234567890,Teknik Mesin\n";
 
         $this->actingAs($this->admin())
             ->post('/teachers/import', ['file' => $this->csv($csv)]);
 
-        $user = User::where('email', 'siti@sekolah.sch.id')->firstOrFail();
+        $user = User::where('email', 'siti@simonik.local')->firstOrFail();
         $this->assertTrue($user->hasRole('guru'));
         $this->assertDatabaseHas('teachers', ['user_id' => $user->id, 'departemen_id' => $dep->id]);
     }
@@ -125,19 +125,19 @@ class DataImportExportTest extends TestCase
     {
         $this->actingAs($this->admin())
             ->post('/pembimbings/import', ['file' => $this->csv(
-                "Nama,Email,No HP,Jenis Kelamin\nBudi,budi@dudi.co.id,081200001111,Laki-laki\n"
+                "Nama,Email,No HP,Jenis Kelamin\nBudi,budi@simonik.local,081200001111,Laki-laki\n"
             )]);
 
         $this->actingAs($this->admin())
             ->post('/parents/import', ['file' => $this->csv(
-                "Nama,Email,Jenis Kelamin,Alamat,Pekerjaan,No HP\nSantoso,santoso@mail.com,Laki-laki,Jl. A,Wiraswasta,081298765432\n"
+                "Nama,Email,Jenis Kelamin,Alamat,Pekerjaan,No HP\nSantoso,santoso@simonik.local,Laki-laki,Jl. A,Wiraswasta,081298765432\n"
             )]);
 
-        $pembimbing = User::where('email', 'budi@dudi.co.id')->firstOrFail();
+        $pembimbing = User::where('email', 'budi@simonik.local')->firstOrFail();
         $this->assertTrue($pembimbing->hasRole('pembimbing'));
         $this->assertDatabaseHas('pembimbings', ['user_id' => $pembimbing->id, 'gender' => 'L']);
 
-        $parent = User::where('email', 'santoso@mail.com')->firstOrFail();
+        $parent = User::where('email', 'santoso@simonik.local')->firstOrFail();
         $this->assertTrue($parent->hasRole('orangtua'));
         $this->assertDatabaseHas('parents', ['user_id' => $parent->id, 'occupation' => 'Wiraswasta']);
     }

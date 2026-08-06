@@ -62,7 +62,7 @@ class ImportTemplates
             dataTitle: ImportDefaults::SHEETS['wakasek'],
             instructions: [
                 ['Nama', 'Wajib', 'Nama lengkap wakasek.'],
-                ['Email', 'Wajib', 'Email unik untuk akun login.'],
+                ['Email', 'Wajib', 'Boleh diisi username saja, mis. "rasyad.helza" — otomatis menjadi rasyad.helza@'.ImportDefaults::EMAIL_DOMAIN.'. Harus unik.'],
             ],
             headings: ['Nama', 'Email'],
         );
@@ -78,7 +78,7 @@ class ImportTemplates
             dataTitle: ImportDefaults::SHEETS['kaprog'],
             instructions: [
                 ['Nama', 'Wajib', 'Nama lengkap kepala program.'],
-                ['Email', 'Wajib', 'Email unik untuk akun login.'],
+                ['Email', 'Wajib', 'Boleh diisi username saja, mis. "rasyad.helza" — otomatis menjadi rasyad.helza@'.ImportDefaults::EMAIL_DOMAIN.'. Harus unik.'],
                 ['Jurusan', 'Opsional', 'Jurusan yang dipimpin. Boleh lebih dari satu, pisahkan dengan tanda ";". Ketik sama persis dengan sheet "Referensi".'],
             ],
             headings: ['Nama', 'Email', 'Jurusan'],
@@ -96,7 +96,7 @@ class ImportTemplates
             dataTitle: ImportDefaults::SHEETS['guru'],
             instructions: [
                 ['Nama', 'Wajib', 'Nama lengkap guru (boleh dengan gelar).'],
-                ['Email', 'Wajib', 'Email unik untuk akun login.'],
+                ['Email', 'Wajib', 'Boleh diisi username saja, mis. "rasyad.helza" — otomatis menjadi rasyad.helza@'.ImportDefaults::EMAIL_DOMAIN.'. Harus unik.'],
                 ['No HP', 'Wajib', 'Nomor HP aktif, mis. 081234567890.'],
                 ['Jurusan', 'Wajib', 'Ketik sama persis dengan nama di sheet "Referensi".'],
             ],
@@ -113,7 +113,7 @@ class ImportTemplates
             dataTitle: ImportDefaults::SHEETS['pembimbing'],
             instructions: [
                 ['Nama', 'Wajib', 'Nama lengkap pembimbing industri.'],
-                ['Email', 'Wajib', 'Email unik untuk akun login.'],
+                ['Email', 'Wajib', 'Boleh diisi username saja, mis. "rasyad.helza" — otomatis menjadi rasyad.helza@'.ImportDefaults::EMAIL_DOMAIN.'. Harus unik.'],
                 ['No HP', 'Wajib', 'Nomor HP aktif.'],
                 ['Jenis Kelamin', 'Opsional', 'Laki-laki atau Perempuan (boleh L / P).'],
             ],
@@ -129,7 +129,7 @@ class ImportTemplates
             dataTitle: ImportDefaults::SHEETS['orangtua'],
             instructions: [
                 ['Nama', 'Wajib', 'Nama lengkap orang tua/wali.'],
-                ['Email', 'Wajib', 'Email unik untuk akun login.'],
+                ['Email', 'Wajib', 'Boleh diisi username saja, mis. "rasyad.helza" — otomatis menjadi rasyad.helza@'.ImportDefaults::EMAIL_DOMAIN.'. Harus unik.'],
                 ['Jenis Kelamin', 'Wajib', 'Laki-laki atau Perempuan (boleh L / P).'],
                 ['Alamat', 'Wajib', 'Alamat tempat tinggal.'],
                 ['Pekerjaan', 'Wajib', 'Pekerjaan orang tua/wali.'],

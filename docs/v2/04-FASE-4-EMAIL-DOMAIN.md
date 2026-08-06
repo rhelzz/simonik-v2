@@ -1,8 +1,10 @@
 # Fase 4 — Seragamkan Email ke `@simonik.local` (Masalah UAT #5)
 
-**Status:** belum dikerjakan · **Prioritas:** P1 · **Risiko regresi:** rendah
+**Status:** ✅ **SELESAI** · **Prioritas:** P1 · **Risiko regresi:** rendah
 (tinggi bila data lama diubah — lihat §8) · **Perkiraan:** ~3 jam
 **Prasyarat:** Fase 2 (alur pembuatan akun sudah dipusatkan di `accountFor()`).
+
+> **Hasil implementasi** — lihat [§9](#9-hasil-implementasi).
 
 ---
 
@@ -228,3 +230,63 @@ test_impor_menerima_username_saja()
 | Login Google (`users.google_id`) tidak akan ber-domain lokal | `ends_with` hanya dipasang di jalur pembuatan akun internal, bukan OAuth/profil |
 | Sufiks domain di UI menutupi teks pada input sempit | Sufiks di luar area ketik, input `min-w-0`, uji di 360px |
 | Tabrakan username saat saran otomatis dipakai | Saran boleh disunting; `Rule::unique` tetap menangkap tabrakan dengan pesan jelas |
+
+
+---
+
+## 9. Hasil implementasi
+
+`composer ci:check` hijau: Pint, PHPStan 0 error, **378/378 test lulus**
+(+6 dari `EmailDomainTest`), eslint + prettier + `tsc` lolos. Nol migrasi.
+
+### Yang dikerjakan
+
+- **`ImportDefaults::EMAIL_DOMAIN` + `ImportDefaults::email()`** — satu tempat
+  yang menyusun email dari username. Nilai yang sudah memuat `@` dibiarkan apa
+  adanya, jadi berkas impor lama berisi email lengkap tetap jalan dan operator
+  yang refleks mengetik domain tidak menghasilkan domain ganda.
+- **`NormalizesEmailDomain`** (trait form request) menormalkan input di
+  `prepareForValidation()`. Dipakai 11 request: 4 form jabatan (lewat
+  `ValidatesRoleAccount`), siswa, orang tua, 6 form ubah, dan profil.
+- **Aturan `ends_with` hanya pada form *tambah***, bukan form ubah maupun
+  profil — persis seperti rencana §4.2. Akun lama berdomain apa pun tetap bisa
+  disunting; menolak emailnya saat disunting sama dengan mengganti kredensial
+  login orang tanpa diminta. Dikunci test
+  `test_akun_lama_berdomain_lain_tetap_bisa_disunting`.
+- **Impor menormalkan di titik baca**, bukan di `makeUser()` — supaya validasi
+  `isEmail()` melihat alamat yang sudah lengkap. Kolom `Email` di template kini
+  boleh diisi username saja.
+- **`EmailInput`** menampilkan `@simonik.local` sebagai sufiks mati di samping
+  kolom isian; operator hanya mengetik username. Bila nilainya sudah memuat
+  `@` (akun lama), sufiksnya disembunyikan dan teks utuhnya ditampilkan.
+  Dipasang di 6 form master data — **tidak** di halaman login (harus menerima
+  email apa pun) dan tidak di profil.
+- **Seeder demo** tidak lagi memakai `@simonik.test`; varian domain kedua
+  hilang dari sumbernya.
+- **Test lama disesuaikan**: 9 berkas test memakai domain sekolah/contoh
+  (`@sekolah.sch.id`, `@simonik.test`, …) yang kini ditolak pada pembuatan akun.
+  Ini konsekuensi perubahan yang memang diminta, bukan bug.
+
+### Yang tidak jadi masalah
+
+§8 mengkhawatirkan reset kata sandi lewat email menjadi mustahil karena
+`@simonik.local` bukan domain sungguhan. Diperiksa: **aplikasi ini memang tidak
+punya alur lupa-kata-sandi** — hanya `PUT /password` untuk pengguna yang sudah
+masuk. Tidak ada janji yang perlu dicabut. Login Google (`users.google_id`) juga
+belum punya rute apa pun, jadi tidak ada jalur OAuth yang terganggu.
+
+### Catatan temuan sampingan
+
+Saat menjalankan test muncul `Call to a member function all() on array` dari
+`Illuminate\Testing\TestResponseAssert`. Penyebabnya `config/session.php`
+memakai `serialization => 'json'`, sehingga `errors` di session kembali sebagai
+array. **Artefak harness, bukan bug aplikasi**: hanya muncul saat sebuah
+assertion sudah gagal pada response redirect. Alur asli (POST gagal validasi →
+GET form) diverifikasi tetap 200. Tidak diubah apa pun untuk ini.
+
+### Belum dikerjakan
+
+- **Command `simonik:normalize-emails`** (§5) untuk merapikan email lama.
+  Sengaja belum dibuat: mengubah email = mengubah kredensial login. Buat hanya
+  bila sekolah memang memintanya, dengan `--dry-run` dan backup.
+- **Verifikasi manual di browser.**

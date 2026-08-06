@@ -12,6 +12,7 @@ import {
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/StudentController';
+import { EmailInput, usernameOf } from '@/components/ui/email-input';
 import { Select } from '@/components/ui/select';
 import type { SelectOption } from '@/components/ui/select';
 
@@ -148,6 +149,7 @@ export function StudentForm({
         student?.parent_id ? String(student.parent_id) : '',
     );
 
+    const [email, setEmail] = useState(usernameOf(student?.email));
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -231,13 +233,9 @@ export function StudentForm({
                             error={errors.email}
                             required
                         >
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                defaultValue={student?.email}
-                                placeholder="nama@sekolah.sch.id"
-                                className={inputClass}
+                            <EmailInput
+                                value={email}
+                                onChange={setEmail}
                                 required
                             />
                         </Field>

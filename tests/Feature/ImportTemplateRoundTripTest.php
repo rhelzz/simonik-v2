@@ -126,7 +126,7 @@ class ImportTemplateRoundTripTest extends TestCase
         $this->actingAs($this->admin())->post('/students/import', ['file' => $file]);
 
         $this->assertDatabaseHas('students', ['name' => 'Ani Lestari']);
-        $this->assertDatabaseMissing('users', ['email' => 'budi@contoh.sch.id']);
+        $this->assertDatabaseMissing('users', ['email' => 'budi@simonik.local']);
         $this->assertDatabaseCount('students', 1);
     }
 

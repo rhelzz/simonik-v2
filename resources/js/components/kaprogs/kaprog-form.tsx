@@ -13,6 +13,7 @@ import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/KaprogController';
 import { AccountPicker } from '@/components/account-picker';
 import type { AccountCandidate } from '@/components/account-picker';
+import { EmailInput, usernameOf } from '@/components/ui/email-input';
 
 export type DepartemenOption = {
     id: number;
@@ -116,6 +117,7 @@ export function KaprogForm({
     const [linked, setLinked] = useState<AccountCandidate | null>(null);
     const selected = new Set(kaprog?.departemen_ids ?? []);
 
+    const [email, setEmail] = useState(usernameOf(kaprog?.email));
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -164,13 +166,9 @@ export function KaprogForm({
                                         error={errors.email}
                                         required
                                     >
-                                        <input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            defaultValue={kaprog?.email}
-                                            placeholder="nama@sekolah.sch.id"
-                                            className={inputClass}
+                                        <EmailInput
+                                            value={email}
+                                            onChange={setEmail}
                                             required
                                         />
                                     </Field>

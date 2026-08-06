@@ -39,7 +39,7 @@ class TeacherImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection,
         foreach ($rows as $index => $row) {
             $line = $index + 2;
             $name = trim((string) ($row['nama'] ?? ''));
-            $email = mb_strtolower(trim((string) ($row['email'] ?? '')));
+            $email = $this->email($row['email'] ?? '');
             $noHp = trim((string) ($row['no_hp'] ?? ''));
             $jurusan = trim((string) ($row['jurusan'] ?? ''));
             $departemenId = $departemens[mb_strtolower($jurusan)] ?? null;

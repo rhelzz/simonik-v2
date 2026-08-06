@@ -11,6 +11,32 @@ final class ImportDefaults
     public const PASSWORD = 'password';
 
     /**
+     * Domain baku untuk seluruh akun yang dibuat dari dalam aplikasi.
+     *
+     * Sengaja konstanta, bukan `config()`: nilainya tidak berubah antar
+     * environment. Pindahkan ke `config/` pada hari ada sekolah kedua dengan
+     * domain berbeda — bukan sebelumnya.
+     */
+    public const EMAIL_DOMAIN = 'simonik.local';
+
+    /**
+     * Susun email dari username. Nilai yang sudah memuat "@" dibiarkan apa
+     * adanya, supaya berkas impor lama yang berisi email lengkap tetap jalan
+     * dan operator yang refleks mengetik domain tidak menghasilkan
+     * "budi@simonik.local@simonik.local".
+     */
+    public static function email(string $username): string
+    {
+        $username = mb_strtolower(trim($username));
+
+        if ($username === '' || str_contains($username, '@')) {
+            return $username;
+        }
+
+        return $username.'@'.self::EMAIL_DOMAIN;
+    }
+
+    /**
      * Nama sheet data pada setiap template impor.
      *
      * Template adalah workbook multi-sheet (Petunjuk / data / Referensi),

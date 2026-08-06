@@ -120,6 +120,15 @@ trait ImportsRows
         return User::query()->pluck('email')->map(fn ($e) => mb_strtolower((string) $e))->all();
     }
 
+    /**
+     * Baca kolom Email dan lengkapi domainnya bila operator hanya menulis
+     * username (lihat `ImportDefaults::email()`).
+     */
+    protected function email(mixed $value): string
+    {
+        return ImportDefaults::email((string) $value);
+    }
+
     protected function isEmail(string $email): bool
     {
         return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;

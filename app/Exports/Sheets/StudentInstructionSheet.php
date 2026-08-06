@@ -37,7 +37,7 @@ class StudentInstructionSheet implements FromArray, WithColumnWidths, WithEvents
             ['', '', ''],
             ['Kolom', 'Wajib', 'Cara mengisi'],
             ['Nama', 'Wajib', 'Nama lengkap siswa.'],
-            ['Email', 'Wajib', 'Email unik untuk akun login siswa.'],
+            ['Email', 'Wajib', 'Boleh diisi username saja, mis. "budi.santoso" — otomatis menjadi budi.santoso@'.ImportDefaults::EMAIL_DOMAIN.'. Harus unik.'],
             ['NIS', 'Opsional', 'Nomor Induk Siswa (panjang bebas). Tidak boleh sama dengan siswa lain.'],
             ['Jenis Kelamin', 'Opsional', 'Isi "Laki-laki" atau "Perempuan" (boleh juga L / P).'],
             ['Tempat Lahir', 'Opsional', 'Kota/kabupaten kelahiran.'],
@@ -55,7 +55,7 @@ class StudentInstructionSheet implements FromArray, WithColumnWidths, WithEvents
             [
                 'CONTOH',
                 '',
-                'Budi Santoso | 0012345678 | budi@sekolah.sch.id | Laki-laki | Bandung | 2008-05-14 | O | '
+                'Budi Santoso | 0012345678 | budi.santoso | Laki-laki | Bandung | 2008-05-14 | O | '
                     .'Jl. Merdeka No. 1 | XI RPL 1 | Rekayasa Perangkat Lunak | PT Contoh Industri | Santoso | Belum',
             ],
             ['', '', ''],

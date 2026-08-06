@@ -309,20 +309,37 @@ Keluhan "kaprog + guru pembimbing bikin nggak bisa login" ternyata bukan bug aut
 
 **Belum:** command `simonik:merge-accounts` untuk melaporkan akun kembar yang terlanjur ada di produksi (dibuat kalau memang ditemukan, jangan spekulatif), dan verifikasi manual di browser.
 
+---
+
+### 49. Fase 4 v2 — satu domain email untuk semua akun
+
+Tidak ada konvensi terpusat: seeder saja memakai `@simonik.local` **dan** `@simonik.test`, template impor mencontohkan `budi@contoh.sch.id`, dan form menerima apa pun. Operator jadi mengetik gaya berbeda tiap kali lalu lupa mana yang dipakai — sekaligus memperparah masalah akun kembar di Fase 2.
+
+- **`ImportDefaults::EMAIL_DOMAIN` + `email()`** jadi satu-satunya tempat email disusun dari username. Nilai yang sudah memuat `@` dibiarkan apa adanya, jadi berkas impor lama tetap jalan dan operator yang refleks mengetik domain tidak menghasilkan domain ganda.
+- **`NormalizesEmailDomain`** (trait form request) menormalkan di `prepareForValidation()`, dipakai 11 request. Aturan `ends_with` **hanya pada form tambah** — form ubah dan profil sengaja dibebaskan: menolak email akun lama saat disunting sama dengan mengganti kredensial login orang tanpa diminta.
+- **Impor menormalkan di titik baca**, bukan di `makeUser()`, supaya validasi `isEmail()` melihat alamat yang sudah lengkap. Kolom Email di template boleh diisi username saja.
+- **`EmailInput`** menampilkan `@simonik.local` sebagai sufiks mati di samping kolom; operator hanya mengetik username. Akun lama berdomain lain tetap tampil utuh. Dipasang di 6 form master data, **tidak** di login (harus menerima email apa pun) dan tidak di profil.
+- **Kekhawatiran yang ternyata tidak berlaku:** rencana sempat mencemaskan reset kata sandi lewat email jadi mustahil karena `@simonik.local` bukan domain sungguhan. Diperiksa: aplikasi ini memang tidak punya alur lupa-kata-sandi (hanya `PUT /password` untuk yang sudah masuk), dan login Google belum punya rute apa pun.
+- **9 berkas test lama disesuaikan** karena memakai domain sekolah/contoh yang kini ditolak saat membuat akun — konsekuensi perubahan yang diminta, bukan bug.
+- **Temuan sampingan (bukan bug aplikasi):** `Call to a member function all() on array` dari `TestResponseAssert` muncul karena `config/session.php` memakai `serialization => 'json'`, sehingga `errors` di session kembali sebagai array. Hanya terjadi saat sebuah assertion sudah gagal pada response redirect; alur asli (POST gagal validasi → GET form) diverifikasi tetap 200. Tidak diubah apa pun.
+- ✅ **Pint + PHPStan 0 error + 378/378 passed + 1574 assertions.** `composer ci:check` hijau.
+
+**Belum:** command `simonik:normalize-emails` untuk merapikan email lama (sengaja ditunda — mengubah email = mengubah kredensial login), dan verifikasi manual di browser.
+
 ## 📍 Current step
-**Fase 1 + 2 v2 selesai — ini rilis pertama yang layak dikirim ke sekolah.** Keduanya bug: impor Excel kini benar-benar bisa dipakai, dan satu orang bisa memegang beberapa jabatan dengan satu login.
+**Fase 1, 2, dan 4 v2 selesai.** Impor Excel bisa dipakai lagi, satu orang bisa memegang beberapa jabatan dengan satu login, dan seluruh akun baru memakai satu domain `@simonik.local`.
 
-**Catatan deploy:** nol migrasi pada kedua fase. Wajib `npm run build` (ada perubahan React). Akun kembar yang terlanjur dibuat operator **tidak** digabung otomatis — perlu ditinjau manual.
+**Catatan deploy:** nol migrasi pada ketiga fase. Wajib `npm run build`. Akun kembar dan email lama **tidak** diubah otomatis — keduanya perlu ditinjau manual bila memang mengganggu.
 
-**Sisa verifikasi:** buka di browser dengan data nyata — (1) unduh template siswa, isi, unggah; (2) tambahkan guru yang ada sebagai kaprog lalu login dengan akunnya.
+**Sisa verifikasi di browser:** (1) unduh template siswa, isi, unggah; (2) tambahkan guru yang ada sebagai kaprog lalu login dengan akunnya; (3) buat akun baru dan pastikan sufiks `@simonik.local` muncul di form.
 
 ---
 
 ## ⏭️ Next step — urutan yang sudah diputuskan
 Urutan **1 → 2 → 4 → 5 → 3 → (6)** (lihat [`docs/v2/README.md`](v2/README.md)), satu fase satu commit.
 
-1. **[Fase 4 — Domain email](v2/04-FASE-4-EMAIL-DOMAIN.md)** ← berikutnya. Menempel pada alur pembuatan akun yang baru saja dipusatkan Fase 2 (`accountFor()`), jadi tinggal satu titik sentuh di backend.
-2. **[Fase 5 — Industri di Pembimbing](v2/05-FASE-5-INDUSTRI-DI-PEMBIMBING.md)**, lalu **[Fase 3 — Tabel siswa](v2/03-FASE-3-TABEL-SISWA.md)** (nol ketergantungan, boleh paralel).
+1. **[Fase 5 — Industri di Pembimbing](v2/05-FASE-5-INDUSTRI-DI-PEMBIMBING.md)** ← berikutnya. Dropdown industri di form pembimbing, menulis ke `industries.pembimbing_id`. Nol migrasi; menyalin pola `KaprogController::syncDepartemens()`.
+2. **[Fase 3 — Tabel siswa](v2/03-FASE-3-TABEL-SISWA.md)** — select & select-all untuk hapus massal + jarak kolom. Nol ketergantungan, boleh paralel.
 3. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** ditinjau ulang, bukan otomatis dikerjakan.
 
 Tiga opsi lama masih berlaku dan belum dikerjakan: wajib lengkapi profil saat login pertama, bersihkan approval WFA menggantung, audit scoping kaprog untuk master data lain.

@@ -30,20 +30,20 @@ class ProfileTest extends TestCase
         $this->actingAs($user)
             ->patch('/profile', [
                 'name' => 'Nama Baru',
-                'email' => 'baru@simonik.test',
+                'email' => 'baru@simonik.local',
             ])
             ->assertSessionHas('success');
 
         $this->assertDatabaseHas('users', [
             'id' => $user->id,
             'name' => 'Nama Baru',
-            'email' => 'baru@simonik.test',
+            'email' => 'baru@simonik.local',
         ]);
     }
 
     public function test_profile_update_rejects_duplicate_email(): void
     {
-        $other = User::factory()->create(['email' => 'taken@simonik.test']);
+        $other = User::factory()->create(['email' => 'taken@simonik.local']);
         $user = User::factory()->create();
 
         $this->actingAs($user)
@@ -56,12 +56,12 @@ class ProfileTest extends TestCase
 
     public function test_user_can_keep_their_own_email(): void
     {
-        $user = User::factory()->create(['email' => 'me@simonik.test']);
+        $user = User::factory()->create(['email' => 'me@simonik.local']);
 
         $this->actingAs($user)
             ->patch('/profile', [
                 'name' => 'Nama Saya',
-                'email' => 'me@simonik.test',
+                'email' => 'me@simonik.local',
             ])
             ->assertSessionHasNoErrors();
     }

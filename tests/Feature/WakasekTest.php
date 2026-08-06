@@ -40,7 +40,7 @@ class WakasekTest extends TestCase
     {
         return [
             'name' => 'Bu Rina',
-            'email' => 'rina@simonik.test',
+            'email' => 'rina@simonik.local',
             'password' => 'password123',
             'password_confirmation' => 'password123',
         ];
@@ -70,7 +70,7 @@ class WakasekTest extends TestCase
             ->post('/wakaseks', $this->validPayload())
             ->assertRedirect();
 
-        $user = User::where('email', 'rina@simonik.test')->firstOrFail();
+        $user = User::where('email', 'rina@simonik.local')->firstOrFail();
         $this->assertTrue($user->hasRole('wakasek'));
     }
 
@@ -81,14 +81,14 @@ class WakasekTest extends TestCase
         $this->actingAs($this->admin())
             ->put("/wakaseks/{$wakasek->id}", [
                 'name' => 'Nama Baru',
-                'email' => 'barubu@simonik.test',
+                'email' => 'barubu@simonik.local',
             ])
             ->assertRedirect();
 
         $this->assertDatabaseHas('users', [
             'id' => $wakasek->id,
             'name' => 'Nama Baru',
-            'email' => 'barubu@simonik.test',
+            'email' => 'barubu@simonik.local',
         ]);
     }
 

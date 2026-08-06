@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesEmailDomain;
 use App\Models\Teacher;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -9,6 +10,8 @@ use Illuminate\Validation\Rules\Password;
 
 class UpdateTeacherRequest extends FormRequest
 {
+    use NormalizesEmailDomain;
+
     public function authorize(): bool
     {
         return true;

@@ -37,7 +37,7 @@ class TeacherTest extends TestCase
     {
         return [
             'name' => 'Pak Hadi',
-            'email' => 'hadi@simonik.test',
+            'email' => 'hadi@simonik.local',
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'no_hp' => '081234567890',
@@ -70,9 +70,9 @@ class TeacherTest extends TestCase
             ->assertRedirect();
 
         $this->assertDatabaseHas('teachers', ['name' => 'Pak Hadi']);
-        $this->assertDatabaseHas('users', ['email' => 'hadi@simonik.test']);
+        $this->assertDatabaseHas('users', ['email' => 'hadi@simonik.local']);
 
-        $user = User::where('email', 'hadi@simonik.test')->firstOrFail();
+        $user = User::where('email', 'hadi@simonik.local')->firstOrFail();
         $this->assertTrue($user->hasRole('guru'));
     }
 
@@ -101,7 +101,7 @@ class TeacherTest extends TestCase
 
         $payload = [
             'name' => 'Nama Baru',
-            'email' => 'baru@simonik.test',
+            'email' => 'baru@simonik.local',
             'no_hp' => '089999999999',
             'departemen_id' => $teacher->departemen_id,
         ];
@@ -117,7 +117,7 @@ class TeacherTest extends TestCase
         ]);
         $this->assertDatabaseHas('users', [
             'id' => $teacher->user_id,
-            'email' => 'baru@simonik.test',
+            'email' => 'baru@simonik.local',
         ]);
     }
 

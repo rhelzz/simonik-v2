@@ -17,7 +17,7 @@ class DemoUserSeeder extends Seeder
     {
         foreach (RoleSeeder::ROLES as $role) {
             $user = User::firstOrCreate(
-                ['email' => $role.'@simonik.test'],
+                ['email' => $role.'@simonik.local'],
                 [
                     'name' => 'Demo '.ucfirst($role),
                     'password' => Hash::make('password'),

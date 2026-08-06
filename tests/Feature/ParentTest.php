@@ -35,7 +35,7 @@ class ParentTest extends TestCase
     {
         return [
             'nama' => 'Bapak Andi',
-            'email' => 'andi@simonik.test',
+            'email' => 'andi@simonik.local',
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'gender' => 'L',
@@ -70,9 +70,9 @@ class ParentTest extends TestCase
             ->assertSessionHas('success');
 
         $this->assertDatabaseHas('parents', ['nama' => 'Bapak Andi']);
-        $this->assertDatabaseHas('users', ['email' => 'andi@simonik.test']);
+        $this->assertDatabaseHas('users', ['email' => 'andi@simonik.local']);
 
-        $user = User::where('email', 'andi@simonik.test')->firstOrFail();
+        $user = User::where('email', 'andi@simonik.local')->firstOrFail();
         $this->assertTrue($user->hasRole('orangtua'));
     }
 
@@ -103,7 +103,7 @@ class ParentTest extends TestCase
         $this->actingAs($this->admin())
             ->put("/parents/{$parent->id}", [
                 'nama' => 'Nama Baru',
-                'email' => 'baru@simonik.test',
+                'email' => 'baru@simonik.local',
                 'gender' => 'P',
                 'alamat' => $parent->alamat,
                 'occupation' => 'Guru',
@@ -118,7 +118,7 @@ class ParentTest extends TestCase
         ]);
         $this->assertDatabaseHas('users', [
             'id' => $parent->user_id,
-            'email' => 'baru@simonik.test',
+            'email' => 'baru@simonik.local',
         ]);
     }
 

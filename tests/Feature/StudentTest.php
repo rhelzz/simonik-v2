@@ -45,7 +45,7 @@ class StudentTest extends TestCase
 
         return [
             'name' => 'Budi Santoso',
-            'email' => 'budi@simonik.test',
+            'email' => 'budi@simonik.local',
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'nis' => '2024001',
@@ -92,9 +92,9 @@ class StudentTest extends TestCase
             'nis' => '2024001',
             'name' => 'Budi Santoso',
         ]);
-        $this->assertDatabaseHas('users', ['email' => 'budi@simonik.test']);
+        $this->assertDatabaseHas('users', ['email' => 'budi@simonik.local']);
 
-        $user = User::where('email', 'budi@simonik.test')->firstOrFail();
+        $user = User::where('email', 'budi@simonik.local')->firstOrFail();
         $this->assertTrue($user->hasRole('siswa'));
     }
 
@@ -104,7 +104,7 @@ class StudentTest extends TestCase
 
         $payload = [
             'name' => 'Nama Baru',
-            'email' => 'baru@simonik.test',
+            'email' => 'baru@simonik.local',
             'nis' => $student->nis,
             'placeOfBirth' => $student->placeOfBirth,
             'dateOfBirth' => $student->dateOfBirth->format('Y-m-d'),
@@ -129,7 +129,7 @@ class StudentTest extends TestCase
         ]);
         $this->assertDatabaseHas('users', [
             'id' => $student->user_id,
-            'email' => 'baru@simonik.test',
+            'email' => 'baru@simonik.local',
         ]);
     }
 
@@ -165,7 +165,7 @@ class StudentTest extends TestCase
         $parent = Parents::factory()->create(['nama' => 'Bapak Santoso']);
 
         $csv = "Nama,NIS,Email,Jenis Kelamin,Tempat Lahir,Tanggal Lahir,Golongan Darah,Alamat,Kelas,Jurusan,Industri,Orang Tua,Status PKL,PKL Mulai,PKL Selesai,Periode\n"
-            ."Budi Santoso,0012345678,budi@contoh.sch.id,Laki-laki,Bandung,2008-05-14,O,Jl. Merdeka No. 1,{$class->name},{$departemen->name},{$industry->name},{$parent->nama},Belum,,,\n";
+            ."Budi Santoso,0012345678,budi@simonik.local,Laki-laki,Bandung,2008-05-14,O,Jl. Merdeka No. 1,{$class->name},{$departemen->name},{$industry->name},{$parent->nama},Belum,,,\n";
 
         $file = UploadedFile::fake()->createWithContent('import.csv', $csv);
 
@@ -180,7 +180,7 @@ class StudentTest extends TestCase
             'industri_id' => $industry->id,
         ]);
 
-        $user = User::where('email', 'budi@contoh.sch.id')->firstOrFail();
+        $user = User::where('email', 'budi@simonik.local')->firstOrFail();
         $this->assertTrue($user->hasRole('siswa'));
         $this->assertTrue(Hash::check('password', $user->password));
     }
@@ -190,7 +190,7 @@ class StudentTest extends TestCase
         Classes::factory()->create(['name' => 'XI RPL 1']);
 
         $csv = "Nama,NIS,Email,Jenis Kelamin,Tempat Lahir,Tanggal Lahir,Golongan Darah,Alamat,Kelas,Jurusan,Industri,Orang Tua,Status PKL,PKL Mulai,PKL Selesai,Periode\n"
-            .'Siti,0022,siti@contoh.sch.id,Perempuan,Bogor,2008-01-01,A,Jl. Melati,Kelas Tidak Ada,Jurusan Hantu,Industri Fiktif,Wali Fiktif,Belum,,,'."\n";
+            .'Siti,0022,siti@simonik.local,Perempuan,Bogor,2008-01-01,A,Jl. Melati,Kelas Tidak Ada,Jurusan Hantu,Industri Fiktif,Wali Fiktif,Belum,,,'."\n";
 
         $file = UploadedFile::fake()->createWithContent('import.csv', $csv);
 
@@ -198,7 +198,7 @@ class StudentTest extends TestCase
             ->post('/students/import', ['file' => $file])
             ->assertSessionHas('success');
 
-        $user = User::where('email', 'siti@contoh.sch.id')->firstOrFail();
+        $user = User::where('email', 'siti@simonik.local')->firstOrFail();
 
         $this->assertDatabaseHas('students', [
             'user_id' => $user->id,
@@ -212,7 +212,7 @@ class StudentTest extends TestCase
     public function test_import_only_requires_name_and_email(): void
     {
         $csv = "Nama,NIS,Email,Jenis Kelamin,Tempat Lahir,Tanggal Lahir,Golongan Darah,Alamat,Kelas,Jurusan,Industri,Orang Tua,Status PKL,PKL Mulai,PKL Selesai,Periode\n"
-            .'Rian,,rian@contoh.sch.id,,,,,,,,,,,,,'."\n";
+            .'Rian,,rian@simonik.local,,,,,,,,,,,,,'."\n";
 
         $file = UploadedFile::fake()->createWithContent('import.csv', $csv);
 
@@ -220,7 +220,7 @@ class StudentTest extends TestCase
             ->post('/students/import', ['file' => $file])
             ->assertSessionHas('success');
 
-        $user = User::where('email', 'rian@contoh.sch.id')->firstOrFail();
+        $user = User::where('email', 'rian@simonik.local')->firstOrFail();
 
         $this->assertDatabaseHas('students', [
             'user_id' => $user->id,

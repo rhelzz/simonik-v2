@@ -12,6 +12,7 @@ import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/TeacherController';
 import { AccountPicker } from '@/components/account-picker';
 import type { AccountCandidate } from '@/components/account-picker';
+import { EmailInput, usernameOf } from '@/components/ui/email-input';
 import { Select } from '@/components/ui/select';
 import type { SelectOption } from '@/components/ui/select';
 
@@ -118,6 +119,7 @@ export function TeacherForm({
     const [departemenId, setDepartemenId] = useState(
         teacher?.departemen_id ? String(teacher.departemen_id) : '',
     );
+    const [email, setEmail] = useState(usernameOf(teacher?.email));
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -170,13 +172,9 @@ export function TeacherForm({
                                     error={errors.email}
                                     required
                                 >
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        defaultValue={teacher?.email}
-                                        placeholder="nama@sekolah.sch.id"
-                                        className={inputClass}
+                                    <EmailInput
+                                        value={email}
+                                        onChange={setEmail}
                                         required
                                     />
                                 </Field>

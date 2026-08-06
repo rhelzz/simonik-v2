@@ -14,6 +14,8 @@ use Illuminate\Validation\Validator;
  */
 trait ValidatesRoleAccount
 {
+    use NormalizesEmailDomain;
+
     /** Peran yang diberikan form ini. */
     abstract protected function targetRole(): string;
 
@@ -28,7 +30,7 @@ trait ValidatesRoleAccount
         return [
             'user_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
             'name' => ['required_without:user_id', 'string', 'max:255'],
-            'email' => ['required_without:user_id', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
+            'email' => ['required_without:user_id', 'string', 'email', 'max:255', ...$this->emailDomainRule(), Rule::unique('users', 'email')],
             'password' => ['required_without:user_id', 'nullable', 'confirmed', Password::defaults()],
         ];
     }

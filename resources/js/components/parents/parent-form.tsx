@@ -10,6 +10,7 @@ import {
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/ParentController';
+import { EmailInput, usernameOf } from '@/components/ui/email-input';
 import { Select } from '@/components/ui/select';
 import type { SelectOption } from '@/components/ui/select';
 
@@ -121,6 +122,7 @@ export function ParentForm({
     const isCreate = !parent;
 
     const [gender, setGender] = useState(normalizeGender(parent?.gender));
+    const [email, setEmail] = useState(usernameOf(parent?.email));
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -165,13 +167,9 @@ export function ParentForm({
                             error={errors.email}
                             required
                         >
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                defaultValue={parent?.email}
-                                placeholder="nama@email.com"
-                                className={inputClass}
+                            <EmailInput
+                                value={email}
+                                onChange={setEmail}
                                 required
                             />
                         </Field>

@@ -38,7 +38,7 @@ class DemoDataSeeder extends Seeder
         ]);
 
         // Kaprog demo memimpin seluruh program keahlian agar dashboard & plotting terisi.
-        $kaprog = User::where('email', 'kaprog@simonik.test')->first();
+        $kaprog = User::where('email', 'kaprog@simonik.local')->first();
 
         $departemens = collect([
             'Rekayasa Perangkat Lunak',

@@ -56,14 +56,14 @@ class KaprogTest extends TestCase
         $this->actingAs($this->admin())
             ->post('/kaprogs', [
                 'name' => 'Pak Budi',
-                'email' => 'budi@simonik.test',
+                'email' => 'budi@simonik.local',
                 'password' => 'password123',
                 'password_confirmation' => 'password123',
                 'departemen_ids' => [$dep->id],
             ])
             ->assertRedirect();
 
-        $user = User::where('email', 'budi@simonik.test')->firstOrFail();
+        $user = User::where('email', 'budi@simonik.local')->firstOrFail();
         $this->assertTrue($user->hasRole('kaprog'));
         $this->assertDatabaseHas('departemens', [
             'id' => $dep->id,

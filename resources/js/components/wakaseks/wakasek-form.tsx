@@ -12,6 +12,7 @@ import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/WakasekController';
 import { AccountPicker } from '@/components/account-picker';
 import type { AccountCandidate } from '@/components/account-picker';
+import { EmailInput, usernameOf } from '@/components/ui/email-input';
 
 export type WakasekDefaults = {
     name?: string;
@@ -107,6 +108,7 @@ export function WakasekForm({
     // disembunyikan karena nama/email/kata sandinya tidak diubah.
     const [linked, setLinked] = useState<AccountCandidate | null>(null);
 
+    const [email, setEmail] = useState(usernameOf(wakasek?.email));
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -154,13 +156,9 @@ export function WakasekForm({
                                     error={errors.email}
                                     required
                                 >
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        defaultValue={wakasek?.email}
-                                        placeholder="nama@sekolah.sch.id"
-                                        className={inputClass}
+                                    <EmailInput
+                                        value={email}
+                                        onChange={setEmail}
                                         required
                                     />
                                 </Field>

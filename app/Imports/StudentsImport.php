@@ -57,7 +57,7 @@ class StudentsImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection
             $get = fn (string $key): string => trim((string) ($row[$key] ?? ''));
 
             $name = $get('nama');
-            $email = mb_strtolower($get('email'));
+            $email = $this->email($get('email'));
             $nis = $get('nis');
             $gender = $this->gender($get('jenis_kelamin'));
             // "-" dipakai untuk siswa yang tidak tahu golongan darahnya.

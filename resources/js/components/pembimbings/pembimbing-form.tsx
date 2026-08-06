@@ -12,6 +12,7 @@ import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/PembimbingController';
 import { AccountPicker } from '@/components/account-picker';
 import type { AccountCandidate } from '@/components/account-picker';
+import { EmailInput, usernameOf } from '@/components/ui/email-input';
 import { Select } from '@/components/ui/select';
 import type { SelectOption } from '@/components/ui/select';
 
@@ -128,6 +129,7 @@ export function PembimbingForm({
     const [linked, setLinked] = useState<AccountCandidate | null>(null);
 
     const [gender, setGender] = useState(normalizeGender(pembimbing?.gender));
+    const [email, setEmail] = useState(usernameOf(pembimbing?.email));
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -180,13 +182,9 @@ export function PembimbingForm({
                                     error={errors.email}
                                     required
                                 >
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        defaultValue={pembimbing?.email}
-                                        placeholder="nama@perusahaan.com"
-                                        className={inputClass}
+                                    <EmailInput
+                                        value={email}
+                                        onChange={setEmail}
                                         required
                                     />
                                 </Field>

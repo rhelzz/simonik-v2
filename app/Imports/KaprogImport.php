@@ -38,7 +38,7 @@ class KaprogImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, 
         foreach ($rows as $index => $row) {
             $line = $index + 2;
             $name = trim((string) ($row['nama'] ?? ''));
-            $email = mb_strtolower(trim((string) ($row['email'] ?? '')));
+            $email = $this->email($row['email'] ?? '');
 
             if ($name === '' || $email === '') {
                 $this->fail($line, 'Nama dan Email wajib diisi.');

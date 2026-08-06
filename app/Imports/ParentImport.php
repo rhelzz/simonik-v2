@@ -37,7 +37,7 @@ class ParentImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, 
         foreach ($rows as $index => $row) {
             $line = $index + 2;
             $name = trim((string) ($row['nama'] ?? ''));
-            $email = mb_strtolower(trim((string) ($row['email'] ?? '')));
+            $email = $this->email($row['email'] ?? '');
             $gender = $this->gender((string) ($row['jenis_kelamin'] ?? ''));
             $alamat = trim((string) ($row['alamat'] ?? ''));
             $occupation = trim((string) ($row['pekerjaan'] ?? ''));
