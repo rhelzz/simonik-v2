@@ -2,12 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesRoleAccount;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 class StoreTeacherRequest extends FormRequest
 {
+    use ValidatesRoleAccount;
+
+    protected function targetRole(): string
+    {
+        return 'guru';
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -20,9 +27,7 @@ class StoreTeacherRequest extends FormRequest
     {
         return [
             // Akun login guru
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            ...$this->accountRules(),
 
             // Profil guru
             'no_hp' => ['required', 'string', 'max:50'],

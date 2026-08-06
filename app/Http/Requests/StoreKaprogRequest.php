@@ -2,12 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\ValidatesRoleAccount;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 class StoreKaprogRequest extends FormRequest
 {
+    use ValidatesRoleAccount;
+
+    protected function targetRole(): string
+    {
+        return 'kaprog';
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -19,9 +26,7 @@ class StoreKaprogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            ...$this->accountRules(),
 
             // Program keahlian yang dipimpin (opsional, boleh lebih dari satu).
             'departemen_ids' => ['nullable', 'array'],

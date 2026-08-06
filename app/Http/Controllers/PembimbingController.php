@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Exports\PembimbingExport;
 use App\Http\Controllers\Concerns\HandlesImportExport;
+use App\Http\Controllers\Concerns\ResolvesRoleAccount;
 use App\Http\Requests\StorePembimbingRequest;
 use App\Http\Requests\UpdatePembimbingRequest;
 use App\Imports\PembimbingImport;
 use App\Models\Pembimbing;
-use App\Models\User;
 use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +22,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class PembimbingController extends Controller
 {
     use HandlesImportExport;
+    use ResolvesRoleAccount;
 
     public function export(): BinaryFileResponse
     {
@@ -96,9 +97,11 @@ class PembimbingController extends Controller
     /**
      * Form tambah pembimbing.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('pembimbings/create');
+        return Inertia::render('pembimbings/create', [
+            'candidates' => $this->accountCandidates($request, 'pembimbing'),
+        ]);
     }
 
     /**
@@ -109,17 +112,11 @@ class PembimbingController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($data): void {
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'email_verified_at' => now(),
-            ]);
-            $user->assignRole('pembimbing');
+            $user = $this->accountFor($data, 'pembimbing');
 
             Pembimbing::create([
                 'user_id' => $user->id,
-                'name' => $data['name'],
+                'name' => $user->name,
                 'no_hp' => $data['no_hp'],
                 'gender' => $data['gender'] ?? null,
             ]);
@@ -221,9 +218,18 @@ class PembimbingController extends Controller
             return back()->with('error', 'Pembimbing tidak bisa dihapus karena masih terkait industri.');
         }
 
-        // Menghapus user akan cascade ke record pembimbing (FK onDelete cascade).
-        $pembimbing->user?->delete();
+        $user = $pembimbing->user;
 
-        return back()->with('success', 'Pembimbing berhasil dihapus.');
+        // Profil pembimbing selalu ikut dilepas: tanpa peran `pembimbing` ia
+        // hanya akan memicu spanduk "akun belum ditautkan".
+        $pembimbing->delete();
+
+        if (! $user) {
+            return back()->with('success', 'Pembimbing berhasil dihapus.');
+        }
+
+        $deleted = $this->detachRole($user, 'pembimbing');
+
+        return back()->with('success', $this->detachMessage($user, $deleted, 'Pembimbing industri'));
     }
 }

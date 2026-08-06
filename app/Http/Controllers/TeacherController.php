@@ -4,12 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Exports\TeacherExport;
 use App\Http\Controllers\Concerns\HandlesImportExport;
+use App\Http\Controllers\Concerns\ResolvesRoleAccount;
 use App\Http\Requests\StoreTeacherRequest;
 use App\Http\Requests\UpdateTeacherRequest;
 use App\Imports\TeacherImport;
 use App\Models\Departemen;
 use App\Models\Teacher;
-use App\Models\User;
 use App\Support\ImportTemplates;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +23,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class TeacherController extends Controller
 {
     use HandlesImportExport;
+    use ResolvesRoleAccount;
 
     public function export(): BinaryFileResponse
     {
@@ -84,10 +85,11 @@ class TeacherController extends Controller
     /**
      * Form tambah guru.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return Inertia::render('teachers/create', [
             'departemens' => Departemen::orderBy('name')->get(['id', 'name']),
+            'candidates' => $this->accountCandidates($request, 'guru'),
         ]);
     }
 
@@ -99,17 +101,11 @@ class TeacherController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($data): void {
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'email_verified_at' => now(),
-            ]);
-            $user->assignRole('guru');
+            $user = $this->accountFor($data, 'guru');
 
             Teacher::create([
                 'user_id' => $user->id,
-                'name' => $data['name'],
+                'name' => $user->name,
                 'no_hp' => $data['no_hp'],
                 'departemen_id' => $data['departemen_id'],
             ]);
@@ -203,9 +199,18 @@ class TeacherController extends Controller
             return back()->with('error', 'Guru tidak bisa dihapus karena masih membimbing siswa.');
         }
 
-        // Menghapus user akan cascade ke record guru (FK onDelete cascade).
-        $teacher->users?->delete();
+        $user = $teacher->users;
 
-        return back()->with('success', 'Guru berhasil dihapus.');
+        // Profil guru selalu ikut dilepas: tanpa peran `guru` ia hanya akan
+        // memicu spanduk "akun belum ditautkan" tanpa halaman yang bisa dibuka.
+        $teacher->delete();
+
+        if (! $user) {
+            return back()->with('success', 'Guru berhasil dihapus.');
+        }
+
+        $deleted = $this->detachRole($user, 'guru');
+
+        return back()->with('success', $this->detachMessage($user, $deleted, 'Guru pembimbing'));
     }
 }

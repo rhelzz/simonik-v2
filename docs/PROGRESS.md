@@ -291,18 +291,38 @@ Template impor adalah workbook 3 sheet (`Petunjuk` / data / `Referensi`), sedang
 
 **Belum:** verifikasi manual di browser dengan data sekolah sungguhan.
 
-## 📍 Current step
-**Fase 1 v2 selesai — impor Excel bisa dipakai lagi.** Unduh template → isi → unggah kini benar-benar memasukkan data, dan berkas hasil Export juga bisa dipakai sebagai input impor karena nama sheetnya konsisten.
+---
 
-**Sisa satu langkah verifikasi:** buka di browser dengan data sekolah nyata (unduh template siswa, isi 2 baris, unggah) sebelum fase ini ditutup di lapangan.
+### 48. Fase 2 v2 — satu orang, satu akun, banyak jabatan
+
+Keluhan "kaprog + guru pembimbing bikin nggak bisa login" ternyata bukan bug autentikasi. `LoginRequest` polos tanpa filter peran; yang salah adalah tiap modul kepegawaian selalu `User::create()` dengan `Rule::unique('users','email')`, jadi satu orang di dua jabatan dipaksa punya dua akun dan dua kata sandi. Menghapus entri kaprog "menyembuhkan" gejalanya karena `destroy()` menghapus baris `users`-nya, bukan mencabut perannya.
+
+- **Nol migrasi.** Spatie sudah menyimpan peran many-to-many dan tak ada `syncRoles()` di mana pun, jadi hanya alur create/destroy yang perlu dibetulkan.
+- **`ResolvesRoleAccount`** (trait controller): `accountFor()` memakai akun terpilih atau membuat baru lalu `assignRole()` (aditif); `detachRole()` mencabut jabatan dan hanya menghapus akun bila itu peran terakhirnya; `accountCandidates()` mencari kandidat. `ValidatesRoleAccount` (trait form request) membuat nama/email/kata sandi `required_without:user_id` dan menolak rangkap terlarang.
+- **Siswa & orang tua tidak boleh merangkap jabatan kepegawaian** (`App\Support\Roles::EXCLUSIVE`). Alasannya nyata: `ScopesStudentsByRole` dan dashboard memilih cakupan data dari peran, jadi akun siswa+guru akan melihat dirinya sendiri sebagai siswa bimbingan dan bisa masuk antrean persetujuannya sendiri.
+- **Bug laten yang ikut diperbaiki:** `DashboardController` memeriksa `guru` sebelum `kaprog`, jadi begitu peran ganda diizinkan seorang guru+kaprog akan **selalu** mendarat di dashboard staf. Urutan kini dari kewenangan terluas ke tersempit, plus `?as=<peran>` untuk berpindah. `app-sidebar.tsx` juga memakai `auth.roles[0]` sebagai label — satu peran dipilih sembarang mengikuti urutan baris DB; kini menampilkan semua jabatan + pemilih dashboard.
+- **`accountNotice()`** mengumpulkan peringatan semua jabatan alih-alih `return` pada yang pertama, jadi pemegang jabatan guru *dan* pembimbing melihat kedua sebabnya.
+- **Tanpa endpoint JSON:** kandidat akun datang sebagai prop halaman `create` dan disegarkan lewat partial reload (`only: ['candidates']`) — rencana awal sempat meminta `UserSearchController` + rute `users/search`, tapi itu bertentangan dengan prinsip "halaman adalah fungsi dari propnya".
+- **Jebakan PHP yang tertangkap test:** konstanta di dalam trait tidak bisa diakses lewat nama trait-nya (`ResolvesRoleAccount::EXCLUSIVE_ROLES` melempar `Error` saat runtime). Dipindah ke `App\Support\Roles`.
+- **Tests (+11, `MultiRoleAccountTest`):** guru jadi kaprog tanpa akun kedua, login & dashboard akun dua jabatan, urutan dashboard + `?as=`, cabut jabatan tidak menghapus akun, cabut jabatan terakhir menghapus akun, hapus guru yang masih pembimbing, tolak akun siswa, tolak yang sudah menjabat, kandidat menyembunyikan siswa & yang sudah menjabat, dan alur buat-akun-baru tetap jalan.
+- ✅ **Pint + PHPStan 0 error + 372/372 passed + 1560 assertions.** `composer ci:check` hijau.
+
+**Belum:** command `simonik:merge-accounts` untuk melaporkan akun kembar yang terlanjur ada di produksi (dibuat kalau memang ditemukan, jangan spekulatif), dan verifikasi manual di browser.
+
+## 📍 Current step
+**Fase 1 + 2 v2 selesai — ini rilis pertama yang layak dikirim ke sekolah.** Keduanya bug: impor Excel kini benar-benar bisa dipakai, dan satu orang bisa memegang beberapa jabatan dengan satu login.
+
+**Catatan deploy:** nol migrasi pada kedua fase. Wajib `npm run build` (ada perubahan React). Akun kembar yang terlanjur dibuat operator **tidak** digabung otomatis — perlu ditinjau manual.
+
+**Sisa verifikasi:** buka di browser dengan data nyata — (1) unduh template siswa, isi, unggah; (2) tambahkan guru yang ada sebagai kaprog lalu login dengan akunnya.
 
 ---
 
 ## ⏭️ Next step — urutan yang sudah diputuskan
 Urutan **1 → 2 → 4 → 5 → 3 → (6)** (lihat [`docs/v2/README.md`](v2/README.md)), satu fase satu commit.
 
-1. **[Fase 2 — Akun multi-peran](v2/02-FASE-2-AKUN-MULTI-PERAN.md)** ← berikutnya. Nol migrasi: Spatie sudah mendukung multi-peran; yang salah alur create/destroy di 4 controller + urutan pengecekan peran di `DashboardController`. Fase 1 + 2 adalah rilis pertama yang layak dikirim ke sekolah.
-2. **[Fase 4 — Domain email](v2/04-FASE-4-EMAIL-DOMAIN.md)**, lalu **[Fase 5 — Industri di Pembimbing](v2/05-FASE-5-INDUSTRI-DI-PEMBIMBING.md)**, lalu **[Fase 3 — Tabel siswa](v2/03-FASE-3-TABEL-SISWA.md)** (nol ketergantungan, boleh paralel).
-3. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** ditinjau ulang sekarang Fase 1 jalan — kalau operator sudah tidak mengeluh, tunda.
+1. **[Fase 4 — Domain email](v2/04-FASE-4-EMAIL-DOMAIN.md)** ← berikutnya. Menempel pada alur pembuatan akun yang baru saja dipusatkan Fase 2 (`accountFor()`), jadi tinggal satu titik sentuh di backend.
+2. **[Fase 5 — Industri di Pembimbing](v2/05-FASE-5-INDUSTRI-DI-PEMBIMBING.md)**, lalu **[Fase 3 — Tabel siswa](v2/03-FASE-3-TABEL-SISWA.md)** (nol ketergantungan, boleh paralel).
+3. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** ditinjau ulang, bukan otomatis dikerjakan.
 
 Tiga opsi lama masih berlaku dan belum dikerjakan: wajib lengkapi profil saat login pertama, bersihkan approval WFA menggantung, audit scoping kaprog untuk master data lain.

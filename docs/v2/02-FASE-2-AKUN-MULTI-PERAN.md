@@ -1,7 +1,9 @@
 # Fase 2 — Satu Orang, Satu Akun, Banyak Peran (Masalah UAT #2)
 
-**Status:** belum dikerjakan · **Prioritas:** P0 · **Risiko regresi:** sedang
+**Status:** ✅ **SELESAI** · **Prioritas:** P0 · **Risiko regresi:** sedang
 (menyentuh alur autentikasi & navigasi) · **Perkiraan:** ~6 jam
+
+> **Hasil & penyimpangan dari rencana** — lihat [§9](#9-hasil-implementasi).
 
 ---
 
@@ -316,3 +318,59 @@ sandi, dan kebingungan login yang berakhir dengan menghapus salah satu jabatan.
 | `destroy()` yang berubah bisa menyisakan akun tanpa peran | Ditangani cabang `roles()->count() === 0`, dengan test |
 | Komponen frontend yang mengasumsikan satu peran | Audit `grep -rn "roles\[0\]\|roles.includes" resources/js` sebelum merge |
 | Pemilih peran aktif melebar jadi proyek sendiri | Batasi ke `?as=` query param; tidak ada persistensi sampai ada permintaan nyata |
+
+
+---
+
+## 9. Hasil implementasi
+
+`composer ci:check` hijau: Pint, PHPStan 0 error, **372/372 test lulus**
+(+11 dari `MultiRoleAccountTest`), eslint + prettier + `tsc` lolos.
+**Nol migrasi**, sesuai rencana.
+
+### Penyimpangan dari rencana
+
+**1. Tidak ada `UserSearchController` maupun rute `users/search`.**
+Rencana §4.3 memintanya, tapi endpoint JSON terpisah bertentangan dengan
+prinsip proyek ini ("halaman adalah fungsi dari propnya"). Kandidat kini datang
+sebagai prop `candidates` pada halaman `create`, disegarkan lewat **partial
+reload** (`router.reload({ only: ['candidates'], data: { q } })`). Hasilnya:
+satu rute lebih sedikit, tidak ada Wayfinder baru, dan otorisasinya otomatis
+ikut rute halaman yang sudah ada.
+
+**2. Konstanta peran tidak jadi tinggal di trait.** PHP tidak mengizinkan
+konstanta trait diakses lewat nama trait-nya (`ResolvesRoleAccount::EXCLUSIVE_ROLES`
+melempar `Error` saat runtime — tertangkap test, bukan di produksi). Dipindah
+ke `App\Support\Roles` yang memang dipakai lintas lapisan (controller, form
+request, pesan flash).
+
+**3. Pemilih peran aktif memakai sidebar, bukan header dashboard.** Sidebar
+sudah membaca `auth.roles` dan tampil di semua halaman, jadi tidak perlu
+menyentuh enam halaman dashboard yang berbeda. Sesuai batasan rencana: hanya
+`?as=` lewat query param, tanpa persistensi.
+
+**4. `HandleInertiaRequests::accountNotice()` diubah seperlunya saja.**
+Rencana menyebut "sadar peran aktif"; kenyataannya cukup mengumpulkan
+peringatan **semua** jabatan alih-alih `return` pada yang pertama — pemegang
+jabatan guru *dan* pembimbing yang keduanya belum tertaut industri kini melihat
+kedua sebabnya, bukan satu.
+
+### Bug laten yang ikut diperbaiki
+
+`DashboardController` memeriksa `guru`/`pembimbing` **sebelum** `kaprog`, jadi
+begitu peran ganda diizinkan, seorang guru yang juga kaprog akan **selalu**
+mendarat di dashboard staf dan tidak pernah bisa membuka dashboard kaprognya.
+Urutan kini dari kewenangan terluas ke tersempit (`ROLE_PRIORITY`), dikunci
+test `test_dashboard_default_mengikuti_kewenangan_terluas`.
+
+Sekalian: `app-sidebar.tsx` memakai `auth.roles[0]` sebagai label peran — satu
+peran dipilih sembarang mengikuti urutan baris basis data. Kini menampilkan
+semua jabatan. Audit `grep -rn "roles\[0\]" resources/js` tidak menemukan
+pemakaian lain.
+
+### Belum dikerjakan
+
+- **Command `simonik:merge-accounts`** (§8) untuk melaporkan kandidat akun
+  kembar yang sudah terlanjur ada di produksi. Belum dibuat — kerjakan bila
+  memang ditemukan akun kembar di lapangan, jangan dibangun spekulatif.
+- **Verifikasi manual di browser.** Jalur HTTP-nya sudah ditempuh test.

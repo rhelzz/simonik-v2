@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\WakasekExport;
 use App\Http\Controllers\Concerns\HandlesImportExport;
+use App\Http\Controllers\Concerns\ResolvesRoleAccount;
 use App\Http\Requests\StoreWakasekRequest;
 use App\Http\Requests\UpdateWakasekRequest;
 use App\Imports\WakasekImport;
@@ -21,6 +22,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class WakasekController extends Controller
 {
     use HandlesImportExport;
+    use ResolvesRoleAccount;
 
     public function export(): BinaryFileResponse
     {
@@ -69,9 +71,11 @@ class WakasekController extends Controller
     /**
      * Form tambah wakasek.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('wakaseks/create');
+        return Inertia::render('wakaseks/create', [
+            'candidates' => $this->accountCandidates($request, 'wakasek'),
+        ]);
     }
 
     /**
@@ -81,13 +85,7 @@ class WakasekController extends Controller
     {
         $data = $request->validated();
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'email_verified_at' => now(),
-        ]);
-        $user->assignRole('wakasek');
+        $this->accountFor($data, 'wakasek');
 
         return redirect()
             ->route('wakaseks.index')
@@ -142,8 +140,8 @@ class WakasekController extends Controller
             return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
 
-        $wakasek->delete();
+        $deleted = $this->detachRole($wakasek, 'wakasek');
 
-        return back()->with('success', 'Wakasek berhasil dihapus.');
+        return back()->with('success', $this->detachMessage($wakasek, $deleted, 'Wakasek'));
     }
 }

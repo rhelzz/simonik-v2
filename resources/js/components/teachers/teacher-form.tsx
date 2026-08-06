@@ -10,6 +10,8 @@ import {
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { index } from '@/actions/App/Http/Controllers/TeacherController';
+import { AccountPicker } from '@/components/account-picker';
+import type { AccountCandidate } from '@/components/account-picker';
 import { Select } from '@/components/ui/select';
 import type { SelectOption } from '@/components/ui/select';
 
@@ -94,17 +96,24 @@ function Section({
 export function TeacherForm({
     action,
     method,
+    candidates = [],
     departemens,
     teacher,
     submitLabel,
 }: {
     action: string;
     method: 'post' | 'put';
+    /** Kandidat akun yang bisa diberi jabatan ini (hanya dipakai saat menambah). */
+    candidates?: AccountCandidate[];
     departemens: DepartemenOption[];
     teacher?: TeacherDefaults;
     submitLabel: string;
 }) {
     const isCreate = !teacher;
+
+    // Jabatan ini ditautkan ke akun yang sudah ada: kolom kredensial
+    // disembunyikan karena nama/email/kata sandinya tidak diubah.
+    const [linked, setLinked] = useState<AccountCandidate | null>(null);
 
     const [departemenId, setDepartemenId] = useState(
         teacher?.departemen_id ? String(teacher.departemen_id) : '',
@@ -132,37 +141,239 @@ export function TeacherForm({
                         title="Data guru pembimbing"
                         description="Identitas, akun login, dan jurusan yang dibimbing."
                     >
-                        <Field
-                            label="Nama lengkap"
-                            htmlFor="name"
-                            error={errors.name}
-                            required
-                        >
-                            <input
-                                id="name"
-                                name="name"
-                                defaultValue={teacher?.name}
-                                placeholder="cth. Siti Aminah, S.Pd."
-                                className={inputClass}
-                                required
-                            />
-                        </Field>
-                        <Field
-                            label="Email"
-                            htmlFor="email"
-                            error={errors.email}
-                            required
-                        >
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                defaultValue={teacher?.email}
-                                placeholder="nama@sekolah.sch.id"
-                                className={inputClass}
-                                required
-                            />
-                        </Field>
+                        <AccountPicker
+                            candidates={candidates}
+                            selected={linked}
+                            onSelect={setLinked}
+                            error={errors.user_id}
+                        />
+                        {!linked && (
+                            <>
+                                <Field
+                                    label="Nama lengkap"
+                                    htmlFor="name"
+                                    error={errors.name}
+                                    required
+                                >
+                                    <input
+                                        id="name"
+                                        name="name"
+                                        defaultValue={teacher?.name}
+                                        placeholder="cth. Siti Aminah, S.Pd."
+                                        className={inputClass}
+                                        required
+                                    />
+                                </Field>
+                                <Field
+                                    label="Email"
+                                    htmlFor="email"
+                                    error={errors.email}
+                                    required
+                                >
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        defaultValue={teacher?.email}
+                                        placeholder="nama@sekolah.sch.id"
+                                        className={inputClass}
+                                        required
+                                    />
+                                </Field>
+                                {isCreate ? (
+                                    <>
+                                        <Field
+                                            label="Kata sandi"
+                                            htmlFor="password"
+                                            error={errors.password}
+                                            required
+                                        >
+                                            <div className="relative">
+                                                <input
+                                                    id="password"
+                                                    name="password"
+                                                    type={
+                                                        showPassword
+                                                            ? 'text'
+                                                            : 'password'
+                                                    }
+                                                    autoComplete="new-password"
+                                                    value={password}
+                                                    onChange={(e) =>
+                                                        setPassword(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Minimal 8 karakter"
+                                                    className={inputClass}
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setShowPassword(
+                                                            !showPassword,
+                                                        )
+                                                    }
+                                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted transition-colors hover:text-ink"
+                                                    aria-label={
+                                                        showPassword
+                                                            ? 'Sembunyikan'
+                                                            : 'Tampilkan'
+                                                    }
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="size-4" />
+                                                    ) : (
+                                                        <Eye className="size-4" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </Field>
+                                        <Field
+                                            label="Konfirmasi kata sandi"
+                                            htmlFor="password_confirmation"
+                                            required
+                                        >
+                                            <input
+                                                id="password_confirmation"
+                                                name="password_confirmation"
+                                                type={
+                                                    showPassword
+                                                        ? 'text'
+                                                        : 'password'
+                                                }
+                                                autoComplete="new-password"
+                                                value={passwordConfirmation}
+                                                onChange={(e) =>
+                                                    setPasswordConfirmation(
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                placeholder="Ulangi kata sandi"
+                                                className={inputClass}
+                                                required
+                                            />
+                                            {passwordConfirmation && (
+                                                <div
+                                                    className={`flex items-center gap-1.5 text-xs font-medium ${passwordMatch ? 'text-positive' : 'text-red-500'}`}
+                                                >
+                                                    {passwordMatch ? (
+                                                        <>
+                                                            <Check className="size-3.5" />
+                                                            Kata sandi cocok
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <AlertCircle className="size-3.5" />
+                                                            Kata sandi tidak
+                                                            cocok
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </Field>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Field
+                                            label="Kata sandi baru"
+                                            htmlFor="password"
+                                            error={errors.password}
+                                            hint="Kosongkan jika tidak ingin mengubah."
+                                            full
+                                        >
+                                            <div className="relative">
+                                                <input
+                                                    id="password"
+                                                    name="password"
+                                                    type={
+                                                        showPassword
+                                                            ? 'text'
+                                                            : 'password'
+                                                    }
+                                                    autoComplete="new-password"
+                                                    value={password}
+                                                    onChange={(e) =>
+                                                        setPassword(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className={inputClass}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setShowPassword(
+                                                            !showPassword,
+                                                        )
+                                                    }
+                                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-muted transition-colors hover:text-ink"
+                                                    aria-label={
+                                                        showPassword
+                                                            ? 'Sembunyikan'
+                                                            : 'Tampilkan'
+                                                    }
+                                                >
+                                                    {showPassword ? (
+                                                        <EyeOff className="size-4" />
+                                                    ) : (
+                                                        <Eye className="size-4" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </Field>
+                                        {password && (
+                                            <Field
+                                                label="Konfirmasi kata sandi"
+                                                htmlFor="password_confirmation"
+                                                error={
+                                                    errors.password_confirmation
+                                                }
+                                                full
+                                            >
+                                                <input
+                                                    id="password_confirmation"
+                                                    name="password_confirmation"
+                                                    type={
+                                                        showPassword
+                                                            ? 'text'
+                                                            : 'password'
+                                                    }
+                                                    autoComplete="new-password"
+                                                    value={passwordConfirmation}
+                                                    onChange={(e) =>
+                                                        setPasswordConfirmation(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Ulangi kata sandi baru"
+                                                    className={inputClass}
+                                                />
+                                                {passwordConfirmation && (
+                                                    <div
+                                                        className={`flex items-center gap-1.5 text-xs font-medium ${passwordMatch ? 'text-positive' : 'text-red-500'}`}
+                                                    >
+                                                        {passwordMatch ? (
+                                                            <>
+                                                                <Check className="size-3.5" />
+                                                                Kata sandi cocok
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <AlertCircle className="size-3.5" />
+                                                                Kata sandi tidak
+                                                                cocok
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </Field>
+                                        )}
+                                    </>
+                                )}
+                            </>
+                        )}
                         <Field
                             label="No. HP"
                             htmlFor="no_hp"
@@ -192,185 +403,6 @@ export function TeacherForm({
                                 placeholder="Pilih jurusan…"
                             />
                         </Field>
-
-                        {isCreate ? (
-                            <>
-                                <Field
-                                    label="Kata sandi"
-                                    htmlFor="password"
-                                    error={errors.password}
-                                    required
-                                >
-                                    <div className="relative">
-                                        <input
-                                            id="password"
-                                            name="password"
-                                            type={
-                                                showPassword
-                                                    ? 'text'
-                                                    : 'password'
-                                            }
-                                            autoComplete="new-password"
-                                            value={password}
-                                            onChange={(e) =>
-                                                setPassword(e.target.value)
-                                            }
-                                            placeholder="Minimal 8 karakter"
-                                            className={inputClass}
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setShowPassword(!showPassword)
-                                            }
-                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-muted transition-colors hover:text-ink"
-                                            aria-label={
-                                                showPassword
-                                                    ? 'Sembunyikan'
-                                                    : 'Tampilkan'
-                                            }
-                                        >
-                                            {showPassword ? (
-                                                <EyeOff className="size-4" />
-                                            ) : (
-                                                <Eye className="size-4" />
-                                            )}
-                                        </button>
-                                    </div>
-                                </Field>
-                                <Field
-                                    label="Konfirmasi kata sandi"
-                                    htmlFor="password_confirmation"
-                                    required
-                                >
-                                    <input
-                                        id="password_confirmation"
-                                        name="password_confirmation"
-                                        type={
-                                            showPassword ? 'text' : 'password'
-                                        }
-                                        autoComplete="new-password"
-                                        value={passwordConfirmation}
-                                        onChange={(e) =>
-                                            setPasswordConfirmation(
-                                                e.target.value,
-                                            )
-                                        }
-                                        placeholder="Ulangi kata sandi"
-                                        className={inputClass}
-                                        required
-                                    />
-                                    {passwordConfirmation && (
-                                        <div
-                                            className={`flex items-center gap-1.5 text-xs font-medium ${passwordMatch ? 'text-positive' : 'text-red-500'}`}
-                                        >
-                                            {passwordMatch ? (
-                                                <>
-                                                    <Check className="size-3.5" />
-                                                    Kata sandi cocok
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <AlertCircle className="size-3.5" />
-                                                    Kata sandi tidak cocok
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
-                                </Field>
-                            </>
-                        ) : (
-                            <>
-                                <Field
-                                    label="Kata sandi baru"
-                                    htmlFor="password"
-                                    error={errors.password}
-                                    hint="Kosongkan jika tidak ingin mengubah."
-                                    full
-                                >
-                                    <div className="relative">
-                                        <input
-                                            id="password"
-                                            name="password"
-                                            type={
-                                                showPassword
-                                                    ? 'text'
-                                                    : 'password'
-                                            }
-                                            autoComplete="new-password"
-                                            value={password}
-                                            onChange={(e) =>
-                                                setPassword(e.target.value)
-                                            }
-                                            className={inputClass}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                setShowPassword(!showPassword)
-                                            }
-                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-muted transition-colors hover:text-ink"
-                                            aria-label={
-                                                showPassword
-                                                    ? 'Sembunyikan'
-                                                    : 'Tampilkan'
-                                            }
-                                        >
-                                            {showPassword ? (
-                                                <EyeOff className="size-4" />
-                                            ) : (
-                                                <Eye className="size-4" />
-                                            )}
-                                        </button>
-                                    </div>
-                                </Field>
-                                {password && (
-                                    <Field
-                                        label="Konfirmasi kata sandi"
-                                        htmlFor="password_confirmation"
-                                        error={errors.password_confirmation}
-                                        full
-                                    >
-                                        <input
-                                            id="password_confirmation"
-                                            name="password_confirmation"
-                                            type={
-                                                showPassword
-                                                    ? 'text'
-                                                    : 'password'
-                                            }
-                                            autoComplete="new-password"
-                                            value={passwordConfirmation}
-                                            onChange={(e) =>
-                                                setPasswordConfirmation(
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Ulangi kata sandi baru"
-                                            className={inputClass}
-                                        />
-                                        {passwordConfirmation && (
-                                            <div
-                                                className={`flex items-center gap-1.5 text-xs font-medium ${passwordMatch ? 'text-positive' : 'text-red-500'}`}
-                                            >
-                                                {passwordMatch ? (
-                                                    <>
-                                                        <Check className="size-3.5" />
-                                                        Kata sandi cocok
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <AlertCircle className="size-3.5" />
-                                                        Kata sandi tidak cocok
-                                                    </>
-                                                )}
-                                            </div>
-                                        )}
-                                    </Field>
-                                )}
-                            </>
-                        )}
                     </Section>
 
                     <div className="sticky bottom-4 z-10 flex items-center justify-end gap-2 rounded-2xl border border-line bg-surface/80 p-3 shadow-lg shadow-ink/5 backdrop-blur">

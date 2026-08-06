@@ -34,35 +34,53 @@ class DashboardController extends Controller
     ) {}
 
     /**
-     * Dashboard diarahkan sesuai role pemanggil.
+     * Urutan peran saat memilih dashboard, dari kewenangan terluas ke tersempit.
+     *
+     * Sejak satu akun boleh memegang beberapa jabatan, urutannya menentukan
+     * dashboard mana yang jadi bawaan. Sebelumnya `guru`/`pembimbing` diperiksa
+     * lebih dulu, sehingga seorang guru yang juga kaprog tidak pernah sampai ke
+     * dashboard kaprognya.
+     */
+    private const ROLE_PRIORITY = ['admin', 'wakasek', 'kaprog', 'guru', 'pembimbing', 'orangtua', 'siswa'];
+
+    /**
+     * Dashboard diarahkan sesuai peran pemanggil. Pemegang beberapa jabatan
+     * bisa berpindah lewat `?as=<peran>`.
      */
     public function __invoke(Request $request): Response
     {
         /** @var User $user */
         $user = $request->user();
 
-        if ($user->hasRole('siswa')) {
-            return $this->studentDashboard($user);
+        $active = $this->activeRole($user, (string) $request->query('as', ''));
+
+        return match ($active) {
+            'siswa' => $this->studentDashboard($user),
+            'orangtua' => $this->parentDashboard($user),
+            'guru', 'pembimbing' => $this->staffDashboard($user),
+            'wakasek' => $this->wakasekDashboard(),
+            'kaprog' => $this->kaprogDashboard($user),
+            default => $this->adminDashboard(),
+        };
+    }
+
+    /**
+     * Peran yang sedang dipakai: pilihan `?as=` bila memang dimiliki, kalau
+     * tidak peran berkewenangan terluas.
+     */
+    private function activeRole(User $user, string $requested): string
+    {
+        if ($requested !== '' && $user->hasRole($requested)) {
+            return $requested;
         }
 
-        if ($user->hasRole('orangtua')) {
-            return $this->parentDashboard($user);
+        foreach (self::ROLE_PRIORITY as $role) {
+            if ($user->hasRole($role)) {
+                return $role;
+            }
         }
 
-        if ($user->hasAnyRole(['guru', 'pembimbing'])) {
-            return $this->staffDashboard($user);
-        }
-
-        if ($user->hasRole('wakasek')) {
-            return $this->wakasekDashboard();
-        }
-
-        if ($user->hasRole('kaprog')) {
-            return $this->kaprogDashboard($user);
-        }
-
-        // admin: analitik penuh.
-        return $this->adminDashboard();
+        return 'admin';
     }
 
     /**

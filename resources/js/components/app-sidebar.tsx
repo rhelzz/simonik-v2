@@ -5,6 +5,7 @@ import { destroy as logout } from '@/actions/App/Http/Controllers/Auth/Authentic
 import { edit as profile } from '@/actions/App/Http/Controllers/ProfileController';
 import { navForRoles } from '@/lib/nav';
 import { cn } from '@/lib/utils';
+import { dashboard } from '@/routes';
 import type { NavItem, SharedData } from '@/types';
 
 function initials(name: string): string {
@@ -18,13 +19,36 @@ function initials(name: string): string {
 
 const NAV_SCROLL_KEY = 'sidebar-nav-scroll';
 
+/** Peran yang punya halaman dashboard sendiri (lihat DashboardController). */
+const DASHBOARD_ROLES = [
+    'admin',
+    'wakasek',
+    'kaprog',
+    'guru',
+    'pembimbing',
+    'orangtua',
+    'siswa',
+];
+
 export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
     const page = usePage<SharedData>();
     const { auth } = page.props;
     const current = page.url;
     const sections = navForRoles(auth.roles);
-    const primaryRole = auth.roles[0];
     const navRef = useRef<HTMLElement>(null);
+
+    // Satu orang bisa memegang beberapa jabatan sekaligus (mis. kaprog yang
+    // juga guru pembimbing), jadi tampilkan semuanya — `roles[0]` dulu memilih
+    // satu peran secara sembarang sesuai urutan baris di basis data.
+    const roleLabel =
+        auth.roles.map((role) => role.replace('_', ' ')).join(' · ') ||
+        'belum masuk';
+
+    // Tiap jabatan punya dashboard sendiri; yang berkewenangan terluas jadi
+    // bawaan. Pemegang lebih dari satu perlu jalan untuk membuka yang lain.
+    const dashboardRoles = auth.roles.filter((role) =>
+        DASHBOARD_ROLES.includes(role),
+    );
 
     useEffect(() => {
         const saved = sessionStorage.getItem(NAV_SCROLL_KEY);
@@ -96,6 +120,27 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                 ))}
             </nav>
 
+            {/* Pemilih dashboard — hanya muncul bagi pemegang lebih dari satu jabatan. */}
+            {dashboardRoles.length > 1 && (
+                <div className="mx-3 mt-3 shrink-0 rounded-2xl bg-canvas p-3">
+                    <p className="text-xs font-semibold text-muted">
+                        Lihat dashboard sebagai
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                        {dashboardRoles.map((role) => (
+                            <Link
+                                key={role}
+                                href={dashboard.url({ query: { as: role } })}
+                                onClick={onNavigate}
+                                className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-ink capitalize transition-colors hover:bg-primary hover:text-white"
+                            >
+                                {role.replace('_', ' ')}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* User */}
             <div className="m-3 flex shrink-0 items-center gap-3 rounded-2xl bg-canvas p-3">
                 <Link
@@ -112,7 +157,7 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                             {auth.user?.name ?? 'Mode demo'}
                         </span>
                         <span className="block truncate text-xs text-muted capitalize">
-                            {primaryRole?.replace('_', ' ') ?? 'belum masuk'}
+                            {roleLabel}
                         </span>
                     </span>
                 </Link>

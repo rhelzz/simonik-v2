@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\KaprogExport;
 use App\Http\Controllers\Concerns\HandlesImportExport;
+use App\Http\Controllers\Concerns\ResolvesRoleAccount;
 use App\Http\Requests\StoreKaprogRequest;
 use App\Http\Requests\UpdateKaprogRequest;
 use App\Imports\KaprogImport;
@@ -23,6 +24,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class KaprogController extends Controller
 {
     use HandlesImportExport;
+    use ResolvesRoleAccount;
 
     public function export(): BinaryFileResponse
     {
@@ -83,10 +85,11 @@ class KaprogController extends Controller
     /**
      * Form tambah kaprog.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         return Inertia::render('kaprogs/create', [
             'departemens' => $this->departemenOptions(),
+            'candidates' => $this->accountCandidates($request, 'kaprog'),
         ]);
     }
 
@@ -98,13 +101,7 @@ class KaprogController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($data): void {
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'email_verified_at' => now(),
-            ]);
-            $user->assignRole('kaprog');
+            $user = $this->accountFor($data, 'kaprog');
 
             $this->syncDepartemens($user, $data['departemen_ids'] ?? []);
         });
@@ -157,8 +154,10 @@ class KaprogController extends Controller
     }
 
     /**
-     * Hapus akun kaprog. Program keahlian dilepas (tidak ikut terhapus)
-     * karena FK departemens.user_id cascade — detach dulu sebelum hapus.
+     * Cabut jabatan kepala program. Akun hanya ikut terhapus bila ini jabatan
+     * terakhirnya — orang yang juga guru pembimbing tetap bisa login.
+     *
+     * Program keahlian dilepas lebih dulu karena FK departemens.user_id cascade.
      */
     public function destroy(User $kaprog): RedirectResponse
     {
@@ -168,12 +167,13 @@ class KaprogController extends Controller
             return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
 
-        DB::transaction(function () use ($kaprog): void {
+        $deleted = DB::transaction(function () use ($kaprog): bool {
             Departemen::query()->where('user_id', $kaprog->id)->update(['user_id' => null]);
-            $kaprog->delete();
+
+            return $this->detachRole($kaprog, 'kaprog');
         });
 
-        return back()->with('success', 'Kepala program berhasil dihapus.');
+        return back()->with('success', $this->detachMessage($kaprog, $deleted, 'Kepala program'));
     }
 
     /**

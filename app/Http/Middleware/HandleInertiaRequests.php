@@ -79,15 +79,18 @@ class HandleInertiaRequests extends Middleware
             return null;
         }
 
+        // Satu akun bisa memegang beberapa jabatan sekaligus, jadi kumpulkan
+        // peringatan untuk semuanya — memakai `return` pada jabatan pertama
+        // akan menyembunyikan masalah jabatan berikutnya.
+        $notices = [];
+
         if ($user->hasRole('guru')) {
             $teacherId = $user->teachers?->id;
 
             if ($teacherId === null) {
-                return 'Akun Anda belum memiliki data Guru Pembimbing. Hubungi admin sekolah agar akun ini dilengkapi, karena tanpa itu daftar siswa bimbingan, nilai, dan inbox persetujuan akan tetap kosong.';
-            }
-
-            if (! Industry::query()->where('teacher_id', $teacherId)->exists()) {
-                return 'Anda belum ditugaskan sebagai guru pembimbing di industri manapun. Hubungi admin atau Kepala Program untuk menetapkan industri bimbingan Anda — sampai itu dilakukan, daftar siswa, nilai, absensi, dan inbox persetujuan akan kosong.';
+                $notices[] = 'Akun Anda belum memiliki data Guru Pembimbing. Hubungi admin sekolah agar akun ini dilengkapi, karena tanpa itu daftar siswa bimbingan, nilai, dan inbox persetujuan akan tetap kosong.';
+            } elseif (! Industry::query()->where('teacher_id', $teacherId)->exists()) {
+                $notices[] = 'Anda belum ditugaskan sebagai guru pembimbing di industri manapun. Hubungi admin atau Kepala Program untuk menetapkan industri bimbingan Anda — sampai itu dilakukan, daftar siswa, nilai, absensi, dan inbox persetujuan akan kosong.';
             }
         }
 
@@ -95,14 +98,12 @@ class HandleInertiaRequests extends Middleware
             $pembimbingId = $user->pembimbing?->id;
 
             if ($pembimbingId === null) {
-                return 'Akun Anda belum memiliki data Pembimbing Industri. Hubungi admin sekolah agar akun ini dilengkapi, karena tanpa itu profil industri dan daftar anak magang tidak dapat ditampilkan.';
-            }
-
-            if (! Industry::query()->where('pembimbing_id', $pembimbingId)->exists()) {
-                return 'Akun Anda belum ditautkan ke industri manapun. Hubungi admin atau Kepala Program untuk menetapkan industri Anda — sampai itu dilakukan, profil industri, titik absensi, jam kerja, daftar anak magang, penilaian, dan sertifikat tidak dapat dipakai.';
+                $notices[] = 'Akun Anda belum memiliki data Pembimbing Industri. Hubungi admin sekolah agar akun ini dilengkapi, karena tanpa itu profil industri dan daftar anak magang tidak dapat ditampilkan.';
+            } elseif (! Industry::query()->where('pembimbing_id', $pembimbingId)->exists()) {
+                $notices[] = 'Akun Anda belum ditautkan ke industri manapun. Hubungi admin atau Kepala Program untuk menetapkan industri Anda — sampai itu dilakukan, profil industri, titik absensi, jam kerja, daftar anak magang, penilaian, dan sertifikat tidak dapat dipakai.';
             }
         }
 
-        return null;
+        return $notices === [] ? null : implode(' ', $notices);
     }
 }
