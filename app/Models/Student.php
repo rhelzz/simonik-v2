@@ -189,4 +189,17 @@ class Student extends Model
         return $query->where('archived', true)
             ->whereYear('created_at', $year);
     }
+
+    /**
+     * Profil dianggap lengkap bila seluruh data diri wajib sudah terisi.
+     * bloodType & image sengaja tidak dihitung — keduanya opsional murni.
+     */
+    public function hasCompleteProfile(): bool
+    {
+        return $this->nis !== null
+            && $this->placeOfBirth !== null
+            && $this->dateOfBirth !== null
+            && $this->gender !== null
+            && $this->alamat !== null;
+    }
 }

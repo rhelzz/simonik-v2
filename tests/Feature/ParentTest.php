@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Exports\ParentExport;
 use App\Models\Parents;
 use App\Models\Student;
 use App\Models\User;
@@ -145,5 +146,59 @@ class ParentTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertDatabaseHas('parents', ['id' => $parent->id]);
+    }
+
+    public function test_orang_tua_bisa_dibuat_tanpa_data_diri(): void
+    {
+        $this->actingAs($this->admin())
+            ->post('/parents', [
+                'nama' => 'Bapak Andi',
+                'email' => 'andi@simonik.local',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('parents', [
+            'nama' => 'Bapak Andi',
+            'gender' => null,
+            'alamat' => null,
+            'occupation' => null,
+            'phoneNumber' => null,
+        ]);
+    }
+
+    public function test_akun_login_tetap_wajib(): void
+    {
+        $this->actingAs($this->admin())
+            ->post('/parents', [
+                'nama' => 'Bapak Andi',
+                'gender' => 'L',
+            ])
+            ->assertSessionHasErrors(['email', 'password']);
+    }
+
+    public function test_label_gender_ayah_ibu_tampil_di_index(): void
+    {
+        $ayah = Parents::factory()->create(['nama' => 'Bapak Fulan', 'gender' => 'L']);
+        $ibu = Parents::factory()->create(['nama' => 'Ibu Fulanah', 'gender' => 'P']);
+
+        $response = $this->actingAs($this->admin())->get('/parents');
+
+        $response->assertOk()->assertSee('Ayah')->assertSee('Ibu');
+
+        // Sanity check: nilai mentah di database tetap L/P, cuma labelnya berubah.
+        $this->assertSame('L', $ayah->fresh()->gender);
+        $this->assertSame('P', $ibu->fresh()->gender);
+    }
+
+    public function test_export_orang_tua_memakai_label_ayah_ibu(): void
+    {
+        $export = new ParentExport;
+        $parentL = Parents::factory()->create(['gender' => 'L']);
+        $parentP = Parents::factory()->create(['gender' => 'P']);
+
+        $this->assertSame('Ayah', $export->map($parentL->fresh())[2]);
+        $this->assertSame('Ibu', $export->map($parentP->fresh())[2]);
     }
 }

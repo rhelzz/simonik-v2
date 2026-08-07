@@ -32,7 +32,7 @@ class ParentExport implements FromQuery, ShouldAutoSize, WithEvents, WithHeading
      */
     public function headings(): array
     {
-        return ['Nama', 'Email', 'Jenis Kelamin', 'Alamat', 'Pekerjaan', 'No HP'];
+        return ['Nama', 'Email', 'Ayah/Ibu', 'Alamat', 'Pekerjaan', 'No HP'];
     }
 
     /**
@@ -45,8 +45,8 @@ class ParentExport implements FromQuery, ShouldAutoSize, WithEvents, WithHeading
             $parent->nama,
             $parent->users?->email,
             match ($parent->gender) {
-                'L' => 'Laki-laki',
-                'P' => 'Perempuan',
+                'L' => 'Ayah',
+                'P' => 'Ibu',
                 default => $parent->gender,
             },
             $parent->alamat,

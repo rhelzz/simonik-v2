@@ -133,8 +133,8 @@ export function ParentForm({
             : null;
 
     const genderOptions: SelectOption[] = [
-        { value: 'L', label: 'Laki-laki' },
-        { value: 'P', label: 'Perempuan' },
+        { value: 'L', label: 'Ayah' },
+        { value: 'P', label: 'Ibu' },
     ];
 
     return (
@@ -173,25 +173,20 @@ export function ParentForm({
                                 required
                             />
                         </Field>
-                        <Field
-                            label="Jenis kelamin"
-                            error={errors.gender}
-                            required
-                        >
+                        <Field label="Ayah/Ibu" error={errors.gender}>
                             <Select
                                 name="gender"
-                                ariaLabel="Jenis kelamin"
+                                ariaLabel="Ayah/Ibu"
                                 value={gender}
                                 options={genderOptions}
                                 onChange={setGender}
-                                placeholder="Pilih jenis kelamin…"
+                                placeholder="Pilih Ayah atau Ibu…"
                             />
                         </Field>
                         <Field
                             label="Pekerjaan"
                             htmlFor="occupation"
                             error={errors.occupation}
-                            required
                         >
                             <input
                                 id="occupation"
@@ -199,14 +194,12 @@ export function ParentForm({
                                 defaultValue={parent?.occupation}
                                 placeholder="cth. Wiraswasta"
                                 className={inputClass}
-                                required
                             />
                         </Field>
                         <Field
                             label="No. HP"
                             htmlFor="phoneNumber"
                             error={errors.phoneNumber}
-                            required
                         >
                             <input
                                 id="phoneNumber"
@@ -214,7 +207,6 @@ export function ParentForm({
                                 defaultValue={parent?.phoneNumber}
                                 placeholder="08xxxxxxxxxx"
                                 className={inputClass}
-                                required
                             />
                         </Field>
                         <Field
@@ -222,7 +214,6 @@ export function ParentForm({
                             htmlFor="alamat"
                             error={errors.alamat}
                             full
-                            required
                         >
                             <textarea
                                 id="alamat"
@@ -231,7 +222,6 @@ export function ParentForm({
                                 defaultValue={parent?.alamat}
                                 placeholder="Alamat tempat tinggal"
                                 className={inputClass}
-                                required
                             />
                         </Field>
 

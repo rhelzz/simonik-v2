@@ -4,6 +4,7 @@ import {
     Check,
     Eye,
     EyeOff,
+    IdCard,
     LoaderCircle,
     ShieldCheck,
     UserCircle2,
@@ -11,13 +12,30 @@ import {
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { update as updatePassword } from '@/actions/App/Http/Controllers/PasswordController';
-import { update as updateProfile } from '@/actions/App/Http/Controllers/ProfileController';
+import {
+    update as updateProfile,
+    updateStudentProfile,
+} from '@/actions/App/Http/Controllers/ProfileController';
+import { Select } from '@/components/ui/select';
+import type { SelectOption } from '@/components/ui/select';
 import { AppLayout } from '@/layouts/app-layout';
 import type { SharedData } from '@/types';
 import type { Role } from '@/types/auth';
 
+type StudentProfile = {
+    nis: string | null;
+    placeOfBirth: string | null;
+    dateOfBirth: string | null;
+    gender: string | null;
+    bloodType: string | null;
+    alamat: string | null;
+    image: string | null;
+    complete: boolean;
+};
+
 type ProfileEditProps = {
     profile: { name: string; email: string };
+    student: StudentProfile | null;
 };
 
 const roleLabels: Record<Role, string> = {
@@ -75,6 +93,7 @@ function Field({
     error,
     hint,
     required,
+    full,
     children,
 }: {
     label: string;
@@ -82,10 +101,11 @@ function Field({
     error?: string;
     hint?: string;
     required?: boolean;
+    full?: boolean;
     children: ReactNode;
 }) {
     return (
-        <div className="space-y-1.5">
+        <div className={full ? 'space-y-1.5 sm:col-span-2' : 'space-y-1.5'}>
             <label
                 htmlFor={htmlFor}
                 className="flex items-center gap-1 text-sm font-medium text-ink"
@@ -145,13 +165,25 @@ function SubmitButton({
     );
 }
 
-export default function ProfileEdit({ profile }: ProfileEditProps) {
+export default function ProfileEdit({ profile, student }: ProfileEditProps) {
     const { auth } = usePage<SharedData>().props;
     const roles = auth.roles ?? [];
 
     const [password, setPassword] = useState('');
     const [confirmation, setConfirmation] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+
+    const [gender, setGender] = useState(student?.gender ?? '');
+    const [bloodType, setBloodType] = useState(student?.bloodType ?? '');
+
+    const genderOptions: SelectOption[] = [
+        { value: 'L', label: 'Laki-laki' },
+        { value: 'P', label: 'Perempuan' },
+    ];
+    const bloodOptions: SelectOption[] = [
+        { value: '', label: '— Tidak tahu' },
+        ...['A', 'B', 'AB', 'O'].map((t) => ({ value: t, label: t })),
+    ];
 
     const passwordMatch =
         password && confirmation ? password === confirmation : null;
@@ -368,6 +400,138 @@ export default function ProfileEdit({ profile }: ProfileEditProps) {
                         </Form>
                     </Section>
                 </div>
+
+                {student && (
+                    <Section
+                        icon={<IdCard className="size-5" />}
+                        title="Data diri"
+                        description="Lengkapi identitas Anda sesuai dokumen resmi. Boleh dicicil — tidak semua wajib diisi sekarang."
+                    >
+                        {!student.complete && (
+                            <p className="mb-4 flex items-center gap-1.5 text-xs font-medium text-amber-700">
+                                <AlertCircle className="size-3.5 shrink-0" />
+                                Belum lengkap
+                            </p>
+                        )}
+                        <Form
+                            action={updateStudentProfile.url()}
+                            method="patch"
+                            encType="multipart/form-data"
+                        >
+                            {({ processing, errors }) => (
+                                <>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <Field
+                                            label="NIS"
+                                            htmlFor="nis"
+                                            error={errors.nis}
+                                        >
+                                            <input
+                                                id="nis"
+                                                name="nis"
+                                                defaultValue={student.nis ?? ''}
+                                                placeholder="Nomor Induk Siswa"
+                                                className={inputClass}
+                                            />
+                                        </Field>
+                                        <Field
+                                            label="Tempat lahir"
+                                            htmlFor="placeOfBirth"
+                                            error={errors.placeOfBirth}
+                                        >
+                                            <input
+                                                id="placeOfBirth"
+                                                name="placeOfBirth"
+                                                defaultValue={
+                                                    student.placeOfBirth ?? ''
+                                                }
+                                                placeholder="cth. Jakarta"
+                                                className={inputClass}
+                                            />
+                                        </Field>
+                                        <Field
+                                            label="Tanggal lahir"
+                                            htmlFor="dateOfBirth"
+                                            error={errors.dateOfBirth}
+                                        >
+                                            <input
+                                                id="dateOfBirth"
+                                                name="dateOfBirth"
+                                                type="date"
+                                                defaultValue={
+                                                    student.dateOfBirth ?? ''
+                                                }
+                                                className={inputClass}
+                                            />
+                                        </Field>
+                                        <Field
+                                            label="Jenis kelamin"
+                                            error={errors.gender}
+                                        >
+                                            <Select
+                                                name="gender"
+                                                ariaLabel="Jenis kelamin"
+                                                value={gender}
+                                                options={genderOptions}
+                                                onChange={setGender}
+                                                placeholder="Pilih jenis kelamin…"
+                                            />
+                                        </Field>
+                                        <Field
+                                            label="Golongan darah"
+                                            error={errors.bloodType}
+                                        >
+                                            <Select
+                                                name="bloodType"
+                                                ariaLabel="Golongan darah"
+                                                value={bloodType}
+                                                options={bloodOptions}
+                                                onChange={setBloodType}
+                                                placeholder="— Tidak tahu"
+                                            />
+                                        </Field>
+                                        <Field
+                                            label="Foto"
+                                            htmlFor="image"
+                                            error={errors.image}
+                                            hint="Opsional. Format gambar, maks. 2MB."
+                                        >
+                                            <input
+                                                id="image"
+                                                name="image"
+                                                type="file"
+                                                accept="image/*"
+                                                className="w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary hover:file:bg-primary hover:file:text-white"
+                                            />
+                                        </Field>
+                                        <Field
+                                            label="Alamat"
+                                            htmlFor="alamat"
+                                            error={errors.alamat}
+                                            full
+                                        >
+                                            <textarea
+                                                id="alamat"
+                                                name="alamat"
+                                                rows={2}
+                                                defaultValue={
+                                                    student.alamat ?? ''
+                                                }
+                                                placeholder="Alamat tempat tinggal Anda"
+                                                className={inputClass}
+                                            />
+                                        </Field>
+                                    </div>
+                                    <div className="mt-4 flex justify-end">
+                                        <SubmitButton processing={processing}>
+                                            Simpan data diri
+                                        </SubmitButton>
+                                    </div>
+                                </>
+                            )}
+                        </Form>
+                    </Section>
+                )}
             </div>
         </AppLayout>
     );

@@ -29,8 +29,8 @@ type Parent = {
     id: number;
     nama: string;
     gender: string | null;
-    occupation: string;
-    phoneNumber: string;
+    occupation: string | null;
+    phoneNumber: string | null;
     email: string | null;
     students: string[];
 };
@@ -90,9 +90,9 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
     }
 
     const genderOptions: SelectOption[] = [
-        { value: '', label: 'Semua jenis kelamin' },
-        { value: 'L', label: 'Laki-laki' },
-        { value: 'P', label: 'Perempuan' },
+        { value: '', label: 'Semua (Ayah/Ibu)' },
+        { value: 'L', label: 'Ayah' },
+        { value: 'P', label: 'Ibu' },
     ];
 
     const activeCount = (filters.gender ? 1 : 0) + (filters.search ? 1 : 0);
@@ -148,7 +148,7 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                             />
                         </form>
                         <Select
-                            ariaLabel="Filter jenis kelamin"
+                            ariaLabel="Filter Ayah/Ibu"
                             className="sm:w-64"
                             value={filters.gender ?? ''}
                             options={genderOptions}
@@ -156,7 +156,7 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                                 applyFilters({ gender: value })
                             }
                             icon={<Venus className="size-4" />}
-                            placeholder="Semua jenis kelamin"
+                            placeholder="Semua (Ayah/Ibu)"
                         />
                     </div>
 
@@ -208,6 +208,9 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                                         Orang tua
                                     </th>
                                     <th className="px-3 pb-3 font-semibold">
+                                        Ayah/Ibu
+                                    </th>
+                                    <th className="px-3 pb-3 font-semibold">
                                         Pekerjaan
                                     </th>
                                     <th className="px-3 pb-3 font-semibold">
@@ -241,7 +244,18 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                                             </div>
                                         </td>
                                         <td className="px-3 py-3 text-ink/80">
-                                            {parent.occupation}
+                                            {parent.gender ?? (
+                                                <span className="text-muted">
+                                                    —
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-3 text-ink/80">
+                                            {parent.occupation ?? (
+                                                <span className="text-muted">
+                                                    —
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-3 py-3">
                                             {parent.students.length === 0 ? (

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Classes;
 use App\Models\Departemen;
 use App\Models\Industry;
 use App\Models\Student;
@@ -133,5 +134,121 @@ class PlacementTest extends TestCase
                 ->has('unassignedIndustries', 1)
                 ->where('unassignedIndustries.0.id', $missingGuru->id)
             );
+    }
+
+    public function test_filter_by_kelas_hanya_menampilkan_siswa_kelas_tersebut(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $classA = Classes::factory()->create(['departemen_id' => $dep->id]);
+        $classB = Classes::factory()->create(['departemen_id' => $dep->id]);
+
+        $inA = Student::factory()->create(['departemen_id' => $dep->id, 'class_id' => $classA->id]);
+        $inB = Student::factory()->create(['departemen_id' => $dep->id, 'class_id' => $classB->id]);
+
+        $this->actingAs($kaprog)
+            ->get('/penempatan?class_id='.$classA->id)
+            ->assertOk()
+            ->assertSee($inA->name)
+            ->assertDontSee($inB->name);
+    }
+
+    public function test_filter_by_industri_hanya_menampilkan_siswa_industri_tersebut(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $industryX = Industry::factory()->create();
+        $industryY = Industry::factory()->create();
+
+        $inX = Student::factory()->create(['departemen_id' => $dep->id, 'industri_id' => $industryX->id]);
+        $inY = Student::factory()->create(['departemen_id' => $dep->id, 'industri_id' => $industryY->id]);
+
+        $this->actingAs($kaprog)
+            ->get('/penempatan?industri_id='.$industryX->id)
+            ->assertOk()
+            ->assertSee($inX->name)
+            ->assertDontSee($inY->name);
+    }
+
+    public function test_filter_by_guru_pembimbing_menampilkan_siswa_di_industri_guru_tersebut(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $guru1 = Teacher::factory()->create();
+        $guru2 = Teacher::factory()->create();
+        $industryGuru1 = Industry::factory()->create(['teacher_id' => $guru1->id]);
+        $industryGuru2 = Industry::factory()->create(['teacher_id' => $guru2->id]);
+
+        $studentA = Student::factory()->create(['departemen_id' => $dep->id, 'industri_id' => $industryGuru1->id]);
+        $studentB = Student::factory()->create(['departemen_id' => $dep->id, 'industri_id' => $industryGuru2->id]);
+
+        $this->actingAs($kaprog)
+            ->get('/penempatan?teacher_id='.$guru1->id)
+            ->assertOk()
+            ->assertSee($studentA->name)
+            ->assertDontSee($studentB->name);
+    }
+
+    public function test_filter_by_status_pkl_hanya_menampilkan_status_tersebut(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $belum = Student::factory()->create(['departemen_id' => $dep->id, 'status_pkl' => 'belum']);
+        $proses = Student::factory()->create(['departemen_id' => $dep->id, 'status_pkl' => 'proses']);
+
+        $this->actingAs($kaprog)
+            ->get('/penempatan?status_pkl=proses')
+            ->assertOk()
+            ->assertSee($proses->name)
+            ->assertDontSee($belum->name);
+    }
+
+    public function test_kombinasi_filter_bekerja_dengan_and_bukan_or(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $classA = Classes::factory()->create(['departemen_id' => $dep->id]);
+
+        $match = Student::factory()->create([
+            'departemen_id' => $dep->id,
+            'class_id' => $classA->id,
+            'status_pkl' => 'proses',
+        ]);
+        // Kelas sama, tapi status beda — tidak boleh ikut kalau AND benar-benar diterapkan.
+        $wrongStatus = Student::factory()->create([
+            'departemen_id' => $dep->id,
+            'class_id' => $classA->id,
+            'status_pkl' => 'belum',
+        ]);
+
+        $this->actingAs($kaprog)
+            ->get('/penempatan?class_id='.$classA->id.'&status_pkl=proses')
+            ->assertOk()
+            ->assertSee($match->name)
+            ->assertDontSee($wrongStatus->name);
+    }
+
+    public function test_opsi_kelas_dibatasi_lingkup_kaprog(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $ownClass = Classes::factory()->create(['departemen_id' => $dep->id]);
+        $otherClass = Classes::factory()->create();
+
+        $this->actingAs($kaprog)
+            ->get('/penempatan')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('classOptions', 1)
+                ->where('classOptions.0.id', $ownClass->id)
+            );
+
+        $this->assertNotEquals($ownClass->departemen_id, $otherClass->departemen_id);
     }
 }

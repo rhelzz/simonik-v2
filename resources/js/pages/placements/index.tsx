@@ -1,5 +1,11 @@
 import { Link, router } from '@inertiajs/react';
-import { ClipboardList, Search, TriangleAlert, UserCheck } from 'lucide-react';
+import {
+    ClipboardList,
+    Search,
+    TriangleAlert,
+    UserCheck,
+    X,
+} from 'lucide-react';
 import { useState } from 'react';
 import { edit as editIndustry } from '@/actions/App/Http/Controllers/IndustryController';
 import {
@@ -7,6 +13,8 @@ import {
     update,
 } from '@/actions/App/Http/Controllers/PlacementController';
 import { Pagination } from '@/components/ui/pagination';
+import { Select } from '@/components/ui/select';
+import type { SelectOption } from '@/components/ui/select';
 import { AppLayout } from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types';
@@ -36,10 +44,22 @@ type UnassignedIndustry = {
     name: string;
 };
 
+type NamedOption = { id: number; name: string };
+
+type PlacementFilters = {
+    search: string;
+    class_id: number | null;
+    industri_id: number | null;
+    teacher_id: number | null;
+    status_pkl: StatusPkl | null;
+};
+
 type PlacementsIndexProps = {
     students: Paginated<PlacementStudent>;
-    filters: { search: string };
+    filters: PlacementFilters;
     industries: IndustryOption[];
+    classOptions: NamedOption[];
+    teacherOptions: NamedOption[];
     unassignedIndustries: UnassignedIndustry[];
 };
 
@@ -165,9 +185,68 @@ export default function PlacementsIndex({
     students,
     filters,
     industries,
+    classOptions,
+    teacherOptions,
     unassignedIndustries,
 }: PlacementsIndexProps) {
     const [search, setSearch] = useState(filters.search);
+
+    function applyFilters(next: {
+        search?: string;
+        class_id?: string;
+        industri_id?: string;
+        teacher_id?: string;
+        status_pkl?: string;
+    }) {
+        router.get(
+            index.url(),
+            {
+                search: next.search ?? search,
+                class_id: next.class_id ?? String(filters.class_id ?? ''),
+                industri_id:
+                    next.industri_id ?? String(filters.industri_id ?? ''),
+                teacher_id: next.teacher_id ?? String(filters.teacher_id ?? ''),
+                status_pkl: next.status_pkl ?? filters.status_pkl ?? '',
+            },
+            { preserveState: true, replace: true, preserveScroll: true },
+        );
+    }
+
+    function resetFilters() {
+        setSearch('');
+        router.get(
+            index.url(),
+            {},
+            { preserveState: true, replace: true, preserveScroll: true },
+        );
+    }
+
+    const classFilterOptions: SelectOption[] = [
+        { value: '', label: 'Semua kelas' },
+        ...classOptions.map((c) => ({ value: String(c.id), label: c.name })),
+    ];
+    const industryFilterOptions: SelectOption[] = [
+        { value: '', label: 'Semua industri' },
+        ...industries.map((i) => ({ value: String(i.id), label: i.name })),
+    ];
+    const teacherFilterOptions: SelectOption[] = [
+        { value: '', label: 'Semua guru pembimbing' },
+        ...teacherOptions.map((t) => ({ value: String(t.id), label: t.name })),
+    ];
+    const statusFilterOptions: SelectOption[] = [
+        { value: '', label: 'Semua status PKL' },
+        ...(Object.keys(statusLabels) as StatusPkl[]).map((value) => ({
+            value,
+            label: statusLabels[value],
+        })),
+    ];
+
+    const activeCount =
+        (filters.search ? 1 : 0) +
+        (filters.class_id ? 1 : 0) +
+        (filters.industri_id ? 1 : 0) +
+        (filters.teacher_id ? 1 : 0) +
+        (filters.status_pkl ? 1 : 0);
 
     return (
         <AppLayout title="Plotting & Penempatan">
@@ -206,32 +285,87 @@ export default function PlacementsIndex({
                     </div>
                 )}
 
-                <form
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        router.get(
-                            index.url(),
-                            { search },
-                            {
-                                preserveState: true,
-                                replace: true,
-                                preserveScroll: true,
-                            },
-                        );
-                    }}
-                    className="mt-5"
-                >
-                    <label className="flex items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted">
-                        <Search className="size-4" />
-                        <input
-                            type="search"
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Cari nama atau NIS…"
-                            className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
-                        />
-                    </label>
-                </form>
+                <div className="mt-5 space-y-3">
+                    <div className="flex flex-col gap-3 lg:flex-row">
+                        <form
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                applyFilters({ search });
+                            }}
+                            className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
+                        >
+                            <Search className="size-4" />
+                            <input
+                                type="search"
+                                value={search}
+                                onChange={(event) =>
+                                    setSearch(event.target.value)
+                                }
+                                placeholder="Cari nama atau NIS…"
+                                className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
+                            />
+                        </form>
+                        <div className="grid grid-cols-2 gap-3 lg:flex lg:shrink-0">
+                            <Select
+                                ariaLabel="Filter kelas"
+                                className="lg:w-44"
+                                value={String(filters.class_id ?? '')}
+                                options={classFilterOptions}
+                                onChange={(value) =>
+                                    applyFilters({ class_id: value })
+                                }
+                                placeholder="Semua kelas"
+                            />
+                            <Select
+                                ariaLabel="Filter industri"
+                                className="lg:w-48"
+                                value={String(filters.industri_id ?? '')}
+                                options={industryFilterOptions}
+                                onChange={(value) =>
+                                    applyFilters({ industri_id: value })
+                                }
+                                placeholder="Semua industri"
+                            />
+                            <Select
+                                ariaLabel="Filter guru pembimbing"
+                                className="lg:w-52"
+                                value={String(filters.teacher_id ?? '')}
+                                options={teacherFilterOptions}
+                                onChange={(value) =>
+                                    applyFilters({ teacher_id: value })
+                                }
+                                placeholder="Semua guru pembimbing"
+                            />
+                            <Select
+                                ariaLabel="Filter status PKL"
+                                className="lg:w-44"
+                                value={filters.status_pkl ?? ''}
+                                options={statusFilterOptions}
+                                onChange={(value) =>
+                                    applyFilters({ status_pkl: value })
+                                }
+                                placeholder="Semua status PKL"
+                            />
+                        </div>
+                    </div>
+
+                    {activeCount > 0 && (
+                        <div className="flex items-center gap-2 text-xs text-muted">
+                            <span>
+                                {students.total} hasil · {activeCount} filter
+                                aktif
+                            </span>
+                            <button
+                                type="button"
+                                onClick={resetFilters}
+                                className="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1 font-medium text-ink/70 transition-colors hover:bg-primary-soft hover:text-primary"
+                            >
+                                <X className="size-3" />
+                                Reset filter
+                            </button>
+                        </div>
+                    )}
+                </div>
 
                 {industries.length === 0 ? (
                     <div className="mt-6 rounded-2xl border border-dashed border-line py-12 text-center text-sm text-muted">

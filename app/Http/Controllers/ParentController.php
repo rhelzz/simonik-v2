@@ -72,8 +72,8 @@ class ParentController extends Controller
                 'id' => $parent->id,
                 'nama' => $parent->nama,
                 'gender' => match (strtolower($parent->gender ?? '')) {
-                    'male', 'm', 'l' => 'Laki-laki',
-                    'female', 'f', 'p' => 'Perempuan',
+                    'male', 'm', 'l' => 'Ayah',
+                    'female', 'f', 'p' => 'Ibu',
                     default => null,
                 },
                 'occupation' => $parent->occupation,
@@ -118,10 +118,10 @@ class ParentController extends Controller
             Parents::create([
                 'user_id' => $user->id,
                 'nama' => $data['nama'],
-                'gender' => $data['gender'],
-                'alamat' => $data['alamat'],
-                'occupation' => $data['occupation'],
-                'phoneNumber' => $data['phoneNumber'],
+                'gender' => $data['gender'] ?? null,
+                'alamat' => $data['alamat'] ?? null,
+                'occupation' => $data['occupation'] ?? null,
+                'phoneNumber' => $data['phoneNumber'] ?? null,
             ]);
         });
 
@@ -166,10 +166,10 @@ class ParentController extends Controller
 
             $parent->update([
                 'nama' => $data['nama'],
-                'gender' => $data['gender'],
-                'alamat' => $data['alamat'],
-                'occupation' => $data['occupation'],
-                'phoneNumber' => $data['phoneNumber'],
+                'gender' => $data['gender'] ?? null,
+                'alamat' => $data['alamat'] ?? null,
+                'occupation' => $data['occupation'] ?? null,
+                'phoneNumber' => $data['phoneNumber'] ?? null,
             ]);
         });
 

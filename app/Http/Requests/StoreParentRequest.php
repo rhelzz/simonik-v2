@@ -27,11 +27,11 @@ class StoreParentRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', ...$this->emailDomainRule(), Rule::unique('users', 'email')],
             'password' => ['required', 'confirmed', Password::defaults()],
 
-            // Profil orang tua
-            'gender' => ['required', Rule::in(['L', 'P'])],
-            'alamat' => ['required', 'string'],
-            'occupation' => ['required', 'string', 'max:255'],
-            'phoneNumber' => ['required', 'string', 'max:50'],
+            // Profil orang tua — opsional, boleh dilengkapi belakangan.
+            'gender' => ['nullable', Rule::in(['L', 'P'])],
+            'alamat' => ['nullable', 'string'],
+            'occupation' => ['nullable', 'string', 'max:255'],
+            'phoneNumber' => ['nullable', 'string', 'max:50'],
         ];
     }
 }

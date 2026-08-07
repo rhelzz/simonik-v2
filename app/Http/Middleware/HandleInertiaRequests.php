@@ -104,6 +104,14 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        if ($user->hasRole('siswa')) {
+            $student = $user->students;
+
+            if ($student !== null && ! $student->hasCompleteProfile()) {
+                $notices[] = 'Lengkapi data diri Anda (NIS, tempat & tanggal lahir, jenis kelamin, alamat) di halaman Profil agar rapor dan sertifikat PKL Anda tercetak dengan benar.';
+            }
+        }
+
         return $notices === [] ? null : implode(' ', $notices);
     }
 }
