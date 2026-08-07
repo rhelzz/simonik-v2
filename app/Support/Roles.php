@@ -24,6 +24,17 @@ final class Roles
     public const EXCLUSIVE = ['siswa', 'orangtua'];
 
     /**
+     * Peran yang akunnya boleh ditautkan ke jabatan lain.
+     *
+     * Rangkap jabatan hanya masuk akal untuk staf sekolah — guru pembimbing
+     * yang diangkat jadi kaprog, atau wakasek yang juga membimbing. Akun di
+     * luar itu (admin, pembimbing industri dari DUDI) dibuat sendiri.
+     *
+     * @var array<int, string>
+     */
+    public const LINKABLE = ['guru', 'wakasek'];
+
+    /**
      * Label peran untuk pesan ke operator.
      *
      * @var array<string, string>

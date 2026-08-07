@@ -33,7 +33,7 @@ type ImportPageProps = {
     references?: ReferenceGroups;
 };
 
-const BLANK_ROWS = 5;
+const BLANK_ROWS = 15;
 
 export default function ImportPage({
     title,
@@ -153,8 +153,8 @@ export default function ImportPage({
                     Kembali
                 </Link>
 
-                <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">
-                    <section className="space-y-4 rounded-3xl bg-surface p-5 sm:p-6">
+                <div className="grid min-w-0 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+                    <section className="min-w-0 space-y-4 rounded-3xl bg-surface p-5 sm:p-6 lg:sticky lg:top-5">
                         <div>
                             <h2 className="text-base font-bold text-ink">
                                 Isi data di sini

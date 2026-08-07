@@ -67,6 +67,17 @@ trait ValidatesRoleAccount
                 return;
             }
 
+            // Batas yang sama dengan daftar kandidat: tanpa ini, `user_id`
+            // sembarang masih bisa dikirim langsung lewat POST.
+            if (! $user->hasAnyRole(Roles::LINKABLE)) {
+                $validator->errors()->add(
+                    'user_id',
+                    'Hanya akun guru pembimbing atau wakasek yang bisa diberi jabatan tambahan.',
+                );
+
+                return;
+            }
+
             if ($user->hasRole($this->targetRole())) {
                 $validator->errors()->add('user_id', 'Akun ini sudah memegang jabatan tersebut.');
             }

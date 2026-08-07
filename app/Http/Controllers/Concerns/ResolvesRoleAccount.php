@@ -99,6 +99,10 @@ trait ResolvesRoleAccount
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('email', 'like', "%{$search}%");
             })
+            // Hanya akun staf sekolah yang boleh dirangkap (lihat
+            // `Roles::LINKABLE`) — daftar "semua akun" membuat form Kaprog
+            // menawarkan admin dan pembimbing industri yang tidak masuk akal.
+            ->whereHas('roles', fn ($query) => $query->whereIn('name', Roles::LINKABLE))
             // Sudah memegang jabatan ini, atau berperan eksklusif (siswa/orang
             // tua) yang tidak boleh dirangkap dengan jabatan kepegawaian.
             ->whereDoesntHave('roles', fn ($query) => $query->whereIn('name', [$role, ...Roles::EXCLUSIVE]))

@@ -196,7 +196,7 @@ export function ImportGrid({
     }
 
     return (
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
                 <button
                     type="button"
@@ -230,20 +230,22 @@ export function ImportGrid({
                 </p>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-line">
+            <div className="max-h-[65vh] overflow-auto rounded-xl border border-line">
                 <table className="w-full border-collapse text-left text-sm">
-                    <thead>
-                        <tr className="bg-canvas/60 text-xs font-semibold tracking-wide text-muted uppercase">
-                            <th className="w-10 px-2 py-2 text-center">#</th>
+                    <thead className="sticky top-0 z-10 bg-surface">
+                        <tr className="bg-canvas text-xs font-semibold tracking-wide text-muted uppercase">
+                            <th className="w-10 border-r border-line px-2 py-2 text-center">
+                                #
+                            </th>
                             {headings.map((heading) => (
                                 <th
                                     key={heading}
-                                    className="min-w-36 px-2 py-2 font-semibold whitespace-nowrap"
+                                    className="min-w-36 border-r border-line px-2 py-2 font-semibold whitespace-nowrap"
                                 >
                                     {heading}
                                 </th>
                             ))}
-                            <th className="w-10 px-2 py-2" />
+                            <th className="w-10 border-r border-line px-2 py-2" />
                             <th className="min-w-56 px-2 py-2 font-semibold">
                                 Catatan
                             </th>
@@ -265,7 +267,7 @@ export function ImportGrid({
                                             'bg-warning/10',
                                     )}
                                 >
-                                    <td className="px-2 py-1 text-center">
+                                    <td className="border-r border-line px-2 py-1 text-center">
                                         <button
                                             type="button"
                                             onClick={() => selectRow(r)}
@@ -281,7 +283,10 @@ export function ImportGrid({
                                             : undefined;
 
                                         return (
-                                            <td key={heading} className="p-0">
+                                            <td
+                                                key={heading}
+                                                className="border-r border-line p-0"
+                                            >
                                                 <input
                                                     ref={(node) => {
                                                         cellRefs.current[
@@ -333,7 +338,7 @@ export function ImportGrid({
                                             </td>
                                         );
                                     })}
-                                    <td className="px-2 py-1 text-center">
+                                    <td className="border-r border-line px-2 py-1 text-center">
                                         <button
                                             type="button"
                                             onClick={() =>
