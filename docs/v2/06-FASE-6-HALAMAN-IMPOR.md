@@ -1,9 +1,11 @@
 # Fase 6 — Halaman Impor dengan Pratinjau ("Excel di web")
 
-**Status:** belum dikerjakan · **Prioritas:** P2 (UX, bukan bug) ·
+**Status:** ✅ **SELESAI (untuk siswa)** · **Prioritas:** P2 (UX, bukan bug) ·
 **Risiko regresi:** rendah · **Perkiraan:** ~12 jam
 (8 jam halaman + pratinjau, 4 jam lapisan gestur ala Excel di [§4.4](#44-tabel-praktik-ux--gestur-mana-yang-dibangun))
 **Prasyarat mutlak:** [Fase 1](01-FASE-1-IMPOR-EXCEL.md) sudah selesai.
+
+> **Hasil implementasi** — lihat [§10](#10-hasil-implementasi).
 
 ---
 
@@ -456,3 +458,86 @@ ulangi. Petunjuk hanya terlihat kalau file-nya dibuka.
    volume terbesar dan kolom terbanyak). Halamannya sudah generik sejak awal,
    jadi menambah delapan entitas sisanya tinggal mengirim prop berbeda —
    lakukan itu setelah halaman siswa terbukti dipakai.
+
+
+---
+
+## 10. Hasil implementasi
+
+`composer ci:check` hijau: Pint, PHPStan 0 error, **399/399 test lulus**
+(+8 dari `ImportPreviewTest`), eslint + prettier + `tsc` lolos. Nol migrasi,
+**nol dependensi baru**. Dikerjakan **untuk siswa dulu**, sesuai §9.
+
+### Penyimpangan besar dari rencana — dan ini yang menghemat paling banyak
+
+**Tidak ada mode `dryRun` di sembilan importer.** Rencana §4.1 meminta cabang
+`if ($this->dryRun)` di setiap importer. Yang dikerjakan justru:
+
+```php
+DB::beginTransaction();
+try { $this->runRows($import, $headings, $rows); }
+finally { DB::rollBack(); }
+```
+
+Pratinjau **menjalankan impor sungguhan lalu membatalkan transaksinya**.
+Konsekuensinya persis yang diminta §4.1 tapi tanpa menyentuh satu pun importer:
+mustahil pratinjau dan penyimpanan berbeda putusan, karena keduanya benar-benar
+kode yang sama — bukan "importer yang sama dengan dua cabang".
+
+Yang ditambahkan ke trait hanya pencatatan terstruktur di `skip()`/`fail()`/
+`warn()` — ketiganya sudah terpusat, jadi 9 importer ikut dapat gratis.
+
+**Baris dari halaman tidak lewat berkas.** `runRows()` men-slug judul kolom
+persis seperti `WithHeadingRow` (`Str::slug($h, '_')`), lalu memanggil
+`collection()` langsung. Importer tidak bisa membedakan asal datanya.
+
+### Bug desain yang tertangkap saat mengetes
+
+Endpoint pratinjau diambil lewat `fetch()` dan dibaca sebagai JSON, tapi
+`bootstrap/app.php` hanya merender galat sebagai JSON untuk `api/*`. Validasi
+yang gagal membalas **redirect 302**, sehingga `response.json()` di klien akan
+pecah. Ditambal dengan menangkap `ValidationException` dan mengembalikan 422
+JSON secara eksplisit, plus penanganan `!response.ok` di halaman.
+
+### Satu sumber untuk petunjuk & referensi
+
+`App\Support\ImportSpecs` kini memegang judul kolom, petunjuk, contoh, catatan,
+dan daftar nilai relasi. Ketiga sheet template (`StudentTemplateSheet`,
+`StudentInstructionSheet`, `StudentReferenceSheet`) **dan** halaman web
+membacanya dari sana — petunjuk tidak bisa lagi menyimpang antara berkas dan
+layar.
+
+### Pemeriksa untuk logika grid, tanpa menambah test runner
+
+Proyek belum punya runner JS, dan menambah satu demi satu berkas tidak sepadan.
+Logika grid dipisah ke `resources/js/lib/grid.ts` (fungsi murni) dengan
+pemeriksa mandiri `grid.check.ts` — **11 pemeriksaan**, dijalankan langsung oleh
+Node 24 yang memahami TypeScript:
+
+```
+node resources/js/lib/grid.check.ts
+```
+
+`allowImportingTsExtensions` diaktifkan di `tsconfig.json` supaya impor
+`./grid.ts` sah bagi Node maupun `tsc`.
+
+### Gestur yang dibangun
+
+Sesuai daftar tertutup §4.4: tempel banyak baris, **isi-ke-bawah (`Ctrl+D`)**,
+salin rentang (`Ctrl+C`), undo satu tingkat (`Ctrl+Z`), navigasi keyboard,
+pilih rentang (`Shift`+klik / `Shift`+panah), pilih baris, tambah/hapus baris,
+penandaan galat inline, dan saran nilai relasi lewat `<datalist>`.
+
+Yang ditolak tetap ditolak: deret otomatis, rumus, undo bertingkat,
+urutkan/saring pratinjau, multi-rentang.
+
+### Belum dikerjakan
+
+- **Delapan entitas master data lain** masih memakai modal impor lama.
+  Halamannya sudah generik (prop `title`/`headings`/`instructions`/`references`),
+  jadi menambah satu entitas ≈ satu `ImportSpecs::x()` + 2 method tipis di
+  controller + 2 rute. Kerjakan saat memang dibutuhkan.
+- **Kandidat "maksud Anda: XI RPL 1?"** (§4.5 lapis 3) belum ada. Penandaan
+  kuning + pesan "dikosongkan" sudah jalan; saran `levenshtein()` menyusul bila
+  ternyata masih sering salah ketik.
+- **Verifikasi manual di browser.**

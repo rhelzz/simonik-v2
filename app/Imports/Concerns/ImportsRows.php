@@ -39,6 +39,13 @@ trait ImportsRows
      */
     public array $warnings = [];
 
+    /**
+     * Masalah per baris dalam bentuk terstruktur, untuk halaman pratinjau.
+     *
+     * @var array<int, array{line: int, type: string, message: string}>
+     */
+    public array $issues = [];
+
     /** Nama sheet yang dicari, direkam agar pesan galat bisa menyebutkannya. */
     public string $wantedSheet = '';
 
@@ -81,16 +88,31 @@ trait ImportsRows
     protected function skip(int $line, string $message): void
     {
         $this->skipped[] = "Baris {$line}: {$message}";
+        $this->note($line, 'skipped', $message);
     }
 
     protected function fail(int $line, string $message): void
     {
         $this->failed[] = "Baris {$line}: {$message}";
+        $this->note($line, 'failed', $message);
     }
 
     protected function warn(int $line, string $message): void
     {
         $this->warnings[] = "Baris {$line}: {$message}";
+        $this->note($line, 'warning', $message);
+    }
+
+    /**
+     * Catat masalah per baris dalam bentuk terstruktur.
+     *
+     * Ringkasan teks di atas dipakai banner flash; bentuk ini dipakai halaman
+     * pratinjau untuk menandai sel yang bermasalah. Keduanya diisi dari satu
+     * tempat supaya tidak bisa berbeda isi.
+     */
+    private function note(int $line, string $type, string $message): void
+    {
+        $this->issues[] = ['line' => $line, 'type' => $type, 'message' => $message];
     }
 
     /**

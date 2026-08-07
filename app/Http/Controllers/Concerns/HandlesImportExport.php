@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Concerns;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -37,6 +40,18 @@ trait HandlesImportExport
             );
         }
 
+        return $this->rowsResult($import, $route);
+    }
+
+    /**
+     * Ringkasan hasil impor sebagai flash: ditambahkan / dilewati / gagal,
+     * plus rincian baris bermasalah. Dipakai jalur berkas maupun jalur baris
+     * dari halaman impor, supaya keduanya melaporkan hal yang sama.
+     *
+     * @param  ToCollection&object{created:int, skipped:array<int,string>, failed:array<int,string>, warnings:array<int,string>}  $import
+     */
+    protected function rowsResult(ToCollection $import, string $route): RedirectResponse
+    {
         $summary = "{$import->created} data ditambahkan";
 
         if ($import->skipped !== []) {
@@ -72,5 +87,57 @@ trait HandlesImportExport
         }
 
         return $redirect;
+    }
+
+    /**
+     * Jalankan importer atas baris yang diketik/ditempel operator di halaman
+     * impor, bukan dari berkas.
+     *
+     * Judul kolom di-slug persis seperti `WithHeadingRow` melakukannya
+     * (`Str::slug($heading, '_')`), sehingga importer tidak bisa membedakan
+     * asalnya — satu validator untuk kedua jalur.
+     *
+     * @param  array<int, string>  $headings
+     * @param  array<int, array<int, string>>  $rows
+     */
+    protected function runRows(ToCollection $import, array $headings, array $rows): void
+    {
+        $keys = array_map(fn (string $heading): string => Str::slug($heading, '_'), $headings);
+        $width = count($keys);
+
+        $collection = collect($rows)->map(function (array $row) use ($keys, $width): Collection {
+            $values = array_pad(array_slice(array_values($row), 0, $width), $width, '');
+
+            return collect(array_combine($keys, $values));
+        });
+
+        $import->collection($collection);
+    }
+
+    /**
+     * Validasi tanpa menyimpan: jalankan importer sungguhan lalu batalkan
+     * transaksinya.
+     *
+     * Sengaja memakai importer yang sama, bukan validator kedua khusus
+     * pratinjau — kalau tidak, pratinjau bisa bilang "aman" sementara
+     * penyimpanan tetap menolak, yaitu bug yang lebih menyebalkan daripada
+     * yang sedang kita perbaiki.
+     *
+     * @param  ToCollection&object{issues: array<int, array{line: int, type: string, message: string}>}  $import
+     * @param  array<int, string>  $headings
+     * @param  array<int, array<int, string>>  $rows
+     * @return array<int, array{line: int, type: string, message: string}>
+     */
+    protected function previewRows(ToCollection $import, array $headings, array $rows): array
+    {
+        DB::beginTransaction();
+
+        try {
+            $this->runRows($import, $headings, $rows);
+        } finally {
+            DB::rollBack();
+        }
+
+        return $import->issues;
     }
 }

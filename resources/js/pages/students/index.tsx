@@ -1,14 +1,12 @@
-import { Link, router, useForm } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     Building2,
     ChevronLeft,
     ChevronRight,
     Download,
     Eye,
-    FileSpreadsheet,
     GraduationCap,
     ListFilter,
-    LoaderCircle,
     Pencil,
     Plus,
     Search,
@@ -18,17 +16,16 @@ import {
     X,
 } from 'lucide-react';
 import { useState } from 'react';
-import type { FormEvent, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
     bulkDestroy,
     create,
     destroy,
     edit,
     exportMethod,
-    importMethod,
+    importPage,
     index,
     show,
-    template,
 } from '@/actions/App/Http/Controllers/StudentController';
 import { Modal } from '@/components/ui/modal';
 import { Select } from '@/components/ui/select';
@@ -95,7 +92,6 @@ export default function StudentsIndex({
     filters,
 }: StudentsIndexProps) {
     const [search, setSearch] = useState(filters.search);
-    const [importOpen, setImportOpen] = useState(false);
     const [selected, setSelected] = useState<number[]>([]);
     const [bulkOpen, setBulkOpen] = useState(false);
 
@@ -131,21 +127,6 @@ export default function StudentsIndex({
             },
         });
     }
-
-    const importForm = useForm<{ file: File | null }>({ file: null });
-
-    function submitImport(event: FormEvent) {
-        event.preventDefault();
-        importForm.post(importMethod.url(), {
-            forceFormData: true,
-            onSuccess: () => {
-                importForm.reset();
-                setImportOpen(false);
-            },
-        });
-    }
-
-    const importErrors = Object.values(importForm.errors);
 
     type FilterPatch = {
         search?: string;
@@ -234,14 +215,13 @@ export default function StudentsIndex({
                             <Download className="size-4" />
                             Ekspor
                         </a>
-                        <button
-                            type="button"
-                            onClick={() => setImportOpen(true)}
+                        <Link
+                            href={importPage.url()}
                             className="inline-flex items-center justify-center gap-2 rounded-xl border border-line px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-canvas"
                         >
                             <Upload className="size-4" />
                             Impor
-                        </button>
+                        </Link>
                         <Link
                             href={create.url()}
                             className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
@@ -588,100 +568,6 @@ export default function StudentsIndex({
                         </button>
                     </div>
                 </div>
-            </Modal>
-
-            <Modal
-                open={importOpen}
-                onClose={() => setImportOpen(false)}
-                title="Impor data siswa"
-            >
-                <form onSubmit={submitImport} className="space-y-4">
-                    <p className="text-sm text-muted">
-                        Isi sheet{' '}
-                        <span className="font-semibold text-ink">
-                            Data Siswa
-                        </span>{' '}
-                        pada template, lalu unggah berkasnya. Setiap akun siswa
-                        dibuat dengan kata sandi default{' '}
-                        <span className="font-semibold text-ink">password</span>
-                        . Hanya kolom Nama & Email yang wajib diisi. Baris yang
-                        salah dilaporkan satu per satu; baris lain tetap
-                        diimpor.
-                    </p>
-
-                    <a
-                        href={template.url()}
-                        className="flex items-center gap-3 rounded-2xl border border-line bg-canvas/40 p-3 transition-colors hover:border-primary/40"
-                    >
-                        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-positive/15 text-positive">
-                            <FileSpreadsheet className="size-5" />
-                        </span>
-                        <span className="min-w-0">
-                            <span className="block text-sm font-semibold text-ink">
-                                Unduh template contoh
-                            </span>
-                            <span className="block text-xs text-muted">
-                                Berisi petunjuk pengisian & daftar nilai relasi
-                                yang valid.
-                            </span>
-                        </span>
-                        <Download className="ml-auto size-4 shrink-0 text-muted" />
-                    </a>
-
-                    <div className="space-y-1.5">
-                        <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-line px-4 py-3 text-sm font-medium text-ink transition-colors hover:bg-canvas">
-                            <Upload className="size-4 text-muted" />
-                            {importForm.data.file
-                                ? importForm.data.file.name
-                                : 'Pilih berkas .xlsx / .csv'}
-                            <input
-                                type="file"
-                                accept=".xlsx,.xls,.csv"
-                                onChange={(event) =>
-                                    importForm.setData(
-                                        'file',
-                                        event.target.files?.[0] ?? null,
-                                    )
-                                }
-                                className="hidden"
-                            />
-                        </label>
-                        {importErrors.length > 0 && (
-                            <div className="max-h-40 space-y-1 overflow-y-auto rounded-xl bg-red-50 p-3">
-                                {importErrors.map((message, i) => (
-                                    <p
-                                        key={i}
-                                        className="text-xs font-medium text-red-600"
-                                    >
-                                        {message}
-                                    </p>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center justify-end gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setImportOpen(false)}
-                            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-ink/70 transition-colors hover:bg-canvas"
-                        >
-                            Batal
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={
-                                importForm.processing || !importForm.data.file
-                            }
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-60"
-                        >
-                            {importForm.processing && (
-                                <LoaderCircle className="size-4 animate-spin" />
-                            )}
-                            Impor sekarang
-                        </button>
-                    </div>
-                </form>
             </Modal>
         </AppLayout>
     );

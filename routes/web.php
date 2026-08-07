@@ -105,6 +105,8 @@ Route::middleware('auth')->group(function () {
         // tertangkap oleh route show `students/{student}`.
         Route::get('students/export', [StudentController::class, 'export'])->name('students.export');
         Route::get('students/template', [StudentController::class, 'template'])->name('students.template');
+        Route::get('students/import', [StudentController::class, 'importPage'])->name('students.import-page');
+        Route::post('students/import/preview', [StudentController::class, 'importPreview'])->name('students.import-preview');
         Route::post('students/import', [StudentController::class, 'import'])->name('students.import');
         Route::delete('students/bulk', [StudentController::class, 'bulkDestroy'])->name('students.bulk-destroy');
 

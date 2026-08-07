@@ -4,6 +4,7 @@ namespace App\Exports\Sheets;
 
 use App\Exports\Concerns\StylesHeadings;
 use App\Support\ImportDefaults;
+use App\Support\ImportSpecs;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -33,23 +34,7 @@ class StudentTemplateSheet implements FromArray, ShouldAutoSize, WithEvents, Wit
      */
     public function headings(): array
     {
-        return [
-            'Nama',
-            'NIS',
-            'Email',
-            'Jenis Kelamin',
-            'Tempat Lahir',
-            'Tanggal Lahir',
-            'Golongan Darah',
-            'Alamat',
-            'Kelas',
-            'Jurusan',
-            'Industri',
-            'Orang Tua',
-            'Status PKL',
-            'PKL Mulai',
-            'PKL Selesai',
-        ];
+        return ImportSpecs::siswa()['headings'];
     }
 
     /**

@@ -357,21 +357,41 @@ Menghapus satu kelas siswa yang salah impor sebelumnya berarti 40 klik hapus + 4
 
 **Catatan proses:** CLAUDE.md diperbarui — verifikasi kini berlingkup pada yang disentuh (`--filter`, `pint --dirty`, phpstan per berkas, eslint/prettier per berkas); `composer ci:check` penuh hanya saat mau commit, saat menyentuh kode bersama, atau diminta. Output perintah tidak boleh dibuang ke `/dev/null` — galat yang tersembunyi terlihat seperti hang.
 
-## 📍 Current step
-**Seluruh enam temuan UAT selesai (Fase 1, 2, 3, 4, 5).** Impor Excel bisa dipakai lagi, satu orang bisa memegang beberapa jabatan dengan satu login, akun baru seragam `@simonik.local`, industri bisa ditetapkan dari form pembimbing, dan tabel siswa punya hapus massal dengan jarak kolom yang wajar.
+---
 
-**Catatan deploy:** nol migrasi pada kelima fase. Wajib `npm run build`. Akun kembar dan email lama **tidak** diubah otomatis — keduanya perlu ditinjau manual bila mengganggu.
+### 52. Fase 6 v2 — halaman impor dengan pratinjau ("Excel di web") untuk siswa
+
+Keluhan "nggak tahu cara isinya" tidak selesai oleh Fase 1: petunjuk terkubur di dalam berkas yang harus diunduh dulu, dan galat baru ketahuan setelah unggah. Halaman `/students/import` menampilkan petunjuk per kolom, panel nilai referensi yang bisa disalin, tabel isian yang bisa ditempeli langsung dari Excel, dan **pratinjau sebelum menyimpan**.
+
+- **Pratinjau tidak memakai validator kedua.** Rencana meminta cabang `dryRun` di sembilan importer; yang dikerjakan justru menjalankan impor **sungguhan lalu membatalkan transaksinya** (`DB::beginTransaction()` … `rollBack()`). Konsekuensinya persis yang diinginkan — mustahil pratinjau dan penyimpanan berbeda putusan karena keduanya benar-benar kode yang sama — tanpa menyentuh satu pun importer. Yang ditambahkan ke trait hanya pencatatan terstruktur di `skip()`/`fail()`/`warn()` yang memang sudah terpusat.
+- **Baris dari halaman tidak lewat berkas:** `runRows()` men-slug judul kolom persis seperti `WithHeadingRow` (`Str::slug($h, '_')`) lalu memanggil `collection()` langsung, jadi importer tidak bisa membedakan asal datanya.
+- **Bug desain yang tertangkap saat mengetes:** endpoint pratinjau diambil lewat `fetch()` dan dibaca sebagai JSON, tapi `bootstrap/app.php` hanya merender galat sebagai JSON untuk `api/*` — validasi yang gagal membalas redirect 302 dan `response.json()` di klien akan pecah. Ditambal dengan mengembalikan 422 JSON eksplisit + penanganan `!response.ok` di halaman.
+- **`App\Support\ImportSpecs`** jadi satu sumber untuk judul kolom, petunjuk, contoh, catatan, dan daftar nilai relasi. Ketiga sheet template **dan** halaman web membacanya dari sana, jadi petunjuk tidak bisa menyimpang antara berkas dan layar.
+- **Gestur ala Excel sesuai daftar tertutup** yang disepakati di dokumen fase: tempel banyak baris, isi-ke-bawah (`Ctrl+D`), salin rentang, undo satu tingkat, navigasi keyboard, pilih rentang/baris, tambah/hapus baris, penandaan galat inline, dan saran nilai relasi lewat `<datalist>` bawaan browser. Deret otomatis, rumus, undo bertingkat, dan pengurutan tetap ditolak.
+- **Pemeriksa logika grid tanpa menambah test runner:** logika dipisah ke `resources/js/lib/grid.ts` (fungsi murni) + `grid.check.ts` berisi 11 pemeriksaan, dijalankan langsung oleh Node 24 yang memahami TypeScript — `node resources/js/lib/grid.check.ts`. Nol dependensi baru.
+- **Tests (+8, `ImportPreviewTest`):** pratinjau tidak menyimpan apa pun, penandaan baris bermasalah, relasi tak dikenal jadi peringatan bukan galat, **pratinjau dan penyimpanan memberi putusan yang sama**, baris dari browser tetap divalidasi, >500 baris ditolak, halaman membawa petunjuk, dan siswa ditolak membukanya.
+- ✅ **Pint + PHPStan 0 error + 399/399 passed + 1659 assertions.** `composer ci:check` hijau.
+
+**Belum:** delapan entitas master data lain masih memakai modal impor lama (halamannya sudah generik — menambah satu entitas ≈ satu `ImportSpecs::x()` + 2 method tipis + 2 rute), saran kandidat "maksud Anda: XI RPL 1?", dan verifikasi manual di browser.
+
+## 📍 Current step
+**Seluruh roadmap v2 selesai (Fase 1–6).** Enam temuan UAT tertutup, plus halaman impor "Excel di web" untuk siswa. Nol migrasi di keenam fase.
+
+**Catatan deploy:** wajib `npm run build`. Akun kembar dan email lama **tidak** diubah otomatis. `tsconfig.json` kini mengaktifkan `allowImportingTsExtensions` (dipakai pemeriksa mandiri `lib/grid.check.ts`).
 
 **Sisa verifikasi di browser** (belum dilakukan sama sekali):
 1. Unduh template siswa → isi 2 baris → unggah → data masuk.
 2. Tambahkan guru yang sudah ada sebagai kaprog → login dengan akunnya → kedua menu terlihat.
 3. Buat akun baru → sufiks `@simonik.local` muncul di form.
 4. Tetapkan industri dari form pembimbing → spanduk "belum ditautkan" hilang.
-5. Pilih beberapa siswa → hapus massal → cek juga tabel di lebar 1366px.
+5. Pilih beberapa siswa → hapus massal → cek tabel di lebar 1366px.
+6. Buka **Data Siswa → Impor** → tempel beberapa baris dari Excel → `Ctrl+D` untuk mengisi kolom Kelas → **Periksa** → **Simpan**.
 
 ---
 
-## ⏭️ Next step
-1. **Verifikasi manual kelima fase di atas** — ini gerbang yang tersisa sebelum batch UAT ini benar-benar ditutup.
-2. **[Fase 6 — Halaman impor](v2/06-FASE-6-HALAMAN-IMPOR.md)** — opsional (~12 jam). **Tinjau ulang dulu**: ia menyelesaikan keluhan UX, dan keluhannya mungkin sudah hilang setelah Fase 1. Putuskan dari keluhan nyata, bukan dari rencana.
-3. Tiga opsi lama masih berlaku: wajib lengkapi profil saat login pertama, bersihkan approval WFA menggantung, audit scoping kaprog untuk master data lain.
+## ⏭️ Next step — opsi terbaik
+1. **Verifikasi manual keenam alur di atas.** Ini gerbang yang tersisa sebelum batch ini ditutup; semuanya baru terbukti lewat test.
+2. **Perluas halaman impor ke entitas lain** bila operator menyukainya — guru, pembimbing, orang tua, industri, kelas, jurusan, kaprog, wakasek. Halamannya sudah generik, jadi biayanya kecil per entitas. Jangan dikerjakan borongan sebelum halaman siswa terbukti dipakai.
+3. **Saran kandidat relasi terdekat** (`levenshtein`, "maksud Anda: XI RPL 1?") bila salah ketik nama relasi ternyata masih sering terjadi.
+
+Tiga opsi lama masih berlaku dan belum dikerjakan: wajib lengkapi profil saat login pertama, bersihkan approval WFA menggantung, audit scoping kaprog untuk master data lain.

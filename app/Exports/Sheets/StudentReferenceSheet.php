@@ -3,10 +3,7 @@
 namespace App\Exports\Sheets;
 
 use App\Exports\Concerns\StylesHeadings;
-use App\Models\Classes;
-use App\Models\Departemen;
-use App\Models\Industry;
-use App\Models\Parents;
+use App\Support\ImportSpecs;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -33,7 +30,7 @@ class StudentReferenceSheet implements FromArray, ShouldAutoSize, WithEvents, Wi
      */
     public function headings(): array
     {
-        return ['Kelas', 'Jurusan', 'Industri', 'Orang Tua'];
+        return array_keys(ImportSpecs::siswaReferences());
     }
 
     /**
@@ -41,27 +38,18 @@ class StudentReferenceSheet implements FromArray, ShouldAutoSize, WithEvents, Wi
      */
     public function array(): array
     {
-        $classes = Classes::query()->orderBy('name')->pluck('name')->all();
-        $departemens = Departemen::query()->orderBy('name')->pluck('name')->all();
-        $industries = Industry::query()->orderBy('name')->pluck('name')->all();
-        $parents = Parents::query()->orderBy('nama')->pluck('nama')->all();
+        $columns = array_values(ImportSpecs::siswaReferences());
 
-        $max = max(
-            count($classes),
-            count($departemens),
-            count($industries),
-            count($parents),
-        );
+        if ($columns === []) {
+            return [];
+        }
+
+        $max = max(array_map('count', $columns));
 
         $rows = [];
 
         for ($i = 0; $i < $max; $i++) {
-            $rows[] = [
-                $classes[$i] ?? '',
-                $departemens[$i] ?? '',
-                $industries[$i] ?? '',
-                $parents[$i] ?? '',
-            ];
+            $rows[] = array_map(fn (array $values): string => $values[$i] ?? '', $columns);
         }
 
         return $rows;

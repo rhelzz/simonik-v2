@@ -17,11 +17,14 @@ use App\Models\Parents;
 use App\Models\PKLPeriod;
 use App\Models\Student;
 use App\Models\User;
+use App\Support\ImportSpecs;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
@@ -355,7 +358,91 @@ class StudentController extends Controller
      */
     public function import(Request $request): RedirectResponse
     {
+        // Baris hasil koreksi dari halaman impor dikirim sebagai JSON; berkas
+        // Excel tetap didukung untuk operator yang lebih suka mengunggah.
+        if ($request->has('rows')) {
+            $data = $this->validateRows($request);
+            $import = new StudentsImport;
+
+            $this->runRows($import, ImportSpecs::siswa()['headings'], $data['rows']);
+
+            return $this->rowsResult($import, 'students.index');
+        }
+
         return $this->runImport($request, new StudentsImport, 'students.index');
+    }
+
+    /**
+     * Halaman impor: petunjuk, nilai referensi, dan tabel isian dengan
+     * pratinjau — supaya operator tidak perlu menebak isian lalu mengulang
+     * siklus unduh–isi–unggah–gagal.
+     */
+    public function importPage(): Response
+    {
+        $spec = ImportSpecs::siswa();
+
+        return Inertia::render('import/index', [
+            'title' => 'Impor Data Siswa',
+            'sheet' => $spec['sheet'],
+            'headings' => $spec['headings'],
+            'instructions' => $spec['instructions'],
+            'example' => $spec['example'],
+            'note' => $spec['note'],
+            'templateUrl' => route('students.template'),
+            'previewUrl' => route('students.import-preview'),
+            'storeUrl' => route('students.import'),
+            'backUrl' => route('students.index'),
+            'references' => Inertia::defer(fn () => ImportSpecs::siswaReferences()),
+        ]);
+    }
+
+    /**
+     * Validasi tanpa menyimpan apa pun.
+     */
+    public function importPreview(Request $request): JsonResponse
+    {
+        // Endpoint ini diambil lewat `fetch()` dan hasilnya dibaca sebagai
+        // JSON. Aplikasi hanya merender galat sebagai JSON untuk `api/*`
+        // (lihat `bootstrap/app.php`), jadi tanpa penanganan ini validasi yang
+        // gagal membalas redirect dan `response.json()` di sisi klien pecah.
+        try {
+            $data = $this->validateRows($request);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'errors' => $exception->errors(),
+            ], 422);
+        }
+
+        $import = new StudentsImport;
+
+        $issues = $this->previewRows($import, ImportSpecs::siswa()['headings'], $data['rows']);
+
+        return response()->json([
+            'issues' => $issues,
+            'valid' => count($data['rows']) - count(array_unique(array_column(
+                array_filter($issues, fn (array $issue): bool => $issue['type'] !== 'warning'),
+                'line',
+            ))),
+        ]);
+    }
+
+    /**
+     * Baris dari browser tidak dipercaya: pratinjau adalah kenyamanan, bukan
+     * bukti kebenaran, jadi batasnya tetap dijaga di sini.
+     *
+     * @return array{rows: array<int, array<int, string>>}
+     */
+    private function validateRows(Request $request): array
+    {
+        /** @var array{rows: array<int, array<int, string>>} $data */
+        $data = $request->validate([
+            'rows' => ['required', 'array', 'max:500'],
+            'rows.*' => ['array'],
+            'rows.*.*' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        return $data;
     }
 
     /**
