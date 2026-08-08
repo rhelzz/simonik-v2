@@ -124,7 +124,7 @@ export function MapViewer({ latitude, longitude, radius }: MapViewerProps) {
     if (isNaN(lat) || isNaN(lng)) {
         return (
             <div className="flex h-48 items-center justify-center rounded-2xl border border-line bg-canvas/30 text-sm text-muted">
-                Koordinat tidak valid.
+                Lokasi belum diisi.
             </div>
         );
     }

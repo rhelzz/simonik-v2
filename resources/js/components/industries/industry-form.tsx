@@ -107,8 +107,8 @@ export function IndustryForm({
     industry?: IndustryDefaults;
     submitLabel: string;
 }) {
-    const [lat, setLat] = useState(industry?.latitude ?? '-6.914744');
-    const [lng, setLng] = useState(industry?.longitude ?? '107.609810');
+    const [lat, setLat] = useState(industry?.latitude ?? '');
+    const [lng, setLng] = useState(industry?.longitude ?? '');
     const [rad, setRad] = useState(industry?.radius ?? 100);
     const [teacherId, setTeacherId] = useState(
         industry?.teacher_id != null ? String(industry.teacher_id) : '',

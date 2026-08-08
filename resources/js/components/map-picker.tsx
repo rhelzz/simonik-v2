@@ -18,10 +18,38 @@ export function MapPicker({
     const mapRef = useRef<any>(null);
     const markerRef = useRef<any>(null);
     const circleRef = useRef<any>(null);
+    const radiusRef = useRef(radius);
+    useEffect(() => {
+        radiusRef.current = radius;
+    }, [radius]);
     const [leafletLoaded, setLeafletLoaded] = useState(
         () => typeof window !== 'undefined' && !!(window as any).L,
     );
     const [loadingError, setLoadingError] = useState(false);
+
+    const lat = parseFloat(latitude?.toString());
+    const lng = parseFloat(longitude?.toString());
+    const hasCoords = !isNaN(lat) && !isNaN(lng);
+
+    /** Buat marker + lingkaran radius di posisi tertentu, sekali saja. */
+    function placeMarker(map: any, L: any, position: [number, number]) {
+        const marker = L.marker(position, { draggable: true }).addTo(map);
+        markerRef.current = marker;
+
+        const circle = L.circle(position, {
+            color: '#3b82f6',
+            fillColor: '#3b82f6',
+            fillOpacity: 0.15,
+            radius: radiusRef.current,
+        }).addTo(map);
+        circleRef.current = circle;
+
+        marker.on('drag', () => circle.setLatLng(marker.getLatLng()));
+        marker.on('dragend', () => {
+            const pos = marker.getLatLng();
+            onLocationChange(pos.lat, pos.lng);
+        });
+    }
 
     useEffect(() => {
         if (leafletLoaded) {
@@ -74,92 +102,74 @@ export function MapPicker({
             return;
         }
 
-        const defaultLat = parseFloat(latitude?.toString()) || -6.914744;
-        const defaultLng = parseFloat(longitude?.toString()) || 107.60981;
+        // Belum ada koordinat: tampilkan peta Indonesia zoom-out tanpa
+        // marker/lingkaran, sampai user klik atau pakai lokasi perangkat.
+        const initialView: [number, number] = hasCoords
+            ? [lat, lng]
+            : [-2.5, 118];
 
-        // Initialize map
         const map = L.map(mapContainerRef.current).setView(
-            [defaultLat, defaultLng],
-            16,
+            initialView,
+            hasCoords ? 16 : 5,
         );
         mapRef.current = map;
 
-        // Add Tile Layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap contributors',
         }).addTo(map);
 
-        // Add Marker
-        const marker = L.marker([defaultLat, defaultLng], {
-            draggable: true,
-        }).addTo(map);
-        markerRef.current = marker;
+        if (hasCoords) {
+            placeMarker(map, L, [lat, lng]);
+        }
 
-        // Add Circle
-        const circle = L.circle([defaultLat, defaultLng], {
-            color: '#3b82f6', // blue
-            fillColor: '#3b82f6',
-            fillOpacity: 0.15,
-            radius: radius,
-        }).addTo(map);
-        circleRef.current = circle;
-
-        // Setup Drag Event
-        marker.on('drag', () => {
-            const position = marker.getLatLng();
-            circle.setLatLng(position);
-        });
-
-        marker.on('dragend', () => {
-            const position = marker.getLatLng();
-            onLocationChange(position.lat, position.lng);
-        });
-
-        // Setup Map Click Event
         map.on('click', (e: any) => {
-            const position = e.latlng;
-            marker.setLatLng(position);
-            circle.setLatLng(position);
-            onLocationChange(position.lat, position.lng);
+            const position: [number, number] = [e.latlng.lat, e.latlng.lng];
+
+            if (markerRef.current) {
+                markerRef.current.setLatLng(position);
+                circleRef.current?.setLatLng(position);
+            } else {
+                placeMarker(map, L, position);
+            }
+
+            onLocationChange(position[0], position[1]);
         });
 
         return () => {
             if (mapRef.current) {
                 mapRef.current.remove();
                 mapRef.current = null;
+                markerRef.current = null;
+                circleRef.current = null;
             }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [leafletLoaded]);
 
-    // Handle updates from inputs to map
+    // Handle updates from inputs to map (mis. tombol "Gunakan Lokasi Perangkat")
     useEffect(() => {
-        if (!leafletLoaded || !mapRef.current) {
+        if (!leafletLoaded || !mapRef.current || !hasCoords) {
             return;
         }
 
-        const lat = parseFloat(latitude?.toString());
-        const lng = parseFloat(longitude?.toString());
+        const newPos: [number, number] = [lat, lng];
 
-        if (!isNaN(lat) && !isNaN(lng)) {
-            const currentMarker = markerRef.current;
+        if (!markerRef.current) {
+            placeMarker(mapRef.current, (window as any).L, newPos);
+            mapRef.current.setView(newPos, 16);
 
-            if (currentMarker) {
-                const currentCenter = currentMarker.getLatLng();
-
-                if (currentCenter.lat !== lat || currentCenter.lng !== lng) {
-                    const newPos = [lat, lng] as [number, number];
-                    currentMarker.setLatLng(newPos);
-
-                    if (circleRef.current) {
-                        circleRef.current.setLatLng(newPos);
-                    }
-
-                    mapRef.current.panTo(newPos);
-                }
-            }
+            return;
         }
+
+        const currentCenter = markerRef.current.getLatLng();
+
+        if (currentCenter.lat !== lat || currentCenter.lng !== lng) {
+            markerRef.current.setLatLng(newPos);
+            circleRef.current?.setLatLng(newPos);
+            mapRef.current.panTo(newPos);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [latitude, longitude, leafletLoaded]);
 
     // Handle radius updates
@@ -224,13 +234,28 @@ export function MapPicker({
                     Gunakan Lokasi Perangkat
                 </button>
             </div>
-            <div
-                ref={mapContainerRef}
-                className="z-10 h-64 w-full overflow-hidden rounded-2xl border border-line shadow-sm"
-            />
+            <div className="relative">
+                <div
+                    ref={mapContainerRef}
+                    className="z-10 h-64 w-full overflow-hidden rounded-2xl border border-line shadow-sm"
+                />
+                {!hasCoords && (
+                    <div className="pointer-events-none absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-canvas/70 text-center backdrop-blur-[1px]">
+                        <MapPin className="size-6 text-muted" />
+                        <p className="max-w-[220px] text-xs font-medium text-ink">
+                            Lokasi belum diisi
+                        </p>
+                        <p className="max-w-[220px] text-xs text-muted">
+                            Presensi berbasis lokasi tidak aktif sampai titik
+                            ini diisi.
+                        </p>
+                    </div>
+                )}
+            </div>
             <p className="text-xs text-muted">
-                Klik peta atau seret marker biru untuk memperbarui koordinat
-                secara presisi.
+                {hasCoords
+                    ? 'Klik peta atau seret marker biru untuk memperbarui koordinat secara presisi.'
+                    : 'Klik di mana pun pada peta, atau gunakan tombol lokasi perangkat, untuk menetapkan titik pertama.'}
             </p>
         </div>
     );
