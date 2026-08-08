@@ -233,6 +233,123 @@ class PlacementTest extends TestCase
             ->assertDontSee($wrongStatus->name);
     }
 
+    public function test_guru_pembimbing_default_ikut_industri(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $guru = Teacher::factory()->create(['name' => 'Pak Industri']);
+        $industry = Industry::factory()->create(['teacher_id' => $guru->id]);
+        Student::factory()->create(['departemen_id' => $dep->id, 'industri_id' => $industry->id]);
+
+        $this->actingAs($kaprog)
+            ->get('/penempatan')
+            ->assertOk()
+            ->assertSee('Pak Industri');
+    }
+
+    public function test_guru_pembimbing_bisa_di_override_per_siswa(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $industryGuru = Teacher::factory()->create(['departemen_id' => $dep->id]);
+        $overrideGuru = Teacher::factory()->create(['departemen_id' => $dep->id]);
+        $industry = Industry::factory()->create(['teacher_id' => $industryGuru->id]);
+        $student = Student::factory()->create([
+            'departemen_id' => $dep->id,
+            'industri_id' => $industry->id,
+        ]);
+
+        $this->actingAs($kaprog)
+            ->patch("/penempatan/{$student->id}", [
+                'industri_id' => $industry->id,
+                'status_pkl' => $student->status_pkl,
+                'teacher_id' => $overrideGuru->id,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('students', [
+            'id' => $student->id,
+            'teacher_id' => $overrideGuru->id,
+        ]);
+    }
+
+    public function test_override_bisa_dikembalikan_ke_ikut_industri(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $overrideGuru = Teacher::factory()->create(['departemen_id' => $dep->id]);
+        $student = Student::factory()->create([
+            'departemen_id' => $dep->id,
+            'teacher_id' => $overrideGuru->id,
+        ]);
+
+        $this->actingAs($kaprog)
+            ->patch("/penempatan/{$student->id}", [
+                'industri_id' => $student->industri_id,
+                'status_pkl' => $student->status_pkl,
+                'teacher_id' => null,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('students', ['id' => $student->id, 'teacher_id' => null]);
+    }
+
+    public function test_guru_override_di_luar_jurusan_kaprog_ditolak(): void
+    {
+        $dep = Departemen::factory()->create();
+        $kaprog = $this->kaprogOwning($dep);
+
+        $student = Student::factory()->create(['departemen_id' => $dep->id]);
+        $outsideGuru = Teacher::factory()->create(); // jurusan lain
+
+        $this->actingAs($kaprog)
+            ->patch("/penempatan/{$student->id}", [
+                'industri_id' => $student->industri_id,
+                'status_pkl' => $student->status_pkl,
+                'teacher_id' => $outsideGuru->id,
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_guru_dengan_override_bisa_lihat_siswa_meski_beda_industri(): void
+    {
+        $guruUser = User::factory()->create();
+        $guruUser->assignRole('guru');
+        $overrideGuru = Teacher::factory()->create(['user_id' => $guruUser->id]);
+
+        $otherTeacher = Teacher::factory()->create();
+        $industry = Industry::factory()->create(['teacher_id' => $otherTeacher->id]);
+        $student = Student::factory()->create([
+            'industri_id' => $industry->id,
+            'teacher_id' => $overrideGuru->id,
+        ]);
+
+        $this->actingAs($guruUser)
+            ->get("/monitoring/absen/murid/{$student->id}")
+            ->assertOk();
+    }
+
+    public function test_guru_industri_asli_kehilangan_akses_setelah_siswa_di_override(): void
+    {
+        $originalGuruUser = User::factory()->create();
+        $originalGuruUser->assignRole('guru');
+        $originalGuru = Teacher::factory()->create(['user_id' => $originalGuruUser->id]);
+
+        $overrideGuru = Teacher::factory()->create();
+        $industry = Industry::factory()->create(['teacher_id' => $originalGuru->id]);
+        $student = Student::factory()->create([
+            'industri_id' => $industry->id,
+            'teacher_id' => $overrideGuru->id,
+        ]);
+
+        $this->actingAs($originalGuruUser)
+            ->get("/monitoring/absen/murid/{$student->id}")
+            ->assertForbidden();
+    }
+
     public function test_opsi_kelas_dibatasi_lingkup_kaprog(): void
     {
         $dep = Departemen::factory()->create();

@@ -165,13 +165,8 @@ export function ParentForm({
                             label="Email"
                             htmlFor="email"
                             error={errors.email}
-                            required
                         >
-                            <EmailInput
-                                value={email}
-                                onChange={setEmail}
-                                required
-                            />
+                            <EmailInput value={email} onChange={setEmail} />
                         </Field>
                         <Field label="Ayah/Ibu" error={errors.gender}>
                             <Select
@@ -231,7 +226,6 @@ export function ParentForm({
                                     label="Kata sandi"
                                     htmlFor="password"
                                     error={errors.password}
-                                    required
                                 >
                                     <div className="relative">
                                         <input
@@ -249,7 +243,6 @@ export function ParentForm({
                                             }
                                             placeholder="Minimal 8 karakter"
                                             className={inputClass}
-                                            required
                                         />
                                         <button
                                             type="button"
@@ -274,7 +267,6 @@ export function ParentForm({
                                 <Field
                                     label="Konfirmasi kata sandi"
                                     htmlFor="password_confirmation"
-                                    required
                                 >
                                     <input
                                         id="password_confirmation"
@@ -291,7 +283,6 @@ export function ParentForm({
                                         }
                                         placeholder="Ulangi kata sandi"
                                         className={inputClass}
-                                        required
                                     />
                                     {passwordConfirmation && (
                                         <div

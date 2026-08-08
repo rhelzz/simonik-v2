@@ -15,10 +15,10 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
- * Impor Industri. Kolom wajib: Nama, Bidang, Alamat, Longitude, Latitude.
- * Opsional: Radius (default 100), Jam Masuk/Pulang, Durasi, Kuota, Guru
- * Pembimbing & Pembimbing Industri (di-resolve ke id berdasarkan nama). Industri
- * dengan nama sama dilewati.
+ * Impor Industri. Kolom wajib: Nama, Bidang, Alamat.
+ * Opsional: Longitude, Latitude, Radius (default 100), Jam Masuk/Pulang,
+ * Durasi, Kuota, Guru Pembimbing & Pembimbing Industri (di-resolve ke id
+ * berdasarkan nama). Industri dengan nama sama dilewati.
  */
 class IndustryImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection, WithHeadingRow, WithMultipleSheets
 {
@@ -49,8 +49,8 @@ class IndustryImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection
             $longitude = $get('longitude');
             $latitude = $get('latitude');
 
-            if ($name === '' || $bidang === '' || $alamat === '' || $longitude === '' || $latitude === '') {
-                $this->fail($line, 'Nama, Bidang, Alamat, Longitude, dan Latitude wajib diisi.');
+            if ($name === '' || $bidang === '' || $alamat === '') {
+                $this->fail($line, 'Nama, Bidang, dan Alamat wajib diisi.');
 
                 continue;
             }
@@ -84,8 +84,8 @@ class IndustryImport implements SkipsEmptyRows, SkipsUnknownSheets, ToCollection
                 'name' => $name,
                 'bidang' => $bidang,
                 'alamat' => $alamat,
-                'longitude' => $longitude,
-                'latitude' => $latitude,
+                'longitude' => $longitude === '' ? null : $longitude,
+                'latitude' => $latitude === '' ? null : $latitude,
                 'radius' => $get('radius') === '' ? 100 : (int) $get('radius'),
                 'jam_masuk' => $this->time($get('jam_masuk')),
                 'jam_pulang' => $this->time($get('jam_pulang')),

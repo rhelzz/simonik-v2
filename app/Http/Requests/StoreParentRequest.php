@@ -22,10 +22,10 @@ class StoreParentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Akun login orang tua
+            // Akun login orang tua — opsional, hanya wajib berpasangan bila diisi.
             'nama' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', ...$this->emailDomainRule(), Rule::unique('users', 'email')],
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'email' => ['nullable', 'required_with:password', 'string', 'email', 'max:255', ...$this->emailDomainRule(), Rule::unique('users', 'email')],
+            'password' => ['nullable', 'required_with:email', 'confirmed', Password::defaults()],
 
             // Profil orang tua — opsional, boleh dilengkapi belakangan.
             'gender' => ['nullable', Rule::in(['L', 'P'])],

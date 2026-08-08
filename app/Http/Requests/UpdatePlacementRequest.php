@@ -20,6 +20,7 @@ class UpdatePlacementRequest extends FormRequest
         return [
             'industri_id' => ['required', Rule::exists('industries', 'id')],
             'status_pkl' => ['required', Rule::in(['belum', 'proses', 'selesai'])],
+            'teacher_id' => ['nullable', Rule::exists('teachers', 'id')],
         ];
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\UpdatePlacementRequest;
 use App\Models\Classes;
 use App\Models\Industry;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,6 +40,7 @@ class PlacementController extends Controller
                 'departements:id,name',
                 'industries:id,name,teacher_id',
                 'industries.teachers:id,name',
+                'teachers:id,name',
             ])
             ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search): void {
                 $query->where('name', 'like', "%{$search}%")
@@ -46,12 +48,15 @@ class PlacementController extends Controller
             }))
             ->when($classId > 0, fn ($query) => $query->where('class_id', $classId))
             ->when($industriId > 0, fn ($query) => $query->where('industri_id', $industriId))
-            // Guru pembimbing bukan kolom langsung di students — ia mengikuti
-            // industries.teacher_id (lihat komentar kelas ini).
-            ->when($teacherId > 0, fn ($query) => $query->whereHas(
-                'industries',
-                fn ($q) => $q->where('teacher_id', $teacherId),
-            ))
+            // Guru pembimbing efektif = override siswa (teacher_id) kalau ada,
+            // else ikut industries.teacher_id — lihat komentar migrasi kolom.
+            ->when($teacherId > 0, fn ($query) => $query->where(function ($query) use ($teacherId): void {
+                $query->where('teacher_id', $teacherId)
+                    ->orWhere(function ($query) use ($teacherId): void {
+                        $query->whereNull('teacher_id')
+                            ->whereHas('industries', fn ($q) => $q->where('teacher_id', $teacherId));
+                    });
+            }))
             ->when($validStatus, fn ($query) => $query->where('status_pkl', $statusPkl))
             ->orderBy('name')
             ->paginate(12)
@@ -64,7 +69,10 @@ class PlacementController extends Controller
                 'departemen' => $student->departements?->name,
                 'industri_id' => $student->industri_id,
                 'industry' => $student->industries?->name,
-                'guru' => $student->industries?->teachers?->name,
+                'teacher_id' => $student->teacher_id,
+                'guru' => $student->teacher_id !== null
+                    ? $student->teachers?->name
+                    : $student->industries?->teachers?->name,
                 'status_pkl' => $student->status_pkl,
             ]);
 
@@ -122,6 +130,15 @@ class PlacementController extends Controller
                 ])
                 ->values()
                 ->all(),
+            // Opsi dropdown "override" guru pembimbing per-siswa — dibatasi ke
+            // jurusan kaprog (beda dari teacherOptions di atas yang lintas
+            // jurusan untuk filter tabel).
+            'programTeacherOptions' => Teacher::query()
+                ->whereIn('departemen_id', $this->programDepartemenIds($user))
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->map(fn (Teacher $teacher): array => ['id' => $teacher->id, 'name' => $teacher->name])
+                ->all(),
         ]);
     }
 
@@ -129,14 +146,26 @@ class PlacementController extends Controller
     {
         /** @var User $user */
         $user = $request->user();
+        $departemenIds = $this->programDepartemenIds($user);
 
         // Siswa harus berada di lingkup program keahlian pengguna.
-        abort_unless(
-            \in_array($student->departemen_id, $this->programDepartemenIds($user), true),
-            403,
-        );
+        abort_unless(\in_array($student->departemen_id, $departemenIds, true), 403);
 
-        $student->update($request->validated());
+        $data = $request->validated();
+
+        // Guru pengganti juga harus berada di lingkup program keahlian yang
+        // sama — mencegah kaprog menugaskan guru dari jurusan lain.
+        if (! empty($data['teacher_id'])) {
+            abort_unless(
+                Teacher::query()
+                    ->whereKey($data['teacher_id'])
+                    ->whereIn('departemen_id', $departemenIds)
+                    ->exists(),
+                403,
+            );
+        }
+
+        $student->update($data);
 
         return back()->with('success', "Penempatan {$student->name} berhasil diperbarui.");
     }

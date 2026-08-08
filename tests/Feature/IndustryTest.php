@@ -129,6 +129,23 @@ class IndustryTest extends TestCase
         $this->assertSame($usersBefore, User::query()->count());
     }
 
+    public function test_admin_can_create_an_industry_without_coordinates(): void
+    {
+        $this->actingAs($this->admin())
+            ->post('/industries', [
+                ...$this->validPayload(),
+                'longitude' => null,
+                'latitude' => null,
+            ])
+            ->assertRedirect(route('industries.index'));
+
+        $this->assertDatabaseHas('industries', [
+            'name' => 'PT Maju Jaya',
+            'longitude' => null,
+            'latitude' => null,
+        ]);
+    }
+
     public function test_admin_can_create_an_industry_with_pembimbing(): void
     {
         $pembimbing = Pembimbing::factory()->create();

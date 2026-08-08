@@ -107,16 +107,21 @@ class ParentController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($data): void {
-            $user = User::create([
-                'name' => $data['nama'],
-                'email' => $data['email'],
-                'password' => Hash::make($data['password']),
-                'email_verified_at' => now(),
-            ]);
-            $user->assignRole('orangtua');
+            $userId = null;
+
+            if (! empty($data['email']) && ! empty($data['password'])) {
+                $user = User::create([
+                    'name' => $data['nama'],
+                    'email' => $data['email'],
+                    'password' => Hash::make($data['password']),
+                    'email_verified_at' => now(),
+                ]);
+                $user->assignRole('orangtua');
+                $userId = $user->id;
+            }
 
             Parents::create([
-                'user_id' => $user->id,
+                'user_id' => $userId,
                 'nama' => $data['nama'],
                 'gender' => $data['gender'] ?? null,
                 'alamat' => $data['alamat'] ?? null,
@@ -158,19 +163,31 @@ class ParentController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($parent, $data): void {
-            $parent->users?->update([
-                'name' => $data['nama'],
-                'email' => $data['email'],
-                ...empty($data['password']) ? [] : ['password' => Hash::make($data['password'])],
-            ]);
+            if ($parent->users) {
+                $parent->users->update([
+                    'name' => $data['nama'],
+                    ...empty($data['email']) ? [] : ['email' => $data['email']],
+                    ...empty($data['password']) ? [] : ['password' => Hash::make($data['password'])],
+                ]);
+            } elseif (! empty($data['email']) && ! empty($data['password'])) {
+                // Parent belum punya akun — lengkapi sekarang.
+                $user = User::create([
+                    'name' => $data['nama'],
+                    'email' => $data['email'],
+                    'password' => Hash::make($data['password']),
+                    'email_verified_at' => now(),
+                ]);
+                $user->assignRole('orangtua');
+                $parent->user_id = $user->id;
+            }
 
-            $parent->update([
+            $parent->fill([
                 'nama' => $data['nama'],
                 'gender' => $data['gender'] ?? null,
                 'alamat' => $data['alamat'] ?? null,
                 'occupation' => $data['occupation'] ?? null,
                 'phoneNumber' => $data['phoneNumber'] ?? null,
-            ]);
+            ])->save();
         });
 
         return redirect()
@@ -190,7 +207,12 @@ class ParentController extends Controller
         }
 
         // Menghapus user akan cascade ke record orang tua (FK onDelete cascade).
-        $parent->users?->delete();
+        // Kalau belum punya akun, hapus record orang tua langsung.
+        if ($parent->users) {
+            $parent->users->delete();
+        } else {
+            $parent->delete();
+        }
 
         return back()->with('success', 'Orang tua berhasil dihapus.');
     }

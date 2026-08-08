@@ -1,11 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import {
-    ClipboardList,
-    Search,
-    TriangleAlert,
-    UserCheck,
-    X,
-} from 'lucide-react';
+import { ClipboardList, Search, TriangleAlert, X } from 'lucide-react';
 import { useState } from 'react';
 import { edit as editIndustry } from '@/actions/App/Http/Controllers/IndustryController';
 import {
@@ -29,6 +23,7 @@ type PlacementStudent = {
     departemen: string | null;
     industri_id: number;
     industry: string | null;
+    teacher_id: number | null;
     guru: string | null;
     status_pkl: StatusPkl;
 };
@@ -61,6 +56,7 @@ type PlacementsIndexProps = {
     classOptions: NamedOption[];
     teacherOptions: NamedOption[];
     unassignedIndustries: UnassignedIndustry[];
+    programTeacherOptions: NamedOption[];
 };
 
 const statusLabels: Record<StatusPkl, string> = {
@@ -86,23 +82,38 @@ function FieldLabel({ children }: { children: string }) {
 function PlacementRow({
     student,
     industries,
+    programTeacherOptions,
 }: {
     student: PlacementStudent;
     industries: IndustryOption[];
+    programTeacherOptions: NamedOption[];
 }) {
     const [industriId, setIndustriId] = useState(student.industri_id);
     const [status, setStatus] = useState<StatusPkl>(student.status_pkl);
+    const [teacherId, setTeacherId] = useState(student.teacher_id);
 
-    function save(nextIndustri: number, nextStatus: StatusPkl) {
+    function save(
+        nextIndustri: number,
+        nextStatus: StatusPkl,
+        nextTeacher: number | null,
+    ) {
         router.patch(
             update.url(student.id),
-            { industri_id: nextIndustri, status_pkl: nextStatus },
+            {
+                industri_id: nextIndustri,
+                status_pkl: nextStatus,
+                teacher_id: nextTeacher,
+            },
             { preserveScroll: true, preserveState: true },
         );
     }
 
-    const guru =
+    const industryGuru =
         industries.find((i) => i.id === industriId)?.guru ?? student.guru;
+    const overrideGuru = programTeacherOptions.find(
+        (t) => t.id === teacherId,
+    )?.name;
+    const guru = overrideGuru ?? industryGuru;
 
     return (
         <div className={cn(rowGrid, 'rounded-2xl border border-line p-4')}>
@@ -125,7 +136,7 @@ function PlacementRow({
                     onChange={(event) => {
                         const next = Number(event.target.value);
                         setIndustriId(next);
-                        save(next, status);
+                        save(next, status, teacherId);
                     }}
                     className={selectClass}
                 >
@@ -137,18 +148,34 @@ function PlacementRow({
                 </select>
             </div>
 
-            {/* Guru pembimbing (mengikuti industri) */}
+            {/* Guru pembimbing (override per-siswa, default ikut industri) */}
             <div className="min-w-0">
                 <FieldLabel>Guru pembimbing</FieldLabel>
-                {guru ? (
-                    <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg bg-primary-soft px-2.5 py-1.5 text-xs font-medium text-primary">
-                        <UserCheck className="size-3.5 shrink-0" />
-                        <span className="truncate">{guru}</span>
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-warning">
+                <select
+                    value={teacherId ?? ''}
+                    onChange={(event) => {
+                        const next = event.target.value
+                            ? Number(event.target.value)
+                            : null;
+                        setTeacherId(next);
+                        save(industriId, status, next);
+                    }}
+                    className={selectClass}
+                >
+                    <option value="">
+                        Ikuti industri
+                        {industryGuru ? ` (${industryGuru})` : ''}
+                    </option>
+                    {programTeacherOptions.map((teacher) => (
+                        <option key={teacher.id} value={teacher.id}>
+                            {teacher.name}
+                        </option>
+                    ))}
+                </select>
+                {!guru && (
+                    <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-warning">
                         <TriangleAlert className="size-3.5 shrink-0" />
-                        Belum ada
+                        Belum ada guru pembimbing
                     </span>
                 )}
             </div>
@@ -161,7 +188,7 @@ function PlacementRow({
                     onChange={(event) => {
                         const next = event.target.value as StatusPkl;
                         setStatus(next);
-                        save(industriId, next);
+                        save(industriId, next, teacherId);
                     }}
                     className={cn(
                         selectClass,
@@ -188,6 +215,7 @@ export default function PlacementsIndex({
     classOptions,
     teacherOptions,
     unassignedIndustries,
+    programTeacherOptions,
 }: PlacementsIndexProps) {
     const [search, setSearch] = useState(filters.search);
 
@@ -398,6 +426,7 @@ export default function PlacementsIndex({
                                 key={student.id}
                                 student={student}
                                 industries={industries}
+                                programTeacherOptions={programTeacherOptions}
                             />
                         ))}
                     </div>

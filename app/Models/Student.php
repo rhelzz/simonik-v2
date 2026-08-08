@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $image
  * @property int|null $class_id
  * @property int|null $industri_id
+ * @property int|null $teacher_id
  * @property int|null $departemen_id
  * @property int|null $parent_id
  * @property bool $archived
@@ -40,6 +41,7 @@ use Illuminate\Support\Carbon;
  * @property Parents|null $parents
  * @property Departemen|null $departements
  * @property Industry|null $industries
+ * @property Teacher|null $teachers
  */
 #[Fillable([
     'user_id',
@@ -53,6 +55,7 @@ use Illuminate\Support\Carbon;
     'image',
     'class_id',
     'industri_id',
+    'teacher_id',
     'departemen_id',
     'parent_id',
     'archived',
@@ -110,6 +113,17 @@ class Student extends Model
     public function users(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Guru pembimbing override per-siswa. Null berarti ikut guru pembimbing
+     * industri (industries.teacher_id) — lihat komentar migrasi kolom ini.
+     *
+     * @return BelongsTo<Teacher, $this>
+     */
+    public function teachers(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'teacher_id');
     }
 
     /** @return BelongsTo<PKLPeriod, $this> */

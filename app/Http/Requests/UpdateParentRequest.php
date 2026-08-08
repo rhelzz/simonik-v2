@@ -26,9 +26,11 @@ class UpdateParentRequest extends FormRequest
         $parent = $this->route('parent');
 
         return [
-            // Akun login orang tua
+            // Akun login orang tua — opsional. Password kosong = biarkan
+            // password lama (untuk yang sudah punya akun); email wajib hanya
+            // saat password baru diisi (untuk melengkapi akun yang belum ada).
             'nama' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($parent->user_id)],
+            'email' => ['nullable', 'required_with:password', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($parent->user_id)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
 
             // Profil orang tua — opsional, boleh dilengkapi belakangan.

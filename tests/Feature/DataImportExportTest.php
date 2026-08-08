@@ -162,6 +162,21 @@ class DataImportExportTest extends TestCase
         ]);
     }
 
+    public function test_import_industry_accepts_row_without_coordinates(): void
+    {
+        $csv = "Nama,Bidang,Alamat,Longitude,Latitude\nPT Tanpa Koordinat,Konstruksi,Jl. Belum Disurvei 1,,\n";
+
+        $this->actingAs($this->admin())
+            ->post('/industries/import', ['file' => $this->csv($csv)])
+            ->assertRedirect(route('industries.index'));
+
+        $this->assertDatabaseHas('industries', [
+            'name' => 'PT Tanpa Koordinat',
+            'longitude' => null,
+            'latitude' => null,
+        ]);
+    }
+
     public function test_import_reports_unknown_relation_without_creating(): void
     {
         $csv = "Nama,Jurusan\nXII TM 1,Jurusan Hantu\n";

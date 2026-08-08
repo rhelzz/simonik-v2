@@ -268,7 +268,6 @@ export function IndustryForm({
                                 onChange={(e) => setLat(e.target.value)}
                                 placeholder="-6.914744"
                                 className={inputClass}
-                                required
                             />
                         </Field>
                         <Field
@@ -283,7 +282,6 @@ export function IndustryForm({
                                 onChange={(e) => setLng(e.target.value)}
                                 placeholder="107.609810"
                                 className={inputClass}
-                                required
                             />
                         </Field>
                         <div className="sm:col-span-2">

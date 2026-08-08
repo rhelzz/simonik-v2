@@ -36,10 +36,24 @@ trait ScopesStudentsByRole
         }
 
         if ($user->hasRole('guru')) {
-            return $this->studentsAtIndustries(
-                Industry::query()->where('teacher_id', $user->teachers?->id),
-                $user->teachers?->id,
-            );
+            $teacherId = $user->teachers?->id;
+
+            if ($teacherId === null) {
+                return $this->none();
+            }
+
+            // Guru pembimbing efektif = override siswa (students.teacher_id)
+            // kalau ada, else ikut industries.teacher_id — sinkron dengan
+            // PlacementController@index. Override menggantikan, bukan
+            // menambah: siswa yang di-override ke guru lain tidak lagi
+            // terlihat oleh guru industri asli.
+            return Student::query()->where(function (Builder $query) use ($teacherId): void {
+                $query->where('teacher_id', $teacherId)
+                    ->orWhere(function (Builder $query) use ($teacherId): void {
+                        $query->whereNull('teacher_id')
+                            ->whereHas('industries', fn ($q) => $q->where('teacher_id', $teacherId));
+                    });
+            });
         }
 
         if ($user->hasRole('pembimbing')) {

@@ -374,8 +374,23 @@ Keluhan "nggak tahu cara isinya" tidak selesai oleh Fase 1: petunjuk terkubur di
 
 **Belum:** delapan entitas master data lain masih memakai modal impor lama (halamannya sudah generik — menambah satu entitas ≈ satu `ImportSpecs::x()` + 2 method tipis + 2 rute), saran kandidat "maksud Anda: XI RPL 1?", dan verifikasi manual di browser.
 
+### 53. Batch v2.2 — breadcrumb Data Absen, koordinat & orang tua opsional, guru pembimbing per-siswa
+
+Empat permintaan lapangan lanjutan, direncanakan di `docs/v2.2/` (README + 4 dokumen fase) sebelum digarap.
+
+- **Fase 10 (breadcrumb):** `attendance-monitor/index.tsx` (level jurusan, teratas) satu-satunya halaman di rantai Data Absen tanpa `<Breadcrumb>` — 3 level lain (kelas/murid/detail) sudah benar. Ditambahkan agar rantainya konsisten dari awal drill-down.
+- **Fase 11 (koordinat industri opsional):** Latitude/Longitude ("LA/LT") dilonggarkan dari wajib ke opsional di 5 titik sekaligus (migrasi `nullable`, `Store/UpdateIndustryRequest`, template impor `ImportTemplates::industry()`, parser `IndustryImport`, form manual) — mengubah salah satu tanpa yang lain akan membuat UI terlihat opsional tapi tetap ditolak backend.
+- **Fase 12 (orang tua, hanya Nama wajib):** melangkah lebih jauh dari keputusan Fase 9 (`docs/v2.1`) yang sengaja mempertahankan email/password wajib — dikonfirmasi eksplisit ke user karena ini pembalikan keputusan sebelumnya. `parents.user_id` jadi nullable (FK tetap `cascadeOnDelete`, **bukan** `nullOnDelete` — sempat salah pakai `nullOnDelete` di percobaan pertama, ketahuan dari test `test_admin_can_delete_a_parent_and_its_account` yang gagal karena baris `parents` tidak ikut terhapus). **Bug nyata ditemukan & diperbaiki saat implementasi:** `destroy()` lama mengandalkan cascade dari penghapusan `User` — untuk orang tua tanpa akun, `$parent->users?->delete()` tidak melakukan apa-apa sama sekali, baris `parents` tak pernah terhapus meski flash sukses tetap muncul.
+- **Fase 13 (guru pembimbing per-siswa):** kolom `students.teacher_id` yang **sengaja dihapus** migrasi lama (`2025_01_02_000003_drop_teacher_id_from_students.php`, saat guru pembimbing dipindah ke level industri) ditambahkan kembali sebagai **override nullable** — bukan pengganti, fallback ke `industries.teacher_id` tetap jalan saat kosong. **Pertanyaan kunci sebelum coding:** apakah override ini juga harus mengubah *akses* guru terhadap siswa (`ScopesStudentsByRole`, dipakai 7 controller), bukan cuma tampilan di tabel Plotting? Dikonfirmasi user: ya. Trait `ScopesStudentsByRole` (cabang `guru`) diubah — guru yang di-assign lewat dropdown baru benar-benar dapat akses (absen/jurnal/nilai/approval/rapor), dan guru industri asli kehilangan akses begitu siswanya di-override (menggantikan, bukan menambah). Guru pengganti divalidasi harus berada di jurusan yang sama dengan kaprog yang menugaskan (403 lintas jurusan).
+- **False-positive PHPStan yang ditemukan & disiasati:** `$student->teachers?->name ?? $student->industries?->teachers?->name` ditandai `nullsafe.neverNull` oleh Larastan meski `teacher_id` genuinely nullable di skema — root cause-nya Larastan membaca migrasi `create_students_table` lama (`teacher_id` NOT NULL, sebelum di-drop lalu ditambah lagi nullable oleh migrasi baru) untuk inferensi skema, bukan urutan migrasi yang sebenarnya. Diperbaiki dengan menulis ulang jadi ternary eksplisit (`$student->teacher_id !== null ? ... : ...`) — sekaligus lebih jelas dibaca, bukan cuma menghindari galat.
+- ✅ **`composer ci:check` penuh: Pint + PHPStan 0 error + 427/427 passed + 1745 assertions.** ESLint + Prettier + `tsc` lolos. Migrasi diterapkan ke DB lokal.
+
+**Belum:** verifikasi manual di browser (belum dilakukan); deploy ke produksi Dokploy (auto-migrate saat `git push`, tanpa backup otomatis — backup manual DB MySQL disarankan sebelum push batch ini).
+
+---
+
 ## 📍 Current step
-**Seluruh roadmap v2 selesai (Fase 1–6).** Enam temuan UAT tertutup, plus halaman impor "Excel di web" untuk siswa. Nol migrasi di keenam fase.
+**Batch v2.2 selesai (Fase 10–13).** Breadcrumb Data Absen konsisten, koordinat industri & profil orang tua kini opsional (hanya Nama wajib), guru pembimbing bisa di-override per-siswa dengan akses yang ikut berpindah.
 
 **Catatan deploy:** wajib `npm run build`. Akun kembar dan email lama **tidak** diubah otomatis. `tsconfig.json` kini mengaktifkan `allowImportingTsExtensions` (dipakai pemeriksa mandiri `lib/grid.check.ts`).
 
@@ -390,8 +405,9 @@ Keluhan "nggak tahu cara isinya" tidak selesai oleh Fase 1: petunjuk terkubur di
 ---
 
 ## ⏭️ Next step — opsi terbaik
-1. **Verifikasi manual keenam alur di atas.** Ini gerbang yang tersisa sebelum batch ini ditutup; semuanya baru terbukti lewat test.
-2. **Perluas halaman impor ke entitas lain** bila operator menyukainya — guru, pembimbing, orang tua, industri, kelas, jurusan, kaprog, wakasek. Halamannya sudah generik, jadi biayanya kecil per entitas. Jangan dikerjakan borongan sebelum halaman siswa terbukti dipakai.
-3. **Saran kandidat relasi terdekat** (`levenshtein`, "maksud Anda: XI RPL 1?") bila salah ketik nama relasi ternyata masih sering terjadi.
+1. **Verifikasi manual batch v2.2 di browser** (breadcrumb Data Absen, tambah industri/orang tua tanpa koordinat/akun, dropdown guru pembimbing di Plotting) sebelum push ke produksi Dokploy — sarankan backup DB manual dulu karena deploy auto-migrate tanpa backup otomatis.
+2. **Verifikasi manual enam alur roadmap v2** (impor Excel, multi-peran, dst. — lihat entri §52) — masih belum dilakukan sama sekali, semuanya baru terbukti lewat test.
+3. **Perluas halaman impor ke entitas lain** bila operator menyukainya — guru, pembimbing, orang tua, industri, kelas, jurusan, kaprog, wakasek. Halamannya sudah generik, jadi biayanya kecil per entitas. Jangan dikerjakan borongan sebelum halaman siswa terbukti dipakai.
+4. **Saran kandidat relasi terdekat** (`levenshtein`, "maksud Anda: XI RPL 1?") bila salah ketik nama relasi ternyata masih sering terjadi.
 
 Tiga opsi lama masih berlaku dan belum dikerjakan: wajib lengkapi profil saat login pertama, bersihkan approval WFA menggantung, audit scoping kaprog untuk master data lain.

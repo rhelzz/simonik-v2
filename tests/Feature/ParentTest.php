@@ -168,14 +168,75 @@ class ParentTest extends TestCase
         ]);
     }
 
-    public function test_akun_login_tetap_wajib(): void
+    public function test_orang_tua_bisa_dibuat_hanya_dengan_nama(): void
     {
-        $this->actingAs($this->admin())
+        $admin = $this->admin();
+        $usersBefore = User::query()->count();
+
+        $this->actingAs($admin)
             ->post('/parents', [
                 'nama' => 'Bapak Andi',
                 'gender' => 'L',
             ])
-            ->assertSessionHasErrors(['email', 'password']);
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('parents', ['nama' => 'Bapak Andi', 'user_id' => null]);
+        // Tanpa email/password, tidak ada akun User yang dibuat.
+        $this->assertSame($usersBefore, User::query()->count());
+    }
+
+    public function test_email_tanpa_password_ditolak(): void
+    {
+        $this->actingAs($this->admin())
+            ->post('/parents', [
+                'nama' => 'Bapak Andi',
+                'email' => 'andi@simonik.local',
+            ])
+            ->assertSessionHasErrors(['password']);
+    }
+
+    public function test_password_tanpa_email_ditolak(): void
+    {
+        $this->actingAs($this->admin())
+            ->post('/parents', [
+                'nama' => 'Bapak Andi',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+            ])
+            ->assertSessionHasErrors(['email']);
+    }
+
+    public function test_akun_bisa_dilengkapi_belakangan_saat_edit(): void
+    {
+        $parent = Parents::factory()->create(['user_id' => null]);
+
+        $this->actingAs($this->admin())
+            ->put("/parents/{$parent->id}", [
+                'nama' => $parent->nama,
+                'email' => 'baru@simonik.local',
+                'password' => 'password123',
+                'password_confirmation' => 'password123',
+                'gender' => $parent->gender,
+                'alamat' => $parent->alamat,
+                'occupation' => $parent->occupation,
+                'phoneNumber' => $parent->phoneNumber,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $user = User::where('email', 'baru@simonik.local')->firstOrFail();
+        $this->assertTrue($user->hasRole('orangtua'));
+        $this->assertSame($user->id, $parent->fresh()->user_id);
+    }
+
+    public function test_orang_tua_tanpa_akun_bisa_dihapus(): void
+    {
+        $parent = Parents::factory()->create(['user_id' => null]);
+
+        $this->actingAs($this->admin())
+            ->delete("/parents/{$parent->id}")
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('parents', ['id' => $parent->id]);
     }
 
     public function test_label_gender_ayah_ibu_tampil_di_index(): void

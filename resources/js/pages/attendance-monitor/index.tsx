@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Fingerprint, Network } from 'lucide-react';
 import { classes } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
+import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { ScopeNote } from '@/components/ui/scope-note';
 import { AppLayout } from '@/layouts/app-layout';
 
@@ -22,7 +23,9 @@ export default function AttendanceMonitorIndex({
     return (
         <AppLayout title="Data Absen">
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
-                <div className="flex items-start gap-3">
+                <Breadcrumb items={[{ label: 'Data Absen' }]} />
+
+                <div className="mt-4 flex items-start gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
                         <Fingerprint className="size-5" />
                     </span>
