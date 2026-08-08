@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { GraduationCap, Mail, MapPin, Phone } from 'lucide-react';
+import { GraduationCap, Globe, MapPin, Phone } from 'lucide-react';
 import { create as login } from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 
 const navGroups: { title: string; links: { label: string; href: string }[] }[] =
@@ -25,9 +25,16 @@ const navGroups: { title: string; links: { label: string; href: string }[] }[] =
     ];
 
 const contacts = [
-    { icon: Mail, label: 'admin@simonik.sch.id' },
-    { icon: Phone, label: '(0274) 123-4567' },
-    { icon: MapPin, label: 'SMK, Yogyakarta' },
+    {
+        icon: MapPin,
+        label: 'Jl. Raya Laladon, Ds. Laladon, Kec. Ciomas, Kab. Bogor, Jawa Barat 16610',
+    },
+    { icon: Phone, label: '(0251) 8631261' },
+    {
+        icon: Globe,
+        label: 'smkn1ciomas.sch.id',
+        href: 'https://www.smkn1ciomas.sch.id',
+    },
 ];
 
 export function SiteFooter() {
@@ -45,7 +52,7 @@ export function SiteFooter() {
                                     SIMONIK
                                 </span>
                                 <span className="block text-xs font-medium text-muted">
-                                    Monitoring PKL
+                                    SMKN 1 Ciomas
                                 </span>
                             </span>
                         </div>
@@ -94,7 +101,18 @@ export function SiteFooter() {
                                         className="flex items-center gap-2.5"
                                     >
                                         <Icon className="size-4 shrink-0 text-primary" />
-                                        {contact.label}
+                                        {contact.href ? (
+                                            <a
+                                                href={contact.href}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="transition-colors hover:text-primary"
+                                            >
+                                                {contact.label}
+                                            </a>
+                                        ) : (
+                                            contact.label
+                                        )}
                                     </li>
                                 );
                             })}
@@ -104,8 +122,7 @@ export function SiteFooter() {
 
                 <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-line/60 pt-6 text-sm text-muted sm:flex-row">
                     <span>
-                        © {new Date().getFullYear()} SIMONIK · Sistem Monitoring
-                        PKL
+                        © {new Date().getFullYear()} SIMONIK · SMKN 1 Ciomas
                     </span>
                     <span className="flex items-center gap-4">
                         <a
