@@ -47,18 +47,22 @@ class IndustryController extends Controller
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
+        $teacherId = $request->integer('teacher_id');
 
         /** @var User $user */
         $user = $request->user();
         $canManage = $user->hasAnyRole(['admin', 'kaprog']);
 
-        $industries = $this->scopedIndustries($user)
+        $scoped = $this->scopedIndustries($user);
+
+        $industries = (clone $scoped)
             ->with([
                 'pembimbingNormatif:id,name',
                 'teachers:id,name',
             ])
             ->withCount('students')
             ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
+            ->when($canManage && $teacherId > 0, fn ($query) => $query->where('teacher_id', $teacherId))
             ->latest()
             ->paginate(10)
             ->withQueryString()
@@ -74,8 +78,22 @@ class IndustryController extends Controller
 
         return Inertia::render('industries/index', [
             'industries' => $industries,
-            'filters' => ['search' => $search],
+            'filters' => [
+                'search' => $search,
+                'teacher_id' => $teacherId > 0 ? $teacherId : null,
+            ],
             'can' => ['manage' => $canManage],
+            'teacherOptions' => (clone $scoped)
+                ->whereNotNull('teacher_id')
+                ->with('teachers:id,name')
+                ->get()
+                ->pluck('teachers')
+                ->filter()
+                ->unique('id')
+                ->sortBy('name')
+                ->map(fn (Teacher $teacher): array => ['id' => $teacher->id, 'name' => $teacher->name])
+                ->values()
+                ->all(),
         ]);
     }
 

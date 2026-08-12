@@ -20,6 +20,7 @@ import {
     LayoutDashboard,
     ListChecks,
     MailCheck,
+    MessageCircle,
     MessagesSquare,
     Network,
     NotebookPen,
@@ -61,6 +62,7 @@ import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentCo
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
 import { index as wakaseksIndex } from '@/actions/App/Http/Controllers/WakasekController';
 import { edit as websiteSettingsEdit } from '@/actions/App/Http/Controllers/WebsiteSettingController';
+import { edit as whatsappCtaEdit } from '@/actions/App/Http/Controllers/WhatsappCtaSettingController';
 import { dashboard, dataGuide, streak } from '@/routes';
 import type { NavItem, NavSection } from '@/types';
 import type { Role } from '@/types/auth';
@@ -304,6 +306,12 @@ export const navSections: NavSection[] = [
                 label: 'Website Settings',
                 icon: Globe,
                 href: websiteSettingsEdit.url(),
+                roles: ['admin'],
+            },
+            {
+                label: 'CTA WhatsApp',
+                icon: MessageCircle,
+                href: whatsappCtaEdit.url(),
                 roles: ['admin'],
             },
         ],

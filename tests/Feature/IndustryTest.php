@@ -233,4 +233,54 @@ class IndustryTest extends TestCase
 
         $this->assertDatabaseHas('industries', ['id' => $industry->id]);
     }
+
+    public function test_admin_can_filter_industries_by_teacher(): void
+    {
+        $teacherA = Teacher::factory()->create();
+        $teacherB = Teacher::factory()->create();
+        $industryA = Industry::factory()->create(['teacher_id' => $teacherA->id]);
+        Industry::factory()->create(['teacher_id' => $teacherB->id]);
+
+        $this->actingAs($this->admin())
+            ->get("/industries?teacher_id={$teacherA->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('industries.data', 1)
+                ->where('industries.data.0.id', $industryA->id)
+            );
+    }
+
+    public function test_guru_filter_by_other_teacher_still_only_sees_own_industry(): void
+    {
+        $guruUser = User::factory()->create();
+        $guruUser->assignRole('guru');
+        $teacher = Teacher::factory()->create(['user_id' => $guruUser->id]);
+        $otherTeacher = Teacher::factory()->create();
+
+        $own = Industry::factory()->create(['teacher_id' => $teacher->id]);
+        Industry::factory()->create(['teacher_id' => $otherTeacher->id]);
+
+        $this->actingAs($guruUser)
+            ->get("/industries?teacher_id={$otherTeacher->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('industries.data', 1)
+                ->where('industries.data.0.id', $own->id)
+            );
+    }
+
+    public function test_teacher_options_only_include_teachers_assigned_to_an_industry(): void
+    {
+        $assigned = Teacher::factory()->create();
+        $unassigned = Teacher::factory()->create();
+        Industry::factory()->create(['teacher_id' => $assigned->id]);
+
+        $this->actingAs($this->admin())
+            ->get('/industries')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('teacherOptions', fn ($options) => collect($options)->pluck('id')->contains($assigned->id)
+                    && ! collect($options)->pluck('id')->contains($unassigned->id))
+            );
+    }
 }

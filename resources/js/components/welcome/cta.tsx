@@ -1,8 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, MessageCircle } from 'lucide-react';
 import { create as login } from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 
-export function Cta() {
+type CtaProps = {
+    whatsappCtaUrl: string | null;
+};
+
+export function Cta({ whatsappCtaUrl }: CtaProps) {
     return (
         <section className="py-8 lg:py-10">
             <div className="reveal relative overflow-hidden rounded-4xl bg-linear-to-br from-primary via-primary to-accent px-6 py-12 text-center text-white sm:px-12">
@@ -22,13 +26,26 @@ export function Cta() {
                         Masuk dengan akun yang diberikan sekolah untuk mulai
                         mengelola dan memantau kegiatan PKL.
                     </p>
-                    <Link
-                        href={login.url()}
-                        className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-primary shadow-lg shadow-black/10 transition-all hover:bg-primary-soft active:translate-y-px"
-                    >
-                        Masuk sekarang
-                        <ArrowRight className="size-4" />
-                    </Link>
+                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                        <Link
+                            href={login.url()}
+                            className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-primary shadow-lg shadow-black/10 transition-all hover:bg-primary-soft active:translate-y-px"
+                        >
+                            Masuk sekarang
+                            <ArrowRight className="size-4" />
+                        </Link>
+                        {whatsappCtaUrl && (
+                            <a
+                                href={whatsappCtaUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-2 rounded-xl border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 active:translate-y-px"
+                            >
+                                <MessageCircle className="size-4" />
+                                Chat via WhatsApp
+                            </a>
+                        )}
+                    </div>
                 </div>
             </div>
         </section>

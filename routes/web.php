@@ -35,14 +35,22 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\WakasekController;
 use App\Http\Controllers\WebsiteSettingController;
+use App\Http\Controllers\WhatsappCtaSettingController;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Auth::check()
-        ? redirect()->route('dashboard')
-        : Inertia::render('welcome');
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+
+    $setting = Setting::query()->first();
+
+    return Inertia::render('welcome', [
+        'whatsappCtaUrl' => $setting?->whatsappCtaUrl(),
+    ]);
 })->name('home');
 
 // Verifikasi publik keaslian dokumen PKL (sertifikat & rapor) via QR ber-signature.
@@ -80,6 +88,10 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('pengaturan-website', [WebsiteSettingController::class, 'edit'])->name('website-settings.edit');
         Route::put('pengaturan-website', [WebsiteSettingController::class, 'update'])->name('website-settings.update');
+
+        // Tombol CTA WhatsApp di landing page — nomor tujuan + template pesan.
+        Route::get('pengaturan-cta-whatsapp', [WhatsappCtaSettingController::class, 'edit'])->name('whatsapp-cta.edit');
+        Route::put('pengaturan-cta-whatsapp', [WhatsappCtaSettingController::class, 'update'])->name('whatsapp-cta.update');
     });
 
     // Panduan PKL — semua role bisa lihat & unduh; kelola hanya admin/kaprog.

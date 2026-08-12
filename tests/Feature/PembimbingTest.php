@@ -178,15 +178,17 @@ class PembimbingTest extends TestCase
         $this->assertDatabaseMissing('users', ['id' => $userId]);
     }
 
-    public function test_pembimbing_linked_to_industry_cannot_be_deleted(): void
+    public function test_pembimbing_linked_to_industry_can_still_be_deleted(): void
     {
         $pembimbing = Pembimbing::factory()->create();
-        Industry::factory()->create(['pembimbing_id' => $pembimbing->id]);
+        $industry = Industry::factory()->create(['pembimbing_id' => $pembimbing->id]);
 
         $this->actingAs($this->admin())
             ->delete("/pembimbings/{$pembimbing->id}")
-            ->assertSessionHas('error');
+            ->assertSessionHasNoErrors()
+            ->assertSessionMissing('error');
 
-        $this->assertDatabaseHas('pembimbings', ['id' => $pembimbing->id]);
+        $this->assertDatabaseMissing('pembimbings', ['id' => $pembimbing->id]);
+        $this->assertDatabaseHas('industries', ['id' => $industry->id, 'pembimbing_id' => null]);
     }
 }

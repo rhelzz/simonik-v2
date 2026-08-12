@@ -222,14 +222,12 @@ class PembimbingController extends Controller
      */
     public function destroy(Pembimbing $pembimbing): RedirectResponse
     {
-        if ($pembimbing->industry()->exists()) {
-            return back()->with('error', 'Pembimbing tidak bisa dihapus karena masih terkait industri.');
-        }
-
         $user = $pembimbing->user;
 
         // Profil pembimbing selalu ikut dilepas: tanpa peran `pembimbing` ia
-        // hanya akan memicu spanduk "akun belum ditautkan".
+        // hanya akan memicu spanduk "akun belum ditautkan". Industri yang
+        // masih terkait otomatis kehilangan pembimbing_id (nullOnDelete pada
+        // migrasi industries) — bukan diblokir.
         $pembimbing->delete();
 
         if (! $user) {

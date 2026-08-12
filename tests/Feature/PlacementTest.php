@@ -56,8 +56,8 @@ class PlacementTest extends TestCase
         $this->actingAs($kaprog)
             ->get('/penempatan')
             ->assertOk()
-            ->assertSee($mine->name)
-            ->assertDontSee($other->name);
+            ->assertSee($mine->name, false)
+            ->assertDontSee($other->name, false);
     }
 
     public function test_kaprog_can_place_student_to_industry(): void
@@ -111,7 +111,7 @@ class PlacementTest extends TestCase
         $this->actingAs($admin)
             ->get('/penempatan')
             ->assertOk()
-            ->assertSee($student->name);
+            ->assertSee($student->name, false);
     }
 
     public function test_flags_industries_missing_guru_pembimbing_only(): void
@@ -150,8 +150,8 @@ class PlacementTest extends TestCase
         $this->actingAs($kaprog)
             ->get('/penempatan?class_id='.$classA->id)
             ->assertOk()
-            ->assertSee($inA->name)
-            ->assertDontSee($inB->name);
+            ->assertSee($inA->name, false)
+            ->assertDontSee($inB->name, false);
     }
 
     public function test_filter_by_industri_hanya_menampilkan_siswa_industri_tersebut(): void
@@ -168,8 +168,8 @@ class PlacementTest extends TestCase
         $this->actingAs($kaprog)
             ->get('/penempatan?industri_id='.$industryX->id)
             ->assertOk()
-            ->assertSee($inX->name)
-            ->assertDontSee($inY->name);
+            ->assertSee($inX->name, false)
+            ->assertDontSee($inY->name, false);
     }
 
     public function test_filter_by_guru_pembimbing_menampilkan_siswa_di_industri_guru_tersebut(): void
@@ -188,8 +188,8 @@ class PlacementTest extends TestCase
         $this->actingAs($kaprog)
             ->get('/penempatan?teacher_id='.$guru1->id)
             ->assertOk()
-            ->assertSee($studentA->name)
-            ->assertDontSee($studentB->name);
+            ->assertSee($studentA->name, false)
+            ->assertDontSee($studentB->name, false);
     }
 
     public function test_filter_by_status_pkl_hanya_menampilkan_status_tersebut(): void
@@ -203,8 +203,8 @@ class PlacementTest extends TestCase
         $this->actingAs($kaprog)
             ->get('/penempatan?status_pkl=proses')
             ->assertOk()
-            ->assertSee($proses->name)
-            ->assertDontSee($belum->name);
+            ->assertSee($proses->name, false)
+            ->assertDontSee($belum->name, false);
     }
 
     public function test_kombinasi_filter_bekerja_dengan_and_bukan_or(): void
@@ -229,8 +229,8 @@ class PlacementTest extends TestCase
         $this->actingAs($kaprog)
             ->get('/penempatan?class_id='.$classA->id.'&status_pkl=proses')
             ->assertOk()
-            ->assertSee($match->name)
-            ->assertDontSee($wrongStatus->name);
+            ->assertSee($match->name, false)
+            ->assertDontSee($wrongStatus->name, false);
     }
 
     public function test_guru_pembimbing_default_ikut_industri(): void
@@ -245,7 +245,7 @@ class PlacementTest extends TestCase
         $this->actingAs($kaprog)
             ->get('/penempatan')
             ->assertOk()
-            ->assertSee('Pak Industri');
+            ->assertSee('Pak Industri', false);
     }
 
     public function test_guru_pembimbing_bisa_di_override_per_siswa(): void

@@ -57,7 +57,7 @@ type StudentsIndexProps = {
     filters: {
         search: string;
         class_id: number | null;
-        industri_id: number | null;
+        industri_id: number | 'none' | null;
         status_pkl: StatusPkl | null;
     };
 };
@@ -164,6 +164,7 @@ export default function StudentsIndex({
 
     const industryOptions: SelectOption[] = [
         { value: '', label: 'Semua industri' },
+        { value: 'none', label: '— Belum ada industri —' },
         ...industries.map((ind) => ({
             value: String(ind.id),
             label: ind.name,

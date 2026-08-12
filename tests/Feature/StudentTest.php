@@ -14,6 +14,7 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
@@ -253,5 +254,48 @@ class StudentTest extends TestCase
 
         $this->assertNotEmpty($export);
         $this->assertNotEmpty($template);
+    }
+
+    public function test_filter_industri_id_none_only_shows_students_without_industri(): void
+    {
+        $withIndustri = Student::factory()->create(['industri_id' => Industry::factory()->create()->id]);
+        $withoutIndustri = Student::factory()->create(['industri_id' => null]);
+
+        $this->actingAs($this->admin())
+            ->get('/students?industri_id=none')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('students.data', 1)
+                ->where('students.data.0.id', $withoutIndustri->id)
+                ->where('filters.industri_id', 'none')
+            );
+
+        $this->assertNotSame($withIndustri->id, $withoutIndustri->id);
+    }
+
+    public function test_filter_industri_id_numeric_still_works(): void
+    {
+        $industry = Industry::factory()->create();
+        $matching = Student::factory()->create(['industri_id' => $industry->id]);
+        Student::factory()->create(['industri_id' => null]);
+
+        $this->actingAs($this->admin())
+            ->get("/students?industri_id={$industry->id}")
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('students.data', 1)
+                ->where('students.data.0.id', $matching->id)
+            );
+    }
+
+    public function test_no_industri_filter_shows_all_students(): void
+    {
+        Student::factory()->create(['industri_id' => Industry::factory()->create()->id]);
+        Student::factory()->create(['industri_id' => null]);
+
+        $this->actingAs($this->admin())
+            ->get('/students')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->has('students.data', 2));
     }
 }

@@ -68,7 +68,9 @@ class StudentController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $classId = $request->integer('class_id');
-        $industriId = $request->integer('industri_id');
+        $industriIdRaw = trim((string) $request->query('industri_id', ''));
+        $industriId = ctype_digit($industriIdRaw) ? (int) $industriIdRaw : 0;
+        $filterNoIndustri = $industriIdRaw === 'none';
         $statusPkl = (string) $request->query('status_pkl', '');
         $validStatuses = ['belum', 'proses', 'selesai'];
         $statusPkl = in_array($statusPkl, $validStatuses, true) ? $statusPkl : '';
@@ -86,7 +88,8 @@ class StudentController extends Controller
                 });
             })
             ->when($classId > 0, fn ($query) => $query->where('class_id', $classId))
-            ->when($industriId > 0, fn ($query) => $query->where('industri_id', $industriId))
+            ->when($filterNoIndustri, fn ($query) => $query->whereNull('industri_id'))
+            ->when(! $filterNoIndustri && $industriId > 0, fn ($query) => $query->where('industri_id', $industriId))
             ->when($statusPkl !== '', fn ($query) => $query->where('status_pkl', $statusPkl))
             ->latest()
             ->paginate(10)
@@ -110,7 +113,7 @@ class StudentController extends Controller
             'filters' => [
                 'search' => $search,
                 'class_id' => $classId > 0 ? $classId : null,
-                'industri_id' => $industriId > 0 ? $industriId : null,
+                'industri_id' => $filterNoIndustri ? 'none' : ($industriId > 0 ? $industriId : null),
                 'status_pkl' => $statusPkl !== '' ? $statusPkl : null,
             ],
         ]);

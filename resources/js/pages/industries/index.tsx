@@ -1,5 +1,14 @@
 import { Link, router } from '@inertiajs/react';
-import { Building2, Eye, Pencil, Plus, Search, Trash2, X } from 'lucide-react';
+import {
+    Building2,
+    Eye,
+    GraduationCap,
+    Pencil,
+    Plus,
+    Search,
+    Trash2,
+    X,
+} from 'lucide-react';
 import { useState } from 'react';
 import {
     create,
@@ -13,6 +22,8 @@ import {
 } from '@/actions/App/Http/Controllers/IndustryController';
 import { ImportExportBar } from '@/components/import-export-bar';
 import { Pagination } from '@/components/ui/pagination';
+import { Select } from '@/components/ui/select';
+import type { SelectOption } from '@/components/ui/select';
 import { AppLayout } from '@/layouts/app-layout';
 import type { Paginated } from '@/types';
 
@@ -28,21 +39,26 @@ type IndustryRow = {
 
 type IndustriesIndexProps = {
     industries: Paginated<IndustryRow>;
-    filters: { search: string };
+    filters: { search: string; teacher_id: number | null };
     can: { manage: boolean };
+    teacherOptions: { id: number; name: string }[];
 };
 
 export default function IndustriesIndex({
     industries,
     filters,
     can,
+    teacherOptions,
 }: IndustriesIndexProps) {
     const [search, setSearch] = useState(filters.search);
 
-    function applyFilters(next: { search?: string }) {
+    function applyFilters(next: { search?: string; teacher_id?: string }) {
         router.get(
             index.url(),
-            { search: next.search ?? search },
+            {
+                search: next.search ?? search,
+                teacher_id: next.teacher_id ?? filters.teacher_id ?? '',
+            },
             { preserveState: true, replace: true, preserveScroll: true },
         );
     }
@@ -55,6 +71,17 @@ export default function IndustriesIndex({
             { preserveState: true, replace: true, preserveScroll: true },
         );
     }
+
+    const teacherFilterOptions: SelectOption[] = [
+        { value: '', label: 'Semua guru' },
+        ...teacherOptions.map((teacher) => ({
+            value: String(teacher.id),
+            label: teacher.name,
+        })),
+    ];
+
+    const activeFilterCount =
+        (filters.search ? 1 : 0) + (filters.teacher_id ? 1 : 0);
 
     function remove(industry: IndustryRow) {
         if (
@@ -99,27 +126,46 @@ export default function IndustriesIndex({
 
                 {/* Filters */}
                 <div className="mt-5 space-y-3">
-                    <form
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            applyFilters({ search });
-                        }}
-                        className="flex items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
-                    >
-                        <Search className="size-4" />
-                        <input
-                            type="search"
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Cari nama industri…"
-                            className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
-                        />
-                    </form>
+                    <div className="flex flex-col gap-3 lg:flex-row">
+                        <form
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                applyFilters({ search });
+                            }}
+                            className="flex flex-1 items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm text-muted transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/15"
+                        >
+                            <Search className="size-4" />
+                            <input
+                                type="search"
+                                value={search}
+                                onChange={(event) =>
+                                    setSearch(event.target.value)
+                                }
+                                placeholder="Cari nama industri…"
+                                className="w-full bg-transparent text-ink placeholder:text-muted focus:outline-none"
+                            />
+                        </form>
+                        {can.manage && teacherOptions.length > 0 && (
+                            <div className="lg:w-64">
+                                <Select
+                                    ariaLabel="Filter guru"
+                                    value={String(filters.teacher_id ?? '')}
+                                    options={teacherFilterOptions}
+                                    onChange={(value) =>
+                                        applyFilters({ teacher_id: value })
+                                    }
+                                    icon={<GraduationCap className="size-4" />}
+                                    placeholder="Semua guru"
+                                />
+                            </div>
+                        )}
+                    </div>
 
-                    {filters.search && (
+                    {activeFilterCount > 0 && (
                         <div className="flex items-center gap-2 text-xs text-muted">
                             <span>
-                                {industries.total} hasil · 1 filter aktif
+                                {industries.total} hasil · {activeFilterCount}{' '}
+                                filter aktif
                             </span>
                             <button
                                 type="button"
@@ -143,7 +189,7 @@ export default function IndustriesIndex({
                         <p className="text-sm text-muted">
                             Sesuaikan pencarian atau tambah industri baru.
                         </p>
-                        {filters.search && (
+                        {activeFilterCount > 0 && (
                             <button
                                 type="button"
                                 onClick={resetFilters}
@@ -156,7 +202,15 @@ export default function IndustriesIndex({
                     </div>
                 ) : (
                     <div className="mt-4 overflow-x-auto">
-                        <table className="w-full min-w-160 border-collapse text-left text-sm">
+                        <table className="w-full min-w-160 table-fixed border-collapse text-left text-sm">
+                            <colgroup>
+                                <col className="w-[34%]" />
+                                <col className="w-[16%]" />
+                                <col className="w-[16%]" />
+                                <col className="w-[16%]" />
+                                <col className="w-[8%]" />
+                                <col className="w-[10%]" />
+                            </colgroup>
                             <thead>
                                 <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
                                     <th className="pr-3 pb-3 pl-2 font-semibold">
@@ -191,10 +245,16 @@ export default function IndustriesIndex({
                                                     <Building2 className="size-4" />
                                                 </span>
                                                 <div className="min-w-0">
-                                                    <p className="truncate font-semibold text-ink">
+                                                    <p
+                                                        className="truncate font-semibold text-ink"
+                                                        title={industry.name}
+                                                    >
                                                         {industry.name}
                                                     </p>
-                                                    <p className="truncate text-xs text-muted">
+                                                    <p
+                                                        className="truncate text-xs text-muted"
+                                                        title={industry.alamat}
+                                                    >
                                                         {industry.alamat}
                                                     </p>
                                                 </div>

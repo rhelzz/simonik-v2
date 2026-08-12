@@ -9,7 +9,11 @@ import { Roles } from '@/components/welcome/roles';
 import { SiteFooter } from '@/components/welcome/site-footer';
 import { Stats } from '@/components/welcome/stats';
 
-export default function Welcome() {
+type WelcomeProps = {
+    whatsappCtaUrl: string | null;
+};
+
+export default function Welcome({ whatsappCtaUrl }: WelcomeProps) {
     return (
         <>
             <Head title="SIMONIK — Sistem Monitoring PKL" />
@@ -23,7 +27,7 @@ export default function Welcome() {
                     <Roles />
                     <HowItWorks />
                     <Faq />
-                    <Cta />
+                    <Cta whatsappCtaUrl={whatsappCtaUrl} />
                 </main>
                 <SiteFooter />
             </div>
