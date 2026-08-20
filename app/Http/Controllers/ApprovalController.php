@@ -29,7 +29,7 @@ class ApprovalController extends Controller
         /** @var User $user */
         $user = $request->user();
 
-        if (! $user->hasAnyRole(['pembimbing', 'guru', 'kaprog', 'orangtua'])) {
+        if (! $user->hasAnyRole(['pembimbing', 'guru', 'kaprog'])) {
             abort(403, 'Anda tidak memiliki akses ke inbox persetujuan.');
         }
 

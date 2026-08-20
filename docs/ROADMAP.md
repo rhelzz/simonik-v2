@@ -22,7 +22,7 @@ Dokumen ini = **acuan utama** desain SIMONIK: konteks proyek, **model data & rel
 | **Guru Pembimbing** | `Teacher` | `guru` | Guru sekolah. Memegang **1+ industri (PT)** → otomatis membimbing siswa di PT itu. Menilai **non-teknis**. |
 | **Pembimbing Industri** | `Pembimbing` | `pembimbing` | Pembimbing dari pihak industri. Terikat ke **PT** & siswanya. Menilai **teknis**. Kelola profil industrinya + pantau performa anak magang. |
 | **Industri (PT)** | `Industry` | — (bukan akun) | **Container relasi** (guru, pembimbing, siswa). Bukan User — kontrolnya ada di akun **Pembimbing Industri**. Dikelola admin/kaprog sebagai master data. |
-| **Orang Tua** | `Parents` | `orangtua` | Wali; terhubung ke siswa (anak). Pantau (read-only). |
+| **Orang Tua** | `Parents` | `orangtua` | Wali; terhubung ke siswa (anak). Pantau (read-only). **Sejak v2.4 Fase 26 tidak lagi ikut menyetujui apa pun** — lihat catatan aturan approval di bawah. |
 | Admin / Kaprog | `User`+role | `admin` / `kaprog` | Pengelola sistem & master data. |
 | Kepala Sekolah | `User`+role | `kepala_sekolah` | Oversight/laporan (belum diwujudkan). |
 
@@ -171,6 +171,28 @@ C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 ---
 
 ## 11. Status implementasi & urutan rekomendasi
+
+> ### ⚖️ Aturan approval yang berlaku (diperbarui v2.4 Fase 26)
+>
+> **Sakit & Izin: SATU tahap.** Pengajuan siswa langsung menunggu **Guru
+> Pembimbing / Pembimbing Industri** (Kaprog sebagai fallback). Tautan akun
+> Orang Tua **tidak lagi disyaratkan** untuk mengajukan, dan Orang Tua **tidak
+> lagi ikut menyetujui**.
+>
+> Konsekuensi yang disengaja: cabang `SakitIzin` adalah satu-satunya yang dulu
+> mengisi antrean Orang Tua, sehingga **Inbox Persetujuan dicabut dari role
+> `orangtua`** (rute, sidebar, `ApprovalController::index`, dan lencana
+> `pendingApprovalsCount`) — menyisakan menunya berarti halaman yang selamanya
+> kosong. Orang Tua tetap melihat **hasilnya** (status sakit/izin di rekap
+> absen anak) lewat dashboard-nya.
+>
+> Bukti (foto surat) **tetap wajib** — setelah tahap Orang Tua hilang, itu satu-
+> satunya pengaman yang tersisa selain penilaian guru.
+>
+> Pengajuan LAMA yang terlanjur dua tahap tetap bisa dituntaskan; cabang
+> `index === 1` di `ApproveRequest` dipertahankan khusus untuk itu, lengkap
+> dengan kueri SQL untuk membuktikan kapan ia aman dihapus (lihat
+> `docs/v2.4/26-FASE-26-SAKIT-TANPA-ORTU.md` §3.3).
 
 **Sudah jadi**: Auth/login, Profil+sandi, Landing, **Dashboard analytical** (5 ringkasan + rate absensi/jurnal filter waktu). **Master data admin penuh**: CRUD Siswa, Guru Pembimbing, Industri, Pembimbing Industri, **Orang Tua** (akun `orangtua`), Jurusan, Kelas, **Periode PKL** — semua gate `admin|kaprog`, relasi via industri terpasang (§3), sidebar dropdown Data User. **Rekap Penilaian** (§7): master Aspek Penilaian (admin) + input nilai guru/pembimbing + lihat role-scoped + grade A/B/C/D otomatis. **Absen Foto + Geo (siswa)**: input kehadiran web (foto + geolokasi, masuk/pulang/izin/sakit), **Pengajuan Libur (M2.1)**, **Sakit & Izin (M2.2)**, **Inbox Persetujuan (M2.3)**, dan **Streak Engine (M3.1)**.
 

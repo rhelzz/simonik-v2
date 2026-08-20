@@ -45,7 +45,7 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $request->user()?->getRoleNames() ?? [],
                 'pendingApprovalsCount' => function () use ($request) {
                     $user = $request->user();
-                    if (! $user || ! $user->hasAnyRole(['pembimbing', 'guru', 'kaprog', 'orangtua'])) {
+                    if (! $user || ! $user->hasAnyRole(['pembimbing', 'guru', 'kaprog'])) {
                         return 0;
                     }
 

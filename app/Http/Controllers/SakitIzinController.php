@@ -48,15 +48,13 @@ class SakitIzinController extends Controller
     }
 
     /**
-     * Simpan pengajuan sakit/izin baru dan inisialisasi approval Ortu.
+     * Simpan pengajuan sakit/izin baru dan buka satu approval untuk Guru
+     * Pembimbing / Pembimbing Industri (Kaprog sebagai fallback).
      */
     public function store(StoreSakitIzinRequest $request): RedirectResponse
     {
-        $student = $request->user()->students;
-        if (! $student || ! $student->parent_id || ! $student->parents?->users?->hasRole('orangtua')) {
-            return back()->withErrors(['date' => 'Anda harus menautkan akun Orang Tua terlebih dahulu sebelum mengajukan sakit/izin.']);
-        }
-
+        // v2.4 Fase 26: tautan akun Orang Tua tidak lagi disyaratkan — sakit
+        // maupun izin cukup disetujui Guru Pembimbing (satu tahap).
         $validated = $request->validated();
         $path = $request->file('bukti')->store('sakit_izins', 'public');
 
@@ -72,6 +70,6 @@ class SakitIzinController extends Controller
 
         return redirect()
             ->route('sakit-izin.index')
-            ->with('success', 'Pengajuan Sakit/Izin berhasil dikirim dan menunggu persetujuan Orang Tua.');
+            ->with('success', 'Pengajuan Sakit/Izin berhasil dikirim dan menunggu persetujuan Guru Pembimbing.');
     }
 }

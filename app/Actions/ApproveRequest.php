@@ -45,33 +45,43 @@ class ApproveRequest
             } elseif ($approval->approvable instanceof SakitIzin) {
                 $sakitIzin = $approval->approvable;
                 $approvals = $sakitIzin->approvals()->orderBy('id')->get();
-                $approvalsCount = $approvals->count();
                 $index = $approvals->pluck('id')->search($approval->id);
 
-                if ($index === 0 && $approvalsCount === 1) {
-                    // Stage 1 approved! Inisiasi Stage 2 (Industri/Guru)
-                    Approval::create([
-                        'approvable_type' => SakitIzin::class,
-                        'approvable_id' => $sakitIzin->id,
-                        'status' => Approval::STATUS_PENDING,
-                    ]);
-                } elseif ($index === 1 && $approvalsCount === 2) {
-                    // Stage 2 approved! Kedua tahap disetujui, buat/update presensi
-                    Attendance::updateOrCreate(
-                        [
-                            'user_id' => $sakitIzin->user_id,
-                            'date' => $sakitIzin->date->format('Y-m-d'),
-                        ],
-                        [
-                            'status' => $sakitIzin->type, // sakit / izin
-                            'absenceReason' => $sakitIzin->reason,
-                            'image' => $sakitIzin->getRawOriginal('bukti'),
-                            'description' => 'Disetujui oleh Ortu & Industri/Guru ('.$approver->name.')',
-                        ]
-                    );
+                // Sejak v2.4 Fase 26 pengajuan Sakit/Izin hanya SATU tahap:
+                // approval pertama yang disetujui langsung menghasilkan baris
+                // presensi. Cabang index 1 dipertahankan semata untuk
+                // menuntaskan pengajuan LAMA yang terlanjur dua tahap.
+                if ($index === 0 || $index === 1) {
+                    $this->recordSakitIzin($sakitIzin, $approver);
                 }
             }
         }
+    }
+
+    /**
+     * Catat presensi hasil pengajuan Sakit/Izin yang disetujui.
+     *
+     * Diekstrak agar alur satu-tahap (baru) dan alur dua-tahap (data lama)
+     * tidak punya dua salinan yang bisa berbeda diam-diam.
+     *
+     * getRawOriginal('bukti') WAJIB: accessor SakitIzin::bukti() mengubah
+     * nilainya jadi URL asset(), dan menyimpan URL ke kolom `image` akan
+     * merusak tampilan foto di rekap absen.
+     */
+    private function recordSakitIzin(SakitIzin $sakitIzin, User $approver): void
+    {
+        Attendance::updateOrCreate(
+            [
+                'user_id' => $sakitIzin->user_id,
+                'date' => $sakitIzin->date->format('Y-m-d'),
+            ],
+            [
+                'status' => $sakitIzin->type, // sakit / izin
+                'absenceReason' => $sakitIzin->reason,
+                'image' => $sakitIzin->getRawOriginal('bukti'),
+                'description' => 'Disetujui oleh '.$approver->name.' ('.$approver->getRoleNames()->first().')',
+            ]
+        );
     }
 
     /**
@@ -89,16 +99,17 @@ class ApproveRequest
             $approvals = $sakitIzin->approvals()->orderBy('id')->get();
             $index = $approvals->pluck('id')->search($approval->id);
 
+            // Tahap tunggal (Fase 26): Guru Pembimbing / Pembimbing Industri /
+            // Kaprog sebagai fallback. Orang Tua tidak lagi terlibat.
             if ($index === 0) {
-                // Tahap 1: Ortu
-                if (! $approver->hasRole('orangtua')) {
-                    return false;
-                }
-                $student = $sakitIzin->user->students;
+                return $approver->hasAnyRole(Approval::ELIGIBLE_ROLES);
+            }
 
-                return $student && $student->parent_id === $approver->parents?->id;
-            } elseif ($index === 1) {
-                // Tahap 2: Industri / Guru / Kaprog (fallback)
+            // Pengajuan LAMA yang terlanjur dua tahap: tahap 2 hanya bisa
+            // diproses kalau tahap 1 sudah disetujui. Cabang ini tidak pernah
+            // dibuat lagi oleh alur baru — lihat catatan penghapusannya di
+            // docs/v2.4/26-FASE-26-SAKIT-TANPA-ORTU.md §3.3.
+            if ($index === 1) {
                 $firstApproval = $approvals->first();
                 if ($firstApproval && $firstApproval->status !== Approval::STATUS_APPROVED) {
                     return false;

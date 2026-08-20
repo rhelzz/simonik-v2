@@ -2,14 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ResetStudentRecords;
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
 use App\Http\Controllers\Concerns\SummarizesStudentPerformance;
+use App\Http\Requests\PreviewResetRecordsRequest;
+use App\Http\Requests\ResetRecordsRequest;
 use App\Models\Activity;
 use App\Models\Classes;
 use App\Models\Departemen;
+use App\Models\Industry;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,6 +29,50 @@ class JournalMonitorController extends Controller
 {
     use ScopesStudentsByRole;
     use SummarizesStudentPerformance;
+
+    public function __construct(private readonly ResetStudentRecords $reset) {}
+
+    /**
+     * Pratinjau: berapa baris jurnal yang AKAN terhapus. Tidak mengubah apa pun.
+     *
+     * Alasan JSON (bukan Inertia render) sama dengan padanannya di
+     * AttendanceMonitorController: dipanggil berkali-kali di dalam modal yang
+     * sedang terbuka.
+     */
+    public function resetPreview(PreviewResetRecordsRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json([
+            'count' => $this->reset->count(
+                $this->scopedStudents($user),
+                Activity::class,
+                $request->validated(),
+            ),
+        ]);
+    }
+
+    /**
+     * Hapus permanen data jurnal sesuai kriteria. Tidak bisa dibatalkan.
+     *
+     * Activity::class, BUKAN Attendance::class — satu class-string yang lupa
+     * diganti di sini akan menghapus modul yang salah tanpa gejala apa pun
+     * sampai ada yang membuka Data Absen. Dijaga test khusus.
+     */
+    public function reset(ResetRecordsRequest $request): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $deleted = $this->reset->handle(
+            $this->scopedStudents($user),
+            Activity::class,
+            $request->validated(),
+        );
+
+        return back()->with('success', "{$deleted} data jurnal berhasil direset.");
+    }
 
     /**
      * Layer 1 — daftar jurusan yang memuat siswa dalam cakupan role.
@@ -50,6 +100,15 @@ class JournalMonitorController extends Controller
         return Inertia::render('journal-monitor/index', [
             'departemens' => $departemens,
             'scopeLabel' => $this->scopeLabel($user),
+            'can' => ['reset' => $user->hasRole('admin')],
+            // Opsi filter modal reset — dua kueri ringan, hanya untuk admin
+            // (satu-satunya role yang bisa mereset).
+            'classOptions' => $user->hasRole('admin')
+                ? Classes::query()->orderBy('name')->get(['id', 'name'])
+                : [],
+            'industryOptions' => $user->hasRole('admin')
+                ? Industry::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 

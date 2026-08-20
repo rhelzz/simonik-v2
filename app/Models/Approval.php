@@ -104,68 +104,49 @@ class Approval extends Model
             $studentUserIdsQuery->whereIn('industri_id', function ($q) use ($pembimbingId) {
                 $q->select('id')->from('industries')->where('pembimbing_id', $pembimbingId);
             });
-        } elseif ($user->hasRole('orangtua')) {
-            $parentId = $user->parents?->id;
-            if (! $parentId) {
-                return $query->whereRaw('1 = 0');
-            }
-            $studentUserIdsQuery->where('parent_id', $parentId);
         } elseif ($user->hasRole('siswa')) {
             $studentUserIdsQuery->where('user_id', $user->id);
         }
 
-        if (! $user->hasAnyRole(['admin', 'kaprog', 'wakasek', 'guru', 'pembimbing', 'orangtua', 'siswa'])) {
+        // Orang Tua tidak lagi punya antrean persetujuan sejak Fase 26 —
+        // cabangnya dihapus, bukan disisakan sebagai kode mati.
+        if (! $user->hasAnyRole(['admin', 'kaprog', 'wakasek', 'guru', 'pembimbing', 'siswa'])) {
             return $query->whereRaw('1 = 0');
         }
 
+        // Sejak v2.4 Fase 26, Sakit/Izin hanya satu tahap: approval pending
+        // SELALU berarti "menunggu Guru/Industri/Kaprog". Tahap Orang Tua
+        // dihapus, sehingga cabang SakitIzin diperlakukan seragam dengan
+        // LeaveRequest & Attendance — tanpa cek pendahulu sama sekali.
         $query->where(function ($q) use ($user, $studentUserIdsQuery) {
-            // SakitIzin
-            $q->where(function ($sub) use ($user, $studentUserIdsQuery) {
+            if (! $user->hasAnyRole(self::ELIGIBLE_ROLES)) {
+                $q->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $q->where(function ($sub) use ($studentUserIdsQuery) {
                 $sub->where('approvable_type', SakitIzin::class)
                     ->whereIn('approvable_id', function ($q2) use ($studentUserIdsQuery) {
                         $q2->select('id')
                             ->from('sakit_izins')
                             ->whereIn('user_id', $studentUserIdsQuery);
                     });
-
-                if ($user->hasRole('orangtua')) {
-                    $sub->whereNotExists(function ($q3) {
-                        $q3->selectRaw(1)
-                            ->from('approvals as prev_app')
-                            ->whereColumn('prev_app.approvable_id', 'approvals.approvable_id')
-                            ->where('prev_app.approvable_type', SakitIzin::class)
-                            ->whereColumn('prev_app.id', '<', 'approvals.id');
+            })->orWhere(function ($sub) use ($studentUserIdsQuery) {
+                $sub->where('approvable_type', LeaveRequest::class)
+                    ->whereIn('approvable_id', function ($q2) use ($studentUserIdsQuery) {
+                        $q2->select('id')
+                            ->from('leave_requests')
+                            ->whereIn('user_id', $studentUserIdsQuery);
                     });
-                } else {
-                    $sub->whereExists(function ($q3) {
-                        $q3->selectRaw(1)
-                            ->from('approvals as first_app')
-                            ->whereColumn('first_app.approvable_id', 'approvals.approvable_id')
-                            ->where('first_app.approvable_type', SakitIzin::class)
-                            ->where('first_app.status', self::STATUS_APPROVED)
-                            ->whereColumn('first_app.id', '<', 'approvals.id');
+            })->orWhere(function ($sub) use ($studentUserIdsQuery) {
+                $sub->where('approvable_type', Attendance::class)
+                    ->whereIn('approvable_id', function ($q2) use ($studentUserIdsQuery) {
+                        $q2->select('id')
+                            ->from('attendances')
+                            ->whereIn('user_id', $studentUserIdsQuery);
                     });
-                }
             });
-
-            // LeaveRequest or Attendance (WFA)
-            if ($user->hasAnyRole(self::ELIGIBLE_ROLES)) {
-                $q->orWhere(function ($sub) use ($studentUserIdsQuery) {
-                    $sub->where('approvable_type', LeaveRequest::class)
-                        ->whereIn('approvable_id', function ($q2) use ($studentUserIdsQuery) {
-                            $q2->select('id')
-                                ->from('leave_requests')
-                                ->whereIn('user_id', $studentUserIdsQuery);
-                        });
-                })->orWhere(function ($sub) use ($studentUserIdsQuery) {
-                    $sub->where('approvable_type', Attendance::class)
-                        ->whereIn('approvable_id', function ($q2) use ($studentUserIdsQuery) {
-                            $q2->select('id')
-                                ->from('attendances')
-                                ->whereIn('user_id', $studentUserIdsQuery);
-                        });
-                });
-            }
         });
 
         return $query;

@@ -1,6 +1,10 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Network, NotebookPen } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { classes } from '@/actions/App/Http/Controllers/JournalMonitorController';
+import { ResetJournalModal } from '@/components/journal-monitor/reset-modal';
+import type { ResetOption } from '@/components/journal-monitor/reset-modal';
 import { ScopeNote } from '@/components/ui/scope-note';
 import { AppLayout } from '@/layouts/app-layout';
 
@@ -13,12 +17,33 @@ type DepartemenCard = {
 export default function JournalMonitorIndex({
     departemens,
     scopeLabel,
+    can,
+    classOptions,
+    industryOptions,
 }: {
     departemens: DepartemenCard[];
     scopeLabel: string;
+    can: { reset: boolean };
+    classOptions: ResetOption[];
+    industryOptions: ResetOption[];
 }) {
+    const [resetOpen, setResetOpen] = useState(false);
+
     return (
         <AppLayout title="Data Jurnal">
+            {can.reset && (
+                <div className="mb-4 flex justify-end">
+                    <button
+                        type="button"
+                        onClick={() => setResetOpen(true)}
+                        className="inline-flex items-center gap-2 rounded-xl border border-red-500/30 px-4 py-2 text-sm font-semibold text-red-500 transition-colors hover:bg-red-500/10"
+                    >
+                        <Trash2 className="size-4" />
+                        Reset data jurnal
+                    </button>
+                </div>
+            )}
+
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
                 <div className="flex items-start gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
@@ -71,6 +96,16 @@ export default function JournalMonitorIndex({
                     </div>
                 )}
             </section>
+
+            {can.reset && (
+                <ResetJournalModal
+                    open={resetOpen}
+                    onClose={() => setResetOpen(false)}
+                    departemens={departemens}
+                    classOptions={classOptions}
+                    industryOptions={industryOptions}
+                />
+            )}
         </AppLayout>
     );
 }

@@ -12,6 +12,7 @@ use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -77,6 +78,299 @@ class AttendanceMonitorTest extends TestCase
             'class' => $class,
             'attendance' => $attendance,
         ];
+    }
+
+    /**
+     * v2.4 Fase 22 — kartu Rate absensi memakai rumus yang sama dengan
+     * dashboard (trait SummarizesParticipation).
+     */
+    public function test_monitor_index_includes_attendance_rate(): void
+    {
+        $this->scenario();
+
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen')
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('attendance-monitor/index')
+                ->has('attendanceRate.today')
+                ->has('attendanceRate.week')
+                ->has('attendanceRate.month')
+                ->has('attendanceRate.all')
+            );
+    }
+
+    /**
+     * v2.4 Fase 22 — rate dibatasi cakupan role. Guru melihat rate MURIDNYA
+     * (1 dari 1 hadir = 100%), bukan rate sekolah yang ikut menghitung siswa
+     * aktif di luar bimbingannya yang tidak absen.
+     */
+    public function test_attendance_rate_is_scoped_to_the_teacher(): void
+    {
+        $data = $this->scenario();
+
+        $data['student']->update(['status_pkl' => 'proses']);
+        $data['attendance']->update(['date' => Carbon::now()->toDateString()]);
+
+        // Siswa aktif di luar bimbingan guru, tanpa absen sama sekali.
+        Student::factory()->count(3)->create(['status_pkl' => 'proses']);
+
+        $this->actingAs($data['teacher'])
+            ->get('/monitoring/absen')
+            ->assertInertia(fn (Assert $page) => $page->where('attendanceRate.today', 100));
+
+        // Admin melihat seluruh sekolah: 1 hadir dari 4 siswa aktif = 25%.
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen')
+            ->assertInertia(fn (Assert $page) => $page->where('attendanceRate.today', 25));
+    }
+
+    /**
+     * v2.4 Fase 23 — roster harian memisahkan yang sudah & belum presensi.
+     * Yang "sudah" ditentukan oleh ADANYA baris absen pada tanggal itu.
+     */
+    public function test_daily_roster_separates_present_and_absent_students(): void
+    {
+        $data = $this->scenario();
+        $today = Carbon::now()->toDateString();
+
+        $data['student']->update(['status_pkl' => 'proses', 'name' => 'Ada Absen']);
+        $data['attendance']->update(['date' => $today, 'status' => 'hadir']);
+
+        $absent = Student::factory()->create([
+            'status_pkl' => 'proses',
+            'name' => 'Tanpa Absen',
+        ]);
+
+        $admin = $this->user('admin');
+
+        $this->actingAs($admin)
+            ->get('/monitoring/absen?tab=belum')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('roster.data', 1)
+                ->where('roster.data.0.id', $absent->id)
+                ->where('roster.data.0.statusLabel', 'Belum presensi')
+                ->where('summary.belum', 1)
+                ->where('summary.sudah', 1)
+            );
+
+        $this->actingAs($admin)
+            ->get('/monitoring/absen?tab=sudah')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('roster.data', 1)
+                ->where('roster.data.0.id', $data['student']->id)
+                ->where('roster.data.0.statusLabel', 'Hadir')
+            );
+    }
+
+    /**
+     * v2.4 Fase 23 — siswa sakit/izin/libur SUDAH punya baris absen, jadi
+     * tidak boleh muncul di daftar "belum". Kalau ini rusak, siswa sakit
+     * ber-approval lengkap akan dipresensikan paksa lewat Fase 24 dan
+     * status sakitnya tertimpa.
+     */
+    public function test_students_with_sakit_status_count_as_present(): void
+    {
+        $data = $this->scenario();
+
+        $data['student']->update(['status_pkl' => 'proses']);
+        $data['attendance']->update([
+            'date' => Carbon::now()->toDateString(),
+            'status' => 'sakit',
+        ]);
+
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen?tab=sudah')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('roster.data', 1)
+                ->where('roster.data.0.statusLabel', 'Sakit')
+                ->where('summary.belum', 0)
+            );
+    }
+
+    /**
+     * v2.4 Fase 23 — hanya siswa PKL berjalan. Yang belum mulai / sudah
+     * selesai memang tidak absen; memasukkannya akan mengubur nama yang
+     * benar di bawah puluhan yang tidak relevan.
+     */
+    public function test_daily_roster_only_includes_active_pkl_students(): void
+    {
+        Student::factory()->create(['status_pkl' => 'belum']);
+        Student::factory()->create(['status_pkl' => 'selesai']);
+        $active = Student::factory()->create(['status_pkl' => 'proses']);
+
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen?tab=belum')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('roster.data', 1)
+                ->where('roster.data.0.id', $active->id)
+            );
+    }
+
+    /**
+     * v2.4 Fase 23 — KEAMANAN: guru hanya melihat murid bimbingannya.
+     */
+    public function test_daily_roster_is_scoped_to_the_teacher(): void
+    {
+        $data = $this->scenario();
+        $data['student']->update(['status_pkl' => 'proses']);
+
+        // Siswa sekolah lain, di luar bimbingan guru.
+        Student::factory()->count(2)->create(['status_pkl' => 'proses']);
+
+        $this->actingAs($data['teacher'])
+            ->get('/monitoring/absen?tab=belum')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('roster.data', 1)
+                ->where('roster.data.0.id', $data['student']->id)
+                ->where('summary.belum', 1)
+            );
+    }
+
+    /**
+     * v2.4 Fase 23 — absen kemarin tidak membuat siswa terhitung "sudah"
+     * hari ini.
+     */
+    public function test_daily_roster_respects_selected_date(): void
+    {
+        $data = $this->scenario();
+        $yesterday = Carbon::now()->subDay()->toDateString();
+
+        $data['student']->update(['status_pkl' => 'proses']);
+        $data['attendance']->update(['date' => $yesterday, 'status' => 'hadir']);
+
+        $admin = $this->user('admin');
+
+        // Hari ini: belum, karena absennya kemarin.
+        $this->actingAs($admin)
+            ->get('/monitoring/absen?tab=belum')
+            ->assertInertia(fn (Assert $page) => $page->where('summary.belum', 1));
+
+        // Kemarin: sudah.
+        $this->actingAs($admin)
+            ->get('/monitoring/absen?tab=sudah&tanggal='.$yesterday)
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('summary.sudah', 1)
+                ->where('summary.belum', 0)
+                ->has('roster.data', 1)
+            );
+    }
+
+    /**
+     * v2.4 Fase 27 — murid tanpa data absen pada hari kerja yang sudah lewat
+     * ditandai Alpha; hari BERJALAN tidak pernah Alpha.
+     */
+    public function test_past_date_labels_missing_students_as_alpha(): void
+    {
+        Carbon::setTestNow('2026-08-19'); // Rabu
+
+        $data = $this->scenario();
+        $data['student']->update([
+            'status_pkl' => 'proses',
+            'pkl_start' => null,
+            'pkl_end' => null,
+        ]);
+        $data['attendance']->update(['date' => '2026-07-01']);
+
+        $admin = $this->user('admin');
+
+        // Selasa kemarin: tidak ada data → Alpha.
+        $this->actingAs($admin)
+            ->get('/monitoring/absen?tab=belum&tanggal=2026-08-18')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('roster.data', 1)
+                ->where('roster.data.0.status', 'alpha')
+                ->where('roster.data.0.statusLabel', 'Alpha')
+            );
+
+        // Hari ini: belum presensi, BUKAN Alpha.
+        $this->actingAs($admin)
+            ->get('/monitoring/absen?tab=belum')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('roster.data.0.status', 'belum')
+                ->where('roster.data.0.statusLabel', 'Belum presensi')
+            );
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * v2.4 Fase 27 — akhir pekan yang sudah lewat tidak dihitung: tab "belum"
+     * kosong, bukan berisi seluruh sekolah.
+     */
+    public function test_past_weekend_is_excluded_from_the_belum_tab(): void
+    {
+        Carbon::setTestNow('2026-08-19'); // Rabu
+
+        $data = $this->scenario();
+        $data['student']->update(['status_pkl' => 'proses']);
+        $data['attendance']->update(['date' => '2026-07-01']);
+
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen?tab=belum&tanggal=2026-08-16') // Minggu
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('roster.data', 0)
+                ->where('summary.belum', 0)
+            );
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * v2.4 Fase 27 — status tersimpan selalu menang. Siswa sakit tidak boleh
+     * berubah jadi Alpha hanya karena statusnya bukan 'hadir'.
+     */
+    public function test_recorded_sakit_is_never_shown_as_alpha(): void
+    {
+        Carbon::setTestNow('2026-08-19');
+
+        $data = $this->scenario();
+        $data['student']->update(['status_pkl' => 'proses']);
+        $data['attendance']->update(['date' => '2026-08-18', 'status' => 'sakit']);
+
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen?tab=sudah&tanggal=2026-08-18')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('roster.data', 1)
+                ->where('roster.data.0.status', 'sakit')
+                ->where('roster.data.0.statusLabel', 'Sakit')
+            );
+
+        Carbon::setTestNow();
+    }
+
+    /**
+     * v2.4 Fase 27 — INTI pilihan "Alpha turunan": koreksi terlambat
+     * menghapus Alpha tanpa ada jalur pembersihan apa pun. Ini yang
+     * membuktikan Alpha tidak perlu disimpan sebagai baris.
+     */
+    public function test_alpha_disappears_after_proxy_attendance_is_recorded(): void
+    {
+        Carbon::setTestNow('2026-08-19');
+
+        $data = $this->scenario();
+        $data['student']->update([
+            'status_pkl' => 'proses',
+            'pkl_start' => null,
+            'pkl_end' => null,
+        ]);
+        $data['attendance']->update(['date' => '2026-07-01']);
+
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen?tab=belum&tanggal=2026-08-18')
+            ->assertInertia(fn (Assert $page) => $page->where('roster.data.0.status', 'alpha'));
+
+        // Guru menyusulkan presensi untuk tanggal itu (Fase 24).
+        $this->actingAs($data['teacher'])->post('/monitoring/absen/presensi', [
+            'student_ids' => [$data['student']->id],
+            'date' => '2026-08-18',
+            'arrival_time' => '08:00',
+        ]);
+
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen?tab=belum&tanggal=2026-08-18')
+            ->assertInertia(fn (Assert $page) => $page->has('roster.data', 0));
+
+        Carbon::setTestNow();
     }
 
     public function test_guests_are_redirected_to_login(): void

@@ -63,6 +63,24 @@ class DashboardTest extends TestCase
             );
     }
 
+    /**
+     * Tabel "Siswa terbaru" dihapus dari dashboard admin (v2.4 Fase 21).
+     * Di-assert sebagai `missing` agar propnya tidak diam-diam kembali —
+     * dashboard guru/pembimbing & kaprog masih memakainya, jadi komponen dan
+     * method pembentuknya sengaja tetap hidup.
+     */
+    public function test_admin_dashboard_no_longer_sends_recent_students(): void
+    {
+        Student::factory()->count(2)->create(['status_pkl' => 'proses']);
+
+        $this->actingAs($this->admin())
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
+                ->missing('recentStudents')
+            );
+    }
+
     public function test_attendance_rate_today_reflects_present_active_students(): void
     {
         $present = Student::factory()->create(['status_pkl' => 'proses']);

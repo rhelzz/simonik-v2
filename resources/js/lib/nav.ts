@@ -236,7 +236,8 @@ export const navSections: NavSection[] = [
                 label: 'Inbox Persetujuan',
                 icon: MailCheck,
                 href: approvalsIndex.url(),
-                roles: ['kaprog', 'guru', 'pembimbing', 'orangtua'],
+                // Orang Tua dicabut (v2.4 Fase 26) — antreannya selalu kosong.
+                roles: ['kaprog', 'guru', 'pembimbing'],
             },
         ],
     },

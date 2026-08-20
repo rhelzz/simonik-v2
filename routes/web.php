@@ -253,8 +253,11 @@ Route::middleware('auth')->group(function () {
         Route::get('streak', StreakController::class)->name('streak');
     });
 
-    // Approval engine — approve/reject (pembimbing, guru, kaprog, orangtua).
-    Route::middleware('role:pembimbing|guru|kaprog|orangtua')->group(function () {
+    // Approval engine — approve/reject (pembimbing, guru, kaprog).
+    // Orang Tua dicabut sejak v2.4 Fase 26: Sakit/Izin jadi satu tahap, dan
+    // itu satu-satunya jenis pengajuan yang dulu masuk antrean orang tua —
+    // menyisakan menunya berarti halaman yang selamanya kosong.
+    Route::middleware('role:pembimbing|guru|kaprog')->group(function () {
         Route::get('approvals', [ApprovalController::class, 'index'])->name('approvals.index');
         Route::post('approvals/{approval}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
         Route::post('approvals/{approval}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
@@ -281,11 +284,36 @@ Route::middleware('auth')->group(function () {
         Route::get('monitoring/absen/kelas/{class}', [AttendanceMonitorController::class, 'students'])->name('attendance-monitor.students');
         Route::get('monitoring/absen/murid/{student}', [AttendanceMonitorController::class, 'show'])->name('attendance-monitor.show');
 
+        // Presensi yang diwakilkan guru pembimbing / admin (tanpa geolokasi &
+        // foto). Cakupan murid tetap ditegakkan scopedStudents() di controller.
+        Route::post('monitoring/absen/presensi', [AttendanceMonitorController::class, 'storeProxy'])
+            ->middleware('role:admin|guru')
+            ->name('attendance-monitor.store-proxy');
+
+        // Reset data absen — DESTRUKTIF & permanen, admin saja, wajib password
+        // akun sendiri. POST untuk pratinjau karena kriterianya memuat array
+        // student_ids (terlalu panjang untuk query string).
+        Route::middleware('role:admin')->group(function (): void {
+            Route::post('monitoring/absen/reset/pratinjau', [AttendanceMonitorController::class, 'resetPreview'])
+                ->name('attendance-monitor.reset-preview');
+            Route::delete('monitoring/absen/reset', [AttendanceMonitorController::class, 'reset'])
+                ->name('attendance-monitor.reset');
+        });
+
         // Data Jurnal.
         Route::get('monitoring/jurnal', [JournalMonitorController::class, 'index'])->name('journal-monitor.index');
         Route::get('monitoring/jurnal/jurusan/{departemen}', [JournalMonitorController::class, 'classes'])->name('journal-monitor.classes');
         Route::get('monitoring/jurnal/kelas/{class}', [JournalMonitorController::class, 'students'])->name('journal-monitor.students');
         Route::get('monitoring/jurnal/murid/{student}', [JournalMonitorController::class, 'show'])->name('journal-monitor.show');
+
+        // Reset data jurnal — DESTRUKTIF & permanen, admin saja, wajib password
+        // akun sendiri. Memakai action yang sama dengan reset Data Absen.
+        Route::middleware('role:admin')->group(function (): void {
+            Route::post('monitoring/jurnal/reset/pratinjau', [JournalMonitorController::class, 'resetPreview'])
+                ->name('journal-monitor.reset-preview');
+            Route::delete('monitoring/jurnal/reset', [JournalMonitorController::class, 'reset'])
+                ->name('journal-monitor.reset');
+        });
     });
 
     // M5.1 Akuntabilitas Dana — Wakasek catat penerimaan & pengeluaran.

@@ -191,8 +191,15 @@ class AttendanceController extends Controller
         $validated = $request->validated();
 
         // Sama seperti absen masuk: ambang akurasi hanya berlaku untuk WFO.
+        // 'proxy' (presensi diwakilkan guru) ikut digerbang seperti WFO —
+        // absen masuknya memang tanpa GPS, tapi absen pulang tetap dilakukan
+        // siswa sendiri dari lokasi, jadi tidak ada alasan melonggarkannya.
+        // Ditulis eksplisit (bukan `!== 'wfa'`) agar baris lama bermode NULL
+        // tidak ikut berubah perilakunya.
+        $geofenced = \in_array($today->mode, ['wfo', 'proxy'], true);
+
         $gpsAccuracy = (float) $validated['gps_accuracy'];
-        if ($today->mode === 'wfo' && $gpsAccuracy > 100) {
+        if ($geofenced && $gpsAccuracy > 100) {
             return back()->withErrors([
                 'latitude' => 'Akurasi GPS terlalu rendah ('.round($gpsAccuracy).'m). Pastikan GPS Anda aktif dan berada di ruang terbuka.',
             ])->with('error', 'Absen pulang ditolak: Akurasi GPS tidak memadai.');
@@ -215,8 +222,8 @@ class AttendanceController extends Controller
                 (float) $validated['longitude']
             );
 
-            // Validasi Geofencing: Tolak jika di luar radius (mode WFO)
-            if ($today->mode === 'wfo' && $distanceM > $industry->radius) {
+            // Validasi Geofencing: Tolak jika di luar radius (mode WFO/proxy)
+            if ($geofenced && $distanceM > $industry->radius) {
                 return back()->withErrors([
                     'latitude' => 'Anda berada di luar radius industri ('.$distanceM.'m dari target, radius maksimal: '.$industry->radius.'m).',
                 ])->with('error', 'Absen pulang ditolak: Anda berada di luar radius industri.');

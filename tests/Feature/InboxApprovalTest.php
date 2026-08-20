@@ -8,6 +8,7 @@ use App\Models\LeaveRequest;
 use App\Models\Pembimbing;
 use App\Models\SakitIzin;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -78,43 +79,51 @@ class InboxApprovalTest extends TestCase
         );
     }
 
-    public function test_parent_can_only_see_stage_1_sakit_izin(): void
+    /**
+     * v2.4 Fase 26 — DIBALIK. Sakit/Izin kini satu tahap (Guru Pembimbing),
+     * sehingga Orang Tua tidak punya antrean apa pun: cabang SakitIzin adalah
+     * SATU-SATUNYA yang dulu melayaninya. Menyisakan menunya berarti halaman
+     * yang selamanya kosong, jadi role-nya dicabut dari rute & sidebar.
+     */
+    public function test_parent_can_no_longer_access_approval_inbox(): void
     {
         $siswaUser = $this->user('siswa');
         $student = Student::factory()->create(['user_id' => $siswaUser->id]);
         $parentUser = $this->user('orangtua');
-        $parent = $student->parents;
-        $parent->update(['user_id' => $parentUser->id]);
+        $student->parents->update(['user_id' => $parentUser->id]);
+
+        SakitIzin::factory()->create(['user_id' => $siswaUser->id, 'type' => 'sakit']);
+
+        $this->actingAs($parentUser)->get('/approvals')->assertForbidden();
+    }
+
+    /**
+     * Pengajuan sakit langsung masuk inbox guru — tanpa menunggu tahap apa pun.
+     */
+    public function test_sakit_appears_in_guru_inbox_immediately(): void
+    {
+        $guruUser = $this->user('guru');
+        $teacher = Teacher::factory()->create(['user_id' => $guruUser->id]);
+        $industry = Industry::factory()->create(['teacher_id' => $teacher->id]);
+
+        $siswaUser = $this->user('siswa');
+        Student::factory()->create([
+            'user_id' => $siswaUser->id,
+            'industri_id' => $industry->id,
+        ]);
 
         $sakitIzin = SakitIzin::factory()->create([
             'user_id' => $siswaUser->id,
             'type' => 'sakit',
         ]);
-        $approvalStage1 = Approval::initiate($sakitIzin);
+        Approval::initiate($sakitIzin);
 
-        // Stage 1 pending, parent should see it
-        $response = $this->actingAs($parentUser)->get('/approvals');
-        $response->assertStatus(200);
-        $response->assertInertia(fn (Assert $page) => $page
-            ->has('approvals.data', 1)
-            ->where('auth.pendingApprovalsCount', 1)
-        );
-
-        // Approve stage 1
-        $this->actingAs($parentUser)->post("/approvals/{$approvalStage1->id}/approve")->assertRedirect();
-
-        // Parent should not see any pending approvals count
-        $responseAfter = $this->actingAs($parentUser)->get('/approvals');
-        $responseAfter->assertInertia(fn (Assert $page) => $page
-            ->has('approvals.data', 0)
-            ->where('auth.pendingApprovalsCount', 0)
-        );
-
-        // Parent should see it in history tab
-        $responseHistory = $this->actingAs($parentUser)->get('/approvals?status=history');
-        $responseHistory->assertInertia(fn (Assert $page) => $page
-            ->has('approvals.data', 1)
-            ->where('approvals.data.0.status', 'approved')
-        );
+        $this->actingAs($guruUser)->get('/approvals')
+            ->assertStatus(200)
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('approvals.data', 1)
+                ->where('approvals.data.0.typeLabel', 'Sakit')
+                ->where('auth.pendingApprovalsCount', 1)
+            );
     }
 }

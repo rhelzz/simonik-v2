@@ -11,13 +11,11 @@ import {
     AttendanceTrendCards,
     HeroGreeting,
     RateCard,
-    RecentStudentsTable,
     StatCard,
 } from '@/components/dashboard/widgets';
 import type {
     ParticipationTrend,
     RateByRange,
-    RecentStudent,
 } from '@/components/dashboard/widgets';
 import { AppLayout } from '@/layouts/app-layout';
 
@@ -32,7 +30,6 @@ type DashboardProps = {
     attendanceRate: RateByRange;
     journalRate: RateByRange;
     trend: ParticipationTrend;
-    recentStudents: RecentStudent[];
     today: string;
 };
 
@@ -41,7 +38,6 @@ export default function Dashboard({
     attendanceRate,
     journalRate,
     trend,
-    recentStudents,
     today,
 }: DashboardProps) {
     return (
@@ -105,15 +101,6 @@ export default function Dashboard({
             <section className="mt-5 grid gap-4 lg:grid-cols-3">
                 <AttendanceTrendCards data={trend} />
             </section>
-
-            <div className="mt-5">
-                <RecentStudentsTable
-                    students={recentStudents}
-                    title="Siswa terbaru"
-                    subtitle="Pendaftaran siswa PKL paling akhir"
-                    emptyText="Belum ada data siswa. Jalankan seeder untuk mengisi data contoh."
-                />
-            </div>
         </AppLayout>
     );
 }

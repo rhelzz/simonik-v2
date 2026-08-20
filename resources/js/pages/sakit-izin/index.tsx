@@ -1,12 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import {
-    FileText,
-    LoaderCircle,
-    HeartPulse,
-    FileImage,
-    ShieldAlert,
-    ArrowRight,
-} from 'lucide-react';
+import { FileText, LoaderCircle, HeartPulse, FileImage } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { store } from '@/actions/App/Http/Controllers/SakitIzinController';
 import { ApprovalStatus } from '@/components/approval-status';
@@ -229,10 +222,14 @@ export default function SakitIzinIndex({ sakitIzins }: Props) {
                         ) : (
                             <div className="mb-4 flex-1 space-y-4">
                                 {sakitIzins.data.map((request) => {
-                                    const parentApproval =
-                                        request.approvals[0] || null;
-                                    const industryApproval =
-                                        request.approvals[1] || null;
+                                    // Sejak v2.4 Fase 26 pengajuan hanya satu
+                                    // tahap (Guru Pembimbing). Pengajuan LAMA
+                                    // bisa punya dua baris approval — yang
+                                    // terakhir adalah keputusan yang berlaku.
+                                    const approval =
+                                        request.approvals[
+                                            request.approvals.length - 1
+                                        ] || null;
 
                                     return (
                                         <div
@@ -280,63 +277,22 @@ export default function SakitIzinIndex({ sakitIzins }: Props) {
                                                     )}
                                                 </div>
 
-                                                {/* Step-by-Step Approval Panel */}
-                                                <div className="shrink-0 space-y-4 border-t border-line pt-3 md:w-72 md:border-t-0 md:border-l md:pt-0 md:pl-4">
-                                                    {/* Tahap 1: Ortu */}
-                                                    <div className="space-y-1">
-                                                        <span className="flex items-center gap-1 text-xs font-bold text-ink/80">
-                                                            Tahap 1: Orang Tua
+                                                {/* Panel persetujuan — satu tahap (Fase 26) */}
+                                                <div className="shrink-0 space-y-1 border-t border-line pt-3 md:w-72 md:border-t-0 md:border-l md:pt-0 md:pl-4">
+                                                    <span className="flex items-center gap-1 text-xs font-bold text-ink/80">
+                                                        Persetujuan Guru
+                                                        Pembimbing
+                                                    </span>
+                                                    {approval ? (
+                                                        <ApprovalStatus
+                                                            approval={approval}
+                                                            canAct={false}
+                                                        />
+                                                    ) : (
+                                                        <span className="text-xs font-medium text-muted">
+                                                            Menunggu data
                                                         </span>
-                                                        {parentApproval ? (
-                                                            <ApprovalStatus
-                                                                approval={
-                                                                    parentApproval
-                                                                }
-                                                                canAct={false}
-                                                            />
-                                                        ) : (
-                                                            <span className="text-xs font-medium text-muted">
-                                                                Menunggu data
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex justify-center md:justify-start">
-                                                        <ArrowRight className="size-4 rotate-90 text-muted md:rotate-0" />
-                                                    </div>
-
-                                                    {/* Tahap 2: Industri/Guru */}
-                                                    <div className="space-y-1">
-                                                        <span className="flex items-center gap-1 text-xs font-bold text-ink/80">
-                                                            Tahap 2: Industri /
-                                                            Guru
-                                                        </span>
-                                                        {industryApproval ? (
-                                                            <ApprovalStatus
-                                                                approval={
-                                                                    industryApproval
-                                                                }
-                                                                canAct={false}
-                                                            />
-                                                        ) : parentApproval?.status ===
-                                                          'rejected' ? (
-                                                            <div className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-1 text-xs font-medium text-red-500">
-                                                                <ShieldAlert className="size-3.5" />
-                                                                Gagal (Ditolak
-                                                                Ortu)
-                                                            </div>
-                                                        ) : parentApproval?.status ===
-                                                          'approved' ? (
-                                                            <div className="inline-flex animate-pulse items-center gap-1.5 rounded-full bg-warning/10 px-3 py-1 text-xs font-medium text-warning">
-                                                                Menunggu
-                                                                Industri
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-xs font-medium text-muted">
-                                                                Menunggu Tahap 1
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

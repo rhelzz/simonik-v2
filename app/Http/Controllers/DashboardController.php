@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ScopesProgramByKaprog;
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
+use App\Http\Controllers\Concerns\SummarizesParticipation;
 use App\Models\Activity;
 use App\Models\Attendance;
 use App\Models\Badge;
@@ -28,6 +29,7 @@ class DashboardController extends Controller
 {
     use ScopesProgramByKaprog;
     use ScopesStudentsByRole;
+    use SummarizesParticipation;
 
     public function __construct(
         private readonly StreakCalculator $streakCalculator,
@@ -106,9 +108,6 @@ class DashboardController extends Controller
             'attendanceRate' => $participation['attendance'],
             'journalRate' => $participation['journal'],
             'trend' => $this->participationTrend($activeUserIds),
-            'recentStudents' => $this->presentStudents(
-                Student::query()->with(['classes:id,name', 'industries:id,name'])->latest()->take(5),
-            ),
             'today' => Carbon::now()->translatedFormat('l, d F Y'),
         ]);
     }
@@ -390,35 +389,6 @@ class DashboardController extends Controller
     }
 
     /**
-     * Hitung rate absensi & jurnal untuk sekumpulan siswa aktif.
-     *
-     * @param  array<int, int>  $activeUserIds
-     * @return array{attendance: array{today: int, week: int, month: int, all: int}, journal: array{today: int, week: int, month: int, all: int}}
-     */
-    private function participation(array $activeUserIds): array
-    {
-        $activeCount = \count($activeUserIds);
-
-        $attendanceDays = $activeCount === 0 ? [] : Attendance::query()
-            ->whereIn('user_id', $activeUserIds)
-            ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
-            ->get(['user_id', 'date'])
-            ->map(fn (Attendance $row): array => ['u' => $row->user_id, 'd' => $row->date->format('Y-m-d')])
-            ->all();
-
-        $journalDays = $activeCount === 0 ? [] : Activity::query()
-            ->whereIn('user_id', $activeUserIds)
-            ->get(['user_id', 'date'])
-            ->map(fn (Activity $row): array => ['u' => $row->user_id, 'd' => $row->date->format('Y-m-d')])
-            ->all();
-
-        return [
-            'attendance' => $this->rates($attendanceDays, $activeCount),
-            'journal' => $this->rates($journalDays, $activeCount),
-        ];
-    }
-
-    /**
      * Tren jumlah absensi & pengisian jurnal siswa aktif untuk grafik dashboard
      * yang bisa di-toggle: masing-masing per-minggu (7 titik harian) dan
      * per-bulan (4 titik mingguan).
@@ -538,92 +508,5 @@ class DashboardController extends Controller
                 'joined' => $student->created_at?->translatedFormat('d M Y'),
             ])
             ->all();
-    }
-
-    /**
-     * Persentase partisipasi (kehadiran/jurnal) per rentang waktu.
-     *
-     * @param  array<int, array{u: int, d: string}>  $days
-     * @return array{today: int, week: int, month: int, all: int}
-     */
-    private function rates(array $days, int $activeCount): array
-    {
-        $now = Carbon::now();
-        $today = $now->toDateString();
-        $weekStart = $now->copy()->startOfWeek()->toDateString();
-        $monthStart = $now->copy()->startOfMonth()->toDateString();
-
-        // Tanggal pertama ada data (sebagai proxy kapan PKL benar-benar dimulai).
-        $allDates = array_column($days, 'd');
-        $firstDate = empty($allDates) ? $today : min($allDates);
-
-        return [
-            'today' => $this->rate(
-                array_filter($days, fn (array $row): bool => $row['d'] === $today),
-                $activeCount,
-                1,
-            ),
-            'week' => $this->rate(
-                array_filter($days, fn (array $row): bool => $row['d'] >= $weekStart),
-                $activeCount,
-                $this->weekdaysBetween(max($weekStart, $firstDate), $today),
-            ),
-            'month' => $this->rate(
-                array_filter($days, fn (array $row): bool => $row['d'] >= $monthStart),
-                $activeCount,
-                $this->weekdaysBetween(max($monthStart, $firstDate), $today),
-            ),
-            'all' => $this->rate(
-                $days,
-                $activeCount,
-                $this->weekdaysBetween($firstDate, $today),
-            ),
-        ];
-    }
-
-    /**
-     * Hitung jumlah hari kerja (Senin–Jumat) antara dua tanggal, inklusif kedua ujung.
-     */
-    private function weekdaysBetween(string $from, string $to): int
-    {
-        $start = Carbon::parse($from)->startOfDay();
-        $end = Carbon::parse($to)->startOfDay();
-
-        if ($start->gt($end)) {
-            return 0;
-        }
-
-        $totalDays = (int) $start->diffInDays($end) + 1;
-        $startDow = $start->dayOfWeek; // 0=Sun … 6=Sat
-
-        $weekdays = (int) floor($totalDays / 7) * 5;
-        $remainder = $totalDays % 7;
-
-        for ($i = 0; $i < $remainder; $i++) {
-            $dow = ($startDow + $i) % 7;
-            if ($dow !== 0 && $dow !== 6) {
-                $weekdays++;
-            }
-        }
-
-        return $weekdays;
-    }
-
-    /**
-     * Rasio hari-siswa aktif / (siswa aktif × jumlah hari efektif), dibatasi 100%.
-     *
-     * @param  array<int, array{u: int, d: string}>  $days
-     */
-    private function rate(array $days, int $activeCount, int $effectiveDays): int
-    {
-        if ($activeCount === 0 || $effectiveDays <= 0) {
-            return 0;
-        }
-
-        $studentDays = \count(array_unique(
-            array_map(fn (array $row): string => $row['u'].'|'.$row['d'], $days),
-        ));
-
-        return (int) min(100, (int) round($studentDays / ($activeCount * $effectiveDays) * 100));
     }
 }

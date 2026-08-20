@@ -2,15 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ResetStudentRecords;
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
+use App\Http\Controllers\Concerns\SummarizesParticipation;
 use App\Http\Controllers\Concerns\SummarizesStudentPerformance;
+use App\Http\Requests\PreviewResetRecordsRequest;
+use App\Http\Requests\ResetRecordsRequest;
+use App\Http\Requests\StoreProxyAttendanceRequest;
 use App\Models\Attendance;
 use App\Models\Classes;
 use App\Models\Departemen;
+use App\Models\Industry;
 use App\Models\Student;
 use App\Models\User;
+use App\Support\AttendanceStatus;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,7 +33,10 @@ use Inertia\Response;
 class AttendanceMonitorController extends Controller
 {
     use ScopesStudentsByRole;
+    use SummarizesParticipation;
     use SummarizesStudentPerformance;
+
+    public function __construct(private readonly ResetStudentRecords $reset) {}
 
     /**
      * Layer 1 — daftar jurusan yang memuat siswa dalam cakupan role.
@@ -46,10 +61,217 @@ class AttendanceMonitorController extends Controller
                 'students' => (int) $counts->get($departemen->id, 0),
             ]);
 
+        // Populasi tunggal untuk rate & roster: siswa PKL berjalan dalam cakupan
+        // role. Yang belum/sudah selesai PKL memang tidak absen — memasukkannya
+        // akan mengubur nama yang benar di bawah puluhan yang tidak relevan.
+        // (students.user_id NOT NULL di skema, jadi tidak perlu dijaga di sini.)
+        $activeStudents = fn (): Builder => $this->scopedStudents($user)
+            ->where('status_pkl', 'proses');
+
+        $date = $request->date('tanggal') ?? Carbon::today();
+        $tab = $request->query('tab') === 'sudah' ? 'sudah' : 'belum';
+
+        // "Sudah presensi" = ADA baris absen pada tanggal itu — bukan
+        // status 'hadir'. Siswa sakit/izin/libur (lewat approval) sudah
+        // terhitung dan tidak boleh muncul di daftar "belum".
+        //
+        // Satu closure dipakai tiga kali (hitung, saring, eager-load) supaya
+        // kriterianya tidak mungkin berbeda antar-pemakai. Tipe union karena
+        // whereHas() memberi Builder sedangkan with() memberi Relation.
+        $onDate = fn (Builder|Relation $query): mixed => $query->whereDate('date', $date);
+
+        // Akhir pekan yang sudah lewat tidak dihitung sama sekali: menampilkan
+        // seluruh sekolah sebagai "belum" di hari Sabtu hanya melatih operator
+        // untuk mengabaikan panel ini. Hari BERJALAN tetap ditampilkan apa
+        // adanya, termasuk kalau jatuh di akhir pekan (lihat AttendanceStatus).
+        $countsAsWorkday = ! ($date->isWeekend() && $date->lessThan(Carbon::today()));
+
+        $sudah = $activeStudents()->whereHas('users.attendances', $onDate)->count();
+        $belum = $countsAsWorkday ? $activeStudents()->count() - $sudah : 0;
+
+        $roster = $activeStudents()
+            ->when(
+                $tab === 'sudah',
+                fn (Builder $query): Builder => $query->whereHas('users.attendances', $onDate),
+                fn (Builder $query): Builder => $query->whereDoesntHave('users.attendances', $onDate),
+            )
+            ->when(
+                $tab === 'belum' && ! $countsAsWorkday,
+                fn (Builder $query): Builder => $query->whereRaw('1 = 0'),
+            )
+            ->with([
+                'classes:id,name',
+                'industries:id,name',
+                // Tanpa eager-load berkondisi ini, tabel 15 baris = 15 kueri.
+                'users.attendances' => $onDate,
+                'pkl_period:id,start_period,end_period',
+            ])
+            ->orderBy('name')
+            ->paginate(15)
+            ->withQueryString()
+            ->through(function (Student $student) use ($date): array {
+                $attendance = $student->users?->attendances->first();
+
+                // Tanggal PKL per-siswa menang atas tanggal periodenya —
+                // pola yang sama dengan SummarizesStudentPerformance.
+                $status = AttendanceStatus::for(
+                    $attendance?->status,
+                    $date,
+                    $student->pkl_start ?? $student->pkl_period?->start_period,
+                    $student->pkl_end ?? $student->pkl_period?->end_period,
+                );
+
+                return [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'nis' => $student->nis,
+                    'class' => $student->classes?->name,
+                    'industry' => $student->industries?->name,
+                    'status' => $status,
+                    'statusLabel' => AttendanceStatus::label($status),
+                    'arrivalTime' => $attendance?->arrivalTime
+                        ? mb_substr($attendance->arrivalTime, 0, 5)
+                        : null,
+                ];
+            });
+
         return Inertia::render('attendance-monitor/index', [
             'departemens' => $departemens,
             'scopeLabel' => $this->scopeLabel($user),
+            'attendanceRate' => $this->participation($activeStudents()->pluck('user_id')->all())['attendance'],
+            'roster' => $roster,
+            'summary' => ['sudah' => $sudah, 'belum' => $belum],
+            'filters' => ['tanggal' => $date->format('Y-m-d'), 'tab' => $tab],
+            'dateLabel' => $date->translatedFormat('l, d F Y'),
+            'can' => [
+                'proxyAttendance' => $user->hasAnyRole(['admin', 'guru']),
+                'reset' => $user->hasRole('admin'),
+            ],
+            // Opsi filter modal reset. Jurusan memakai ulang prop `departemens`
+            // yang sudah dimuat; kelas & industri butuh dua kueri ringan
+            // tambahan, dan hanya dijalankan untuk admin (satu-satunya role
+            // yang bisa mereset).
+            'classOptions' => $user->hasRole('admin')
+                ? Classes::query()->orderBy('name')->get(['id', 'name'])
+                : [],
+            'industryOptions' => $user->hasRole('admin')
+                ? Industry::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
+    }
+
+    /**
+     * Presensi yang diwakilkan guru pembimbing / admin — pilih murid + waktu
+     * custom, tanpa geolokasi dan foto.
+     *
+     * Tidak memakai AttendanceController::checkIn(): seluruh jalur itu
+     * mensyaratkan foto & GPS (dan melonggarkannya akan membuat setiap
+     * pengaman anti-titip-absen di jalur siswa jadi opsional).
+     */
+    public function storeProxy(StoreProxyAttendanceRequest $request): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        $data = $request->validated();
+        $date = Carbon::parse($data['date'])->startOfDay();
+        $arrival = $data['arrival_time'].':00';
+
+        // Cakupan role: murid di luar bimbingan pemanggil tidak pernah terambil
+        // di sini, jadi ID sembarang dari devtools menghasilkan 0 baris.
+        $students = $this->scopedStudents($user)
+            ->whereIn('id', $data['student_ids'])
+            ->with('industries:id,jam_masuk')
+            ->get();
+
+        [$created, $skipped] = DB::transaction(function () use ($students, $date, $arrival, $user): array {
+            $created = 0;
+            $skipped = 0;
+
+            foreach ($students as $student) {
+                // create(), BUKAN updateOrCreate(): menimpa berarti menghapus
+                // bukti foto & GPS absen mandiri siswa, atau membatalkan status
+                // sakit/izin yang sudah lolos approval. Yang sudah punya data
+                // dilewati dan dilaporkan, bukan ditindih diam-diam.
+                $exists = Attendance::query()
+                    ->where('user_id', $student->user_id)
+                    ->whereDate('date', $date)
+                    ->exists();
+
+                if ($exists) {
+                    $skipped++;
+
+                    continue;
+                }
+
+                $jamMasuk = $student->industries?->jam_masuk;
+
+                Attendance::create([
+                    'user_id' => $student->user_id,
+                    'date' => $date,
+                    'arrivalTime' => $arrival,
+                    'status' => 'hadir',
+                    'mode' => 'proxy',
+                    // Keterlambatan tetap dihitung dari waktu yang diketik —
+                    // kalau tidak, presensi diwakilkan jadi jalan pintas
+                    // menghapus keterlambatan dan rekap kedisiplinan kehilangan arti.
+                    'is_late' => $jamMasuk !== null && $arrival > $jamMasuk,
+                    'is_suspect' => false,
+                    'description' => 'Presensi diwakilkan oleh '.$user->name.' ('.$user->getRoleNames()->first().')',
+                ]);
+
+                $created++;
+            }
+
+            return [$created, $skipped];
+        });
+
+        // Angka yang dilewati wajib disebut: kalau disembunyikan, guru mengira
+        // semuanya beres dan baru tahu sebulan kemudian saat rekap tak cocok.
+        return back()->with('success', $skipped === 0
+            ? "{$created} murid berhasil dipresensikan."
+            : "{$created} murid berhasil dipresensikan. {$skipped} dilewati karena sudah punya data absen.");
+    }
+
+    /**
+     * Pratinjau: berapa baris absen yang AKAN terhapus. Tidak mengubah apa pun.
+     *
+     * Mengembalikan JSON, bukan Inertia render — satu-satunya pengecualian
+     * "tanpa API terpisah" di proyek ini, dan alasannya: pratinjau dipanggil
+     * berkali-kali saat operator mengubah kriteria di dalam modal yang sedang
+     * terbuka, sedangkan router.reload akan merender ulang halaman di
+     * belakang modal.
+     */
+    public function resetPreview(PreviewResetRecordsRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        return response()->json([
+            'count' => $this->reset->count(
+                $this->scopedStudents($user),
+                Attendance::class,
+                $request->validated(),
+            ),
+        ]);
+    }
+
+    /**
+     * Hapus permanen data absen sesuai kriteria. Tidak bisa dibatalkan.
+     */
+    public function reset(ResetRecordsRequest $request): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        $deleted = $this->reset->handle(
+            $this->scopedStudents($user),
+            Attendance::class,
+            $request->validated(),
+        );
+
+        // Angka nyata, bukan "berhasil": operator harus bisa membedakan
+        // "terhapus 240" dari "terhapus 0 karena filternya salah".
+        return back()->with('success', "{$deleted} data absen berhasil direset.");
     }
 
     /**
