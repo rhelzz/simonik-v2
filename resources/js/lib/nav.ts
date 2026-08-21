@@ -15,6 +15,7 @@ import {
     GraduationCap,
     Globe,
     Handshake,
+    Hash,
     HardHat,
     HeartPulse,
     LayoutDashboard,
@@ -45,6 +46,7 @@ import { index as certificateTemplatesIndex } from '@/actions/App/Http/Controlle
 import { index as classesIndex } from '@/actions/App/Http/Controllers/ClassController';
 import { index as departemensIndex } from '@/actions/App/Http/Controllers/DepartemenController';
 import { index as financeIndex } from '@/actions/App/Http/Controllers/FinanceController';
+import { index as forumIndex } from '@/actions/App/Http/Controllers/ForumController';
 import { index as guidesIndex } from '@/actions/App/Http/Controllers/GuideController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as journalMonitorIndex } from '@/actions/App/Http/Controllers/JournalMonitorController';
@@ -61,6 +63,7 @@ import { index as raporIndex } from '@/actions/App/Http/Controllers/RaporControl
 import { index as sakitIzinIndex } from '@/actions/App/Http/Controllers/SakitIzinController';
 import { index as statistikIndex } from '@/actions/App/Http/Controllers/StatistikController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
+import { index as tagsIndex } from '@/actions/App/Http/Controllers/TagController';
 import { index as teachersIndex } from '@/actions/App/Http/Controllers/TeacherController';
 import { index as wakaseksIndex } from '@/actions/App/Http/Controllers/WakasekController';
 import { edit as websiteSettingsEdit } from '@/actions/App/Http/Controllers/WebsiteSettingController';
@@ -222,7 +225,11 @@ export const navSections: NavSection[] = [
                 href: announcementsIndex.url(),
                 roles: ['admin', 'guru'],
             },
-            { label: 'Forum PKL', icon: MessagesSquare },
+            {
+                label: 'Forum PKL',
+                icon: MessagesSquare,
+                href: forumIndex.url(),
+            },
         ],
     },
     {
@@ -315,6 +322,12 @@ export const navSections: NavSection[] = [
                 label: 'Website Settings',
                 icon: Globe,
                 href: websiteSettingsEdit.url(),
+                roles: ['admin'],
+            },
+            {
+                label: 'Kelola Tag Forum',
+                icon: Hash,
+                href: tagsIndex.url(),
                 roles: ['admin'],
             },
             {

@@ -80,7 +80,7 @@ Kartu/metric (perluasan dari `DashboardController` + `pages/dashboard.tsx` yang 
 | **Data Jurusan** | ✅ | Referensi relasi murid & industri. |
 | **Data Kelas** | ✅ | Referensi relasi murid. |
 | **Periode PKL** | ✅ | CRUD gelombang + rentang tanggal. |
-| **Forum PKL** | ⏳ | Prioritas rendah. |
+| **Forum PKL** | ✅ | **Selesai v2.5 Fase 28.** Thread berjudul + tag bebas ber-`#` (dengan tag saran yang dikelola admin) + balasan + moderasi. Tidak dibatasi per-industri/jurusan — lihat `docs/v2.5/`. |
 | **Panduan PKL** | ✅ | CRUD upload dokumen PDF/Office (admin/kaprog) → lihat & unduh semua role (§22). |
 | **Absen Foto + Geo** (siswa) | ✅ | Input absen web (foto `getUserMedia`/upload + `navigator.geolocation`): masuk/pulang/izin/sakit, sekali per hari. |
 | **Data Absen** | ✅ | Monitoring **drill-down 4 layer** (§6) Jurusan→Kelas→Murid→**rekap performa**, role-scoped. Verifikasi **dihapus** (§27) → diganti rekap berbasis hitungan (count + rate). |
@@ -199,5 +199,5 @@ C=CRUD/kelola · I=input · V=lihat/monitor · ✓=akses · — =tidak
 Juga sudah jadi: **Absen Foto + Geo (siswa)** + **Jurnal harian (siswa)** input web; **Data Absen** & **Data Jurnal** monitoring drill-down 4 layer + **rekap performa** (count + rate + nilai/grade, tanpa verifikasi §27; scope via trait `ScopesStudentsByRole`, navigasi via `Breadcrumb`); **Industri Saya** (pembimbing kelola industrinya + pantau anak magang, §27); **Panduan PKL** (CRUD dokumen admin + unduh semua role); **Sertifikat** (CRUD template anchor + cetak per siswa, §8). **Kedua rate dashboard** (absensi & jurnal) kini terisi riil.
 
 **Urutan rekomendasi berikutnya:**
-1. **Forum PKL** — tanya-jawab antar role (model `Post`/`Comment` sudah ada); CRUD thread + balasan.
+1. ~~**Forum PKL**~~ — **SELESAI** (v2.5 Fase 28).
 2. ~~**Polish**: dashboard ringkas per-role; rapikan role `industri` vs `mitra`~~ ✅ **selesai** (dashboard per-role §26; role `mitra` dihapus §25).

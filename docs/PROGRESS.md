@@ -487,11 +487,37 @@ Batch permintaan lapangan ke-4: 13 butir dari user. Direncanakan lengkap di [`do
 
 **Belum:** verifikasi manual di browser (kartu Rate & roster di 2 role, alur presensi diwakilkan, lencana Alpha pada tanggal lampau, seam border kartu jurusan di 375/768/1366px); **tidak ada fase v2.4 yang tersisa.**
 
+### 55. Forum PKL (v2.5 Fase 28) — thread + tag `#` + moderasi
+
+Sisa rencana lama dari roadmap v2 (`Forum PKL ⏳ prioritas rendah`) akhirnya digarap. Direncanakan lebih dulu di [`docs/v2.5/`](v2.5/) dengan **tiga opsi skema** dibandingkan terbuka; user memilih Opsi B (thread berjudul) + tag bebas + kontrol admin.
+
+**Pondasinya ternyata sudah ada dan tidak pernah dipakai:** model `Post` & `Comment` beserta migrasinya ada sejak skema awal, tapi `grep -rl "Post::|Comment::" app/Http routes/ resources/js` mengembalikan **kosong** — nol controller, rute, halaman, seeder.
+
+- **Tag ternormalisasi (`tags` + pivot `post_tag`), BUKAN kolom JSON.** Alasannya bukan kerapian: interaksi inti forum adalah *"tampilkan thread ber-#absen, halaman 2"*, jadi penyaringan harus di SQL supaya bisa dipaginasi. Di modul Pengumuman (Fase 18) penyaringan di PHP sah karena himpunan aktif 0-5 baris; di forum bisa ratusan thread, dan menyaring di PHP berarti kehilangan paginasi. Bonus gratis: `withCount` per-tag untuk halaman kelola tag.
+- **`posts.category` DIHAPUS** (string tunggal, tidak bisa menampung tag jamak). Aman karena `select count(*) from posts` = 0 — **diverifikasi sebelum menulis migrasi**, sesuai peringatan di dokumen rencana.
+- **`important` dipakai ulang jadi "sematkan"** — kolom itu sudah ada dan belum dipakai; tidak perlu `is_pinned` baru.
+- **`App\Support\TagName::normalise()`** — satu pintu masuk. Tanpa ini `#Absen` / `#absen` / `#ABSEN` jadi tiga kelompok berbeda dan seluruh gagasan "pengelompokan agar tidak bercampur" gagal di minggu pertama. 8 test unit tanpa DB (37ms).
+- **Tag saran = kolom `is_suggested`, bukan konstanta PHP** — permintaan user adalah admin bisa mengontrol; kalau daftarnya di kode, menambah satu saran berarti deploy ulang. Di-seed 7 tag awal (`#ask`, `#feedback`, `#absen`, `#jurnal`, `#industri`, `#sidang`, `#info`).
+- **Tag TIDAK di-parse dari badan tulisan** ala Twitter: `#1` dan potongan kode akan ikut jadi tag, dan memperbaiki typo di isi akan memindahkan thread ke kelompok lain tanpa disadari penulisnya. Diketik di field chip tersendiri + chip saran yang bisa diklik.
+- **Isi disimpan TEKS BIASA, bukan HTML.** Panduan & Pengumuman pakai rich-text karena penulisnya staf; forum ditulis **siswa**, dan menyimpan HTML dari input siswa membuat keamanan bergantung pada sanitasi klien tidak pernah luput. Ada testnya.
+- **Pembeda hapus vs ubah:** guru/kaprog boleh **menghapus** tulisan siapa pun (itu moderasi), tapi **tidak boleh mengubahnya** — mengubah kalimat orang lain lalu membiarkannya tampil atas nama penulis aslinya adalah pemalsuan. Hanya admin. Ada testnya.
+- **Moderasi ikut di fase yang sama, tidak ditunda.** Forum tanpa moderasi yang sudah dibuka ke siswa berarti tidak ada yang bisa menangani satu komentar tidak pantas — itu tidak bisa "menyusul minggu depan".
+
+**Dua bug ditemukan oleh test, bukan oleh pengguna:**
+1. **`Gate::authorize('deleteComment', $comment)` selalu 403.** Laravel menemukan policy dari **kelas model** yang di-otorisasi, jadi method `deleteComment` di `PostPolicy` tidak pernah ditemukan untuk model `Comment`. Diperbaiki dengan `CommentPolicy` tersendiri; daftar moderator jadi `PostPolicy::MODERATORS` publik agar tetap satu sumber.
+2. **Middleware bawaan Laravel mengubah tag berisi spasi jadi `null`.** `TrimStrings` + `ConvertEmptyStringsToNull` membuat entri `'   '` jadi `null`, lalu aturan `string` menolaknya sebagai galat validasi — padahal maksud user jelas: tag itu tidak jadi dipakai. Diperbaiki jadi `nullable` + action tahan-null.
+
+✅ **`php artisan test` PENUH: 554/554 passed, 2433 assertions.** PHPStan 0 error, Pint + `tsc` + ESLint + Prettier lolos, `npm run build` sukses. Migrasi diterapkan & seeder tag dijalankan di DB lokal.
+
+**Belum:** verifikasi manual di browser.
+
 ---
 
 ## 📍 Current step
 
-**🎉 Batch v2.4 TUNTAS — 10 dari 10 fase diimplementasikan** (rencana lengkapnya di [`docs/v2.4/`](v2.4/), penelusuran per butir permintaan di [`00-TRACEABILITY.md`](v2.4/00-TRACEABILITY.md)).
+**Batch v2.4 TUNTAS (10/10 fase) + Forum PKL (v2.5 Fase 28) selesai.**
+
+**🎉 Batch v2.4 — 10 dari 10 fase diimplementasikan** (rencana lengkapnya di [`docs/v2.4/`](v2.4/), penelusuran per butir permintaan di [`00-TRACEABILITY.md`](v2.4/00-TRACEABILITY.md)).
 
 Yang berubah untuk pengguna:
 
@@ -503,6 +529,7 @@ Yang berubah untuk pengguna:
 | Pengumuman (menu baru) | Modul CRUD untuk admin & guru; tampil di dashboard role sasaran selama periode yang ditentukan (18) |
 | Detail Industri | Guru pembimbing bisa **Edit informasi** industri bimbingannya (25) |
 | Sakit & Izin | Satu tahap approval di Guru Pembimbing; tautan Orang Tua tidak lagi disyaratkan (26) |
+| **Forum PKL** (menu baru, v2.5) | Diskusi berjudul + tag bebas ber-`#` dengan saran (`#ask`, `#feedback`, …); balasan; moderasi hapus/tutup/sematkan oleh guru ke atas; admin bisa mengubah judul siapa pun & mengelola tag |
 
 **Terbukti lewat test, BELUM diverifikasi di browser** — itu satu-satunya yang tersisa, dan satu-satunya yang test tidak bisa buktikan (layout, seam border, alur klik nyata).
 
@@ -520,7 +547,7 @@ Akun kembar dan email lama **tidak** diubah otomatis. `tsconfig.json` mengaktifk
 
 ## ⏭️ Next step — opsi terbaik
 
-1. **Verifikasi manual seluruh batch v2.4 di browser** — ini satu-satunya yang tersisa, dan satu-satunya yang test tidak bisa buktikan (layout, seam border, alur klik nyata). Daftar lengkapnya di butir 3 di bawah.
+1. **Verifikasi manual seluruh batch v2.4 + Forum PKL di browser** — ini satu-satunya yang tersisa, dan satu-satunya yang test tidak bisa buktikan (layout, seam border, alur klik nyata). Daftar lengkapnya di butir 3 di bawah.
 2. ~~Fase 18 — Pengumuman~~ **SELESAI.** Catatan lama: Satu-satunya fase v2.4 yang membawa **migrasi** (tabel `announcements`) → backup DB dulu. Keputusan kunci yang sudah dirancang: target role sebagai kolom JSON dengan `['*']` untuk "semua" (bukan pivot, dan bukan daftar semua role — supaya role baru di masa depan tidak diam-diam dikecualikan dari pengumuman lama), penyaringan target di PHP (bukan `JSON_CONTAINS`, yang tidak ada di SQLite yang dipakai test), dan dibagikan lewat `HandleInertiaRequests::share()` sebagai **lazy prop** yang hanya dieksekusi di rute dashboard. Rencana: `docs/v2.4/18-FASE-18-PENGUMUMAN.md`.
 3. **Rincian verifikasi manual Fase 18–27 di browser** — belum dilakukan sama sekali, semuanya baru terbukti lewat test:
    - Kartu Rate absensi sebagai **admin** dan sebagai **guru pembimbing** (angkanya harus berbeda — itu memang benar, lihat §54).
@@ -528,6 +555,7 @@ Akun kembar dan email lama **tidak** diubah otomatis. `tsconfig.json` mengaktifk
    - Presensikan beberapa murid sekaligus, lalu pastikan mereka pindah ke tab "Sudah" dan Alpha-nya hilang.
    - **Reset absen & jurnal** dengan password benar/salah — pakai data contoh, JANGAN di produksi.
    - Seam border kartu jurusan di 375px / 768px / 1366px setelah `gap-0` (tidak boleh ada garis dobel).
+   - **Forum PKL:** buat diskusi dengan tag `#Absen` (huruf besar) → tersimpan sebagai `#absen`; saring lewat chip tag; balas; login guru → hapus balasan orang lain BISA, ubah judulnya TIDAK; login admin → ubah judul orang lain BISA + halaman Kelola Tag Forum.
    - **Fase 18:** buat pengumuman ber-target Murid → login murid (muncul di dashboard) & login orang tua (TIDAK muncul); ubah `ends_at` jadi kemarin → hilang; centang "All User" → checkbox lain non-aktif.
    - **Fase 25:** login guru → buka detail industri bimbingannya → "Edit informasi" → ubah alamat → Simpan (halaman tidak melompat ke atas); pastikan guru TIDAK melihat tombol Edit besar di header.
    - **Fase 26:** siswa TANPA akun orang tua mengajukan sakit **dan** izin → keduanya masuk; login guru → keduanya langsung ada di Inbox; setujui → baris presensi `sakit`/`izin` terbentuk dan **foto bukti tampil** di rekap absen (kalau fotonya rusak, `getRawOriginal('bukti')` bocor jadi URL); login orang tua → menu Inbox Persetujuan **tidak ada**.

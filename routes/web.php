@@ -14,6 +14,7 @@ use App\Http\Controllers\ClassController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartemenController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\ForumController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\IndustryController;
 use App\Http\Controllers\JournalMonitorController;
@@ -32,6 +33,7 @@ use App\Http\Controllers\SakitIzinController;
 use App\Http\Controllers\StatistikController;
 use App\Http\Controllers\StreakController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TagController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\VerificationController;
 use App\Http\Controllers\WakasekController;
@@ -261,6 +263,30 @@ Route::middleware('auth')->group(function () {
             ->parameters(['pengumuman' => 'announcement'])
             ->except('show')
             ->names('announcements');
+    });
+
+    // Forum PKL — semua role boleh membaca & menulis. Rute literal
+    // (forum-tag) didefinisikan di grup terpisah SEBELUM forum/{post} agar
+    // tidak tertangkap sebagai parameter, pola yang sama dengan
+    // students/export di atas.
+    Route::middleware('role:admin')->group(function (): void {
+        Route::get('forum-tag', [TagController::class, 'index'])->name('tags.index');
+        Route::patch('forum-tag/{tag}', [TagController::class, 'update'])->name('tags.update');
+        Route::delete('forum-tag/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
+    });
+
+    Route::get('forum', [ForumController::class, 'index'])->name('forum.index');
+    Route::post('forum', [ForumController::class, 'store'])->name('forum.store');
+    Route::get('forum/{post}', [ForumController::class, 'show'])->name('forum.show');
+    Route::patch('forum/{post}', [ForumController::class, 'update'])->name('forum.update');
+    Route::delete('forum/{post}', [ForumController::class, 'destroy'])->name('forum.destroy');
+    Route::post('forum/{post}/komentar', [ForumController::class, 'storeComment'])->name('forum.comments.store');
+    Route::delete('forum/komentar/{comment}', [ForumController::class, 'destroyComment'])->name('forum.comments.destroy');
+
+    // Moderasi thread — guru/kaprog/admin. Otorisasi sebenarnya di PostPolicy.
+    Route::middleware('role:admin|kaprog|guru')->group(function (): void {
+        Route::patch('forum/{post}/tutup', [ForumController::class, 'toggleClose'])->name('forum.toggle-close');
+        Route::patch('forum/{post}/sematkan', [ForumController::class, 'togglePin'])->name('forum.toggle-pin');
     });
 
     // Approval engine — approve/reject (pembimbing, guru, kaprog).
