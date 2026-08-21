@@ -9,6 +9,21 @@ use App\Models\User;
 class IndustryPolicy
 {
     /**
+     * Ubah PROFIL industri (nama, bidang, alamat, jam kerja, durasi) — bukan
+     * relasinya (guru pembimbing / pembimbing industri), yang tetap wewenang
+     * admin & kaprog lewat halaman edit penuh.
+     *
+     * Aturannya sengaja identik dengan updateCoordinates: kalau seseorang
+     * sudah boleh memindahkan titik absensi sebuah industri, ia boleh
+     * memperbaiki alamatnya. Method terpisah agar maksudnya terbaca di titik
+     * panggil dan agar aturannya bisa berbeda kelak tanpa mengubah yang lain.
+     */
+    public function updateProfile(User $user, Industry $industry): bool
+    {
+        return $this->updateCoordinates($user, $industry);
+    }
+
+    /**
      * Tentukan apakah user bisa mengupdate koordinat/radius industri.
      */
     public function updateCoordinates(User $user, Industry $industry): bool

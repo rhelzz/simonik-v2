@@ -16,6 +16,7 @@ import type { LucideIcon } from 'lucide-react';
 import { index as financeIndex } from '@/actions/App/Http/Controllers/FinanceController';
 import { index as partnershipsIndex } from '@/actions/App/Http/Controllers/PartnershipController';
 import { index as statistikIndex } from '@/actions/App/Http/Controllers/StatistikController';
+import { AnnouncementBoard } from '@/components/announcements/announcement-board';
 import {
     HeroGreeting,
     RateCard,
@@ -81,6 +82,8 @@ export default function DashboardWakasek({
                 menjalani PKL dari <strong>{stats.industries}</strong> industri
                 mitra.
             </HeroGreeting>
+
+            <AnnouncementBoard />
 
             <section className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <StatCard

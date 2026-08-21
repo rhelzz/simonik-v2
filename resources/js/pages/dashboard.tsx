@@ -7,6 +7,7 @@ import {
     Users,
     Workflow,
 } from 'lucide-react';
+import { AnnouncementBoard } from '@/components/announcements/announcement-board';
 import {
     AttendanceTrendCards,
     HeroGreeting,
@@ -47,6 +48,8 @@ export default function Dashboard({
                 menjalani PKL dari total {stats.students} siswa terdaftar.
                 Pantau perkembangan mereka di sini.
             </HeroGreeting>
+
+            <AnnouncementBoard />
 
             <section className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
                 <StatCard

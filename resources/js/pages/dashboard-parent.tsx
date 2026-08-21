@@ -3,6 +3,7 @@ import { CalendarCheck, NotebookPen, UsersRound } from 'lucide-react';
 import { show as assessmentShow } from '@/actions/App/Http/Controllers/AssessmentController';
 import { show as attendanceShow } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { show as journalShow } from '@/actions/App/Http/Controllers/JournalMonitorController';
+import { AnnouncementBoard } from '@/components/announcements/announcement-board';
 import {
     HeroGreeting,
     statusLabels,
@@ -40,6 +41,8 @@ export default function DashboardParent({
                     ? `Pantau perkembangan PKL ${children.length === 1 ? 'anak' : `${children.length} anak`} Anda di sini.`
                     : 'Belum ada data anak yang terhubung dengan akun Anda.'}
             </HeroGreeting>
+
+            <AnnouncementBoard />
 
             {children.length === 0 ? (
                 <section className="mt-5 flex flex-col items-center gap-2 rounded-3xl bg-surface py-16 text-center">

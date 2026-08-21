@@ -2,9 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Announcement;
 use App\Models\Approval;
 use App\Models\Industry;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -56,6 +59,17 @@ class HandleInertiaRequests extends Middleware
                 },
                 'accountNotice' => fn () => $this->accountNotice($request),
             ],
+            // Pengumuman aktif untuk user ini. Closure = LAZY PROP: share()
+            // dieksekusi di SETIAP request Inertia, jadi kueri hanya boleh
+            // jalan di halaman yang memakainya.
+            //
+            // Namanya spesifik ('dashboardAnnouncements', bukan
+            // 'announcements') karena prop bersama berlaku di SEMUA halaman
+            // dan akan bertabrakan dengan prop milik halaman — halaman daftar
+            // pengumuman punya propnya sendiri bernama `announcements`.
+            'dashboardAnnouncements' => fn (): array => $request->routeIs('dashboard')
+                ? $this->announcementsFor($request->user())
+                : [],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
@@ -71,6 +85,39 @@ class HandleInertiaRequests extends Middleware
      * tampil kosong dan terbaca seperti fiturnya belum jadi. Ditampilkan
      * sebagai spanduk global agar penyebabnya jelas, bukan ditebak.
      */
+    /**
+     * Pengumuman yang sedang tayang dan ditujukan untuk user ini.
+     *
+     * take(5) SETELAH penyaringan: dashboard bukan arsip. Kalau ada 30
+     * pengumuman aktif, 5 terbaru yang relevan sudah lebih dari cukup.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function announcementsFor(?User $user): array
+    {
+        if ($user === null) {
+            return [];
+        }
+
+        return Announcement::query()
+            ->activeOn(Carbon::today())
+            ->with('author:id,name')
+            ->latest('starts_at')
+            ->latest('id')
+            ->get()
+            ->filter(fn (Announcement $announcement): bool => $announcement->isFor($user))
+            ->take(5)
+            ->map(fn (Announcement $announcement): array => [
+                'id' => $announcement->id,
+                'title' => $announcement->title,
+                'body' => $announcement->body,
+                'author' => $announcement->author?->name,
+                'until' => $announcement->ends_at->translatedFormat('d M Y'),
+            ])
+            ->values()
+            ->all();
+    }
+
     private function accountNotice(Request $request): ?string
     {
         $user = $request->user();

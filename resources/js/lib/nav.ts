@@ -20,6 +20,7 @@ import {
     LayoutDashboard,
     ListChecks,
     MailCheck,
+    Megaphone,
     MessageCircle,
     MessagesSquare,
     Network,
@@ -33,6 +34,7 @@ import {
     Wallet,
 } from 'lucide-react';
 import { index as activitiesIndex } from '@/actions/App/Http/Controllers/ActivityController';
+import { index as announcementsIndex } from '@/actions/App/Http/Controllers/AnnouncementController';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/ApprovalController';
 import { index as aspectsIndex } from '@/actions/App/Http/Controllers/AspectController';
 import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
@@ -213,6 +215,12 @@ export const navSections: NavSection[] = [
                 label: 'Panduan PKL',
                 icon: BookOpen,
                 href: guidesIndex.url(),
+            },
+            {
+                label: 'Pengumuman',
+                icon: Megaphone,
+                href: announcementsIndex.url(),
+                roles: ['admin', 'guru'],
             },
             { label: 'Forum PKL', icon: MessagesSquare },
         ],

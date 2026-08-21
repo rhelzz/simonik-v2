@@ -12,6 +12,7 @@ import { index as activitiesIndex } from '@/actions/App/Http/Controllers/Activit
 import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
 import { index as attendanceIndex } from '@/actions/App/Http/Controllers/AttendanceController';
 import { index as certificatesIndex } from '@/actions/App/Http/Controllers/CertificateController';
+import { AnnouncementBoard } from '@/components/announcements/announcement-board';
 import type { BadgeData } from '@/components/badges/badge-atom';
 import { BadgeShowcase } from '@/components/badges/badge-showcase';
 import {
@@ -72,6 +73,8 @@ export default function DashboardStudent({
                     ? `Anda sedang PKL di ${profile.industry}. Jangan lupa absen dan isi jurnal hari ini.`
                     : 'Selamat datang. Pastikan absen dan jurnal harianmu terisi.'}
             </HeroGreeting>
+
+            <AnnouncementBoard />
 
             {/* Quick actions */}
             <section className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">

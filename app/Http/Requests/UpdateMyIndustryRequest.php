@@ -23,8 +23,12 @@ class UpdateMyIndustryRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'bidang' => ['required', 'string', 'max:255'],
             'alamat' => ['required', 'string'],
-            'longitude' => ['required', 'string', 'max:255'],
-            'latitude' => ['required', 'string', 'max:255'],
+            // Opsional sejak v2.2 Fase 11 (koordinat industri dilonggarkan di
+            // 5 titik). Berkas ini tertinggal, sehingga pembimbing industri
+            // yang industrinya belum berkoordinat TIDAK BISA menyimpan
+            // profilnya sama sekali. Diperbaiki di v2.4 Fase 25.
+            'longitude' => ['nullable', 'string', 'max:255'],
+            'latitude' => ['nullable', 'string', 'max:255'],
             'radius' => ['required', 'integer', 'min:10', 'max:10000'],
             'jam_masuk' => ['nullable', 'date_format:H:i'],
             'jam_pulang' => ['nullable', 'date_format:H:i', 'after:jam_masuk'],

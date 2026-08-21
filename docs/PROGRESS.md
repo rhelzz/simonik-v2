@@ -387,7 +387,7 @@ Empat permintaan lapangan lanjutan, direncanakan di `docs/v2.2/` (README + 4 dok
 
 **Belum:** verifikasi manual di browser (belum dilakukan); deploy ke produksi Dokploy (auto-migrate saat `git push`, tanpa backup otomatis — backup manual DB MySQL disarankan sebelum push batch ini).
 
-### 54. Planning v2.4 (10 fase) + Fase 19–24, 26 & 27 selesai
+### 54. Batch v2.4 — planning 10 fase + implementasi SELURUHNYA (18–27)
 
 Batch permintaan lapangan ke-4: 13 butir dari user. Direncanakan lengkap di [`docs/v2.4/`](v2.4/) (README + [penelusuran permintaan](v2.4/00-TRACEABILITY.md) + 10 dokumen fase) sebelum digarap.
 
@@ -463,46 +463,74 @@ Batch permintaan lapangan ke-4: 13 butir dari user. Direncanakan lengkap di [`do
 - ✅ **`php artisan test` PENUH: 499/499 passed, 2131 assertions.** PHPStan 0 error di seluruh `app/`. Pint + `tsc` + ESLint + Prettier (seluruh `resources/js/`) lolos.
 - 📄 **`docs/ROADMAP.md` diperbarui** — aturan approval yang berlaku dicatat sebagai blok tersendiri, termasuk konsekuensi pencabutan inbox orang tua dan alasan bukti tetap wajib.
 
-**Rantai halaman Data Absen tuntas (21 → 22 → 23 → 24 → 27); kedua fitur reset tuntas (19 → 20); aturan approval disederhanakan (26).**
+**Fase 18 — Pengumuman (SATU-SATUNYA fase v2.4 dengan migrasi).** Tabel `announcements` + modul CRUD untuk admin & guru pembimbing; tampil di dashboard role sasaran selama periode yang ditentukan.
+- **Target role = kolom JSON dengan `['*']` untuk "semua"**, bukan tabel pivot dan bukan daftar semua role. Menyimpan daftar lengkap akan diam-diam MENGECUALIKAN role yang ditambahkan di kemudian hari dari pengumuman lama. Opsinya persis lima yang diminta (All User, Murid, Guru Pembimbing, Pembimbing Industri, Orangtua) dengan label yang dipakai peminta sendiri — bukan nama role internal.
+- **Penyaringan target di PHP, bukan `JSON_CONTAINS`** — fungsi itu tidak ada di SQLite yang dipakai test suite. Himpunan pengumuman AKTIF per hari realistis 0-5 baris, jadi biayanya nol praktis; tuas upgrade ditulis sebagai komentar `ponytail:`.
+- **Dibagikan lewat `HandleInertiaRequests::share()` sebagai LAZY PROP** (closure) yang hanya mengeksekusi kueri saat `routeIs('dashboard')` — `share()` jalan di SETIAP request Inertia. Penempatannya tetap eksplisit satu baris di 6 berkas dashboard: memasangnya di `app-layout` akan memunculkan pengumuman di semua halaman, padahal yang diminta "muncul di dashboard".
+- **Periode inklusif di kedua ujung** — pengumuman ber-`ends_at` hari ini masih tampil hari ini (itu yang diharapkan operator saat mengetik "sampai 30 Agustus"). Tidak ada kolom `is_active`; status Tayang/Terjadwal/Berakhir **diturunkan** dari kedua tanggal, jadi tidak mungkin tidak sinkron.
+- Guru hanya berwenang atas pengumuman buatannya sendiri; `edit`/`update`/`destroy` diawali cek cakupan → 403. Menyembunyikan dari daftar saja tidak cukup karena URL bisa ditebak — ada testnya.
+- Isi pengumuman memakai `RichTextEditor` yang sudah ada, dirender lewat `RichText` yang menyaring HTML dengan **DOMPurify** — penting karena isinya dibaca semua role.
+- **Dua bug ditemukan oleh test, bukan oleh pengguna:**
+  1. `passedValidation()` adalah hook yang SALAH untuk menormalkan `['*','siswa']` → `['*']`: `validated()` mengembalikan data yang sudah dikumpulkan validator, jadi `merge()` sesudahnya tidak pernah sampai ke data yang disimpan. Diperbaiki ke `prepareForValidation()`.
+  2. **Tabrakan nama prop:** prop bersama `announcements` bentrok dengan prop paginator milik halaman daftar pengumuman. Prop global diberi nama spesifik `dashboardAnnouncements` — prop bersama berlaku di semua halaman, jadi namanya yang harus mengalah.
+- ✅ **`php artisan test` PENUH: 512/512 passed, 2261 assertions.** PHPStan 0 error di seluruh `app/`. Pint + `tsc` + ESLint + Prettier lolos. 13/13 `AnnouncementTest`. Migrasi diterapkan ke DB lokal; `npm run build` dijalankan (halaman baru harus masuk manifest Vite — tanpa itu test render halaman baru gagal 500).
 
-**Belum:** verifikasi manual di browser (kartu Rate & roster di 2 role, alur presensi diwakilkan, lencana Alpha pada tanggal lampau, seam border kartu jurusan di 375/768/1366px); 2 fase v2.4 sisanya (18 Pengumuman, 25 guru edit industri).
+**Fase 25 — guru pembimbing bisa mengubah info industri bimbingannya.** Edit inline di seksi "Informasi Industri" halaman detail industri (tombol Edit informasi → Simpan/Batal), bukan halaman terpisah — mengikuti pola `CoordinateEditor` yang sudah ada tepat di bawahnya.
+- **Kemampuan baru `updateProfile` di `IndustryPolicy`, BUKAN melonggarkan `can.manage`.** Prop `manage` mengendalikan tombol menuju halaman edit **penuh** yang memuat dropdown `teacher_id` dan `pembimbing_id` — melonggarkannya berarti seorang guru bisa memindahkan industri ke guru lain atau melepas dirinya sendiri, dan itu memindahkan akses SELURUH siswa di industri tersebut. Aturan `updateProfile` sengaja identik dengan `updateCoordinates`: kalau seseorang sudah boleh memindahkan titik absensi sebuah industri, ia boleh memperbaiki alamatnya.
+- **Relasi dikunci lewat `validated()`, bukan lewat UI.** `UpdateIndustryProfileRequest` tidak memuat `teacher_id`/`pembimbing_id` sama sekali, sehingga payload hasil tulis-tangan dari devtools tidak bisa menyentuhnya. Ada testnya — menyembunyikan field di UI bukan otorisasi.
+- **Koordinat dikeluarkan dari form profil** meski berada di seksi yang sama: `CoordinateEditor` sudah mengurusnya. Dua form yang mengubah kolom yang sama di satu halaman berarti yang disimpan belakangan menang diam-diam. Ada testnya.
+- `preserveScroll` pada simpan — halaman detail industri panjang, tanpa itu menyimpan seksi teratas melempar operator ke atas dan terasa seperti aplikasi reset.
+- **Bug tetangga diperbaiki (ditemukan saat planning, bukan saat coding):** `UpdateMyIndustryRequest` masih mewajibkan `latitude`/`longitude` padahal **Fase 11 (v2.2)** melonggarkannya di 5 titik lain — akibatnya pembimbing industri yang industrinya belum berkoordinat **tidak bisa menyimpan profilnya sama sekali**. Dilonggarkan jadi `nullable` + test regresi di `MyIndustryTest`.
+- ✅ **`php artisan test` PENUH: 522/522 passed, 2295 assertions.** PHPStan 0 error di seluruh `app/`. Pint + `tsc` + ESLint + Prettier lolos. `npm run build` sukses.
+
+**🎉 BATCH v2.4 TUNTAS — 10 dari 10 fase.** Rantai halaman Data Absen (21 → 22 → 23 → 24 → 27), kedua fitur reset (19 → 20), aturan approval disederhanakan (26), modul Pengumuman (18), dan guru bisa mengubah info industrinya (25).
+
+**Belum:** verifikasi manual di browser (kartu Rate & roster di 2 role, alur presensi diwakilkan, lencana Alpha pada tanggal lampau, seam border kartu jurusan di 375/768/1366px); **tidak ada fase v2.4 yang tersisa.**
 
 ---
 
 ## 📍 Current step
-**Batch v2.4 berjalan — Fase 21–24 & 27 selesai (rantai halaman Data Absen tuntas); 5 fase sisa sudah terencana penuh di [`docs/v2.4/`](v2.4/).** Dashboard admin tanpa tabel "Siswa terbaru". Halaman Data Absen kini punya: kartu Rate absensi (ter-scope per role, rumusnya dipakai bersama dashboard lewat trait `SummarizesParticipation`), panel "Presensi harian" dengan tab Belum/Sudah + pemilih tanggal, label **Alpha** turunan untuk tanggal lampau, tombol presensi diwakilkan (`mode = 'proxy'`, tanpa geolokasi & foto), dan kartu jurusan tanpa gap.
 
-**Urutan garap berikutnya:** **18** (pengumuman — satu-satunya fase v2.4 yang membawa migrasi), lalu **25** (guru edit info industri).
+**🎉 Batch v2.4 TUNTAS — 10 dari 10 fase diimplementasikan** (rencana lengkapnya di [`docs/v2.4/`](v2.4/), penelusuran per butir permintaan di [`00-TRACEABILITY.md`](v2.4/00-TRACEABILITY.md)).
 
-⚠️ **Reset data absen DAN jurnal sudah aktif untuk role admin.** Menghapus permanen, tanpa undo, tanpa audit log. Backup DB MySQL manual sebelum push ke produksi Dokploy (auto-migrate tanpa backup otomatis), dan beri tahu operator bahwa tombol ini tidak bisa dibatalkan sebelum mereka menemukannya sendiri.
+Yang berubah untuk pengguna:
 
-**Satu keputusan yang masih perlu dikonfirmasi ke user sebelum Fase 26:** permintaan aslinya hanya menyebut **sakit**, tapi jawaban "satu tahap saja" diberlakukan juga ke **izin** — superset yang menyebabkan Inbox Persetujuan orang tua kosong permanen (menunya ikut dicabut). Cara mengembalikan izin ke dua tahap ada di `docs/v2.4/26-*.md` §1 (±15 baris).
+| Modul | Perubahan |
+|---|---|
+| Dashboard admin | Tabel "Siswa terbaru" dihapus (21) |
+| Data Absen (`/monitoring/absen`) | Kartu **Rate absensi** ter-scope per role (22) · kartu jurusan tanpa gap (22) · panel **Presensi harian** dengan tab Belum/Sudah + pemilih tanggal (23) · tombol **Presensikan** murid terpilih tanpa geolokasi & foto (24) · label **Alpha** untuk tanggal lampau (27) · tombol **Reset data absen** (19) |
+| Data Jurnal (`/monitoring/jurnal`) | Tombol **Reset data jurnal** (20) |
+| Pengumuman (menu baru) | Modul CRUD untuk admin & guru; tampil di dashboard role sasaran selama periode yang ditentukan (18) |
+| Detail Industri | Guru pembimbing bisa **Edit informasi** industri bimbingannya (25) |
+| Sakit & Izin | Satu tahap approval di Guru Pembimbing; tautan Orang Tua tidak lagi disyaratkan (26) |
 
-### Riwayat: batch v2.2 selesai (Fase 10–13) Breadcrumb Data Absen konsisten, koordinat industri & profil orang tua kini opsional (hanya Nama wajib), guru pembimbing bisa di-override per-siswa dengan akses yang ikut berpindah.
+**Terbukti lewat test, BELUM diverifikasi di browser** — itu satu-satunya yang tersisa, dan satu-satunya yang test tidak bisa buktikan (layout, seam border, alur klik nyata).
 
-**Catatan deploy:** wajib `npm run build`. Akun kembar dan email lama **tidak** diubah otomatis. `tsconfig.json` kini mengaktifkan `allowImportingTsExtensions` (dipakai pemeriksa mandiri `lib/grid.check.ts`).
+### ⚠️ Sebelum deploy ke produksi
 
-**Sisa verifikasi di browser** (belum dilakukan sama sekali):
-1. Unduh template siswa → isi 2 baris → unggah → data masuk.
-2. Tambahkan guru yang sudah ada sebagai kaprog → login dengan akunnya → kedua menu terlihat.
-3. Buat akun baru → sufiks `@simonik.local` muncul di form.
-4. Tetapkan industri dari form pembimbing → spanduk "belum ditautkan" hilang.
-5. Pilih beberapa siswa → hapus massal → cek tabel di lebar 1366px.
-6. Buka **Data Siswa → Impor** → tempel beberapa baris dari Excel → `Ctrl+D` untuk mengisi kolom Kelas → **Periksa** → **Simpan**.
+1. **Backup DB MySQL manual.** Deploy Dokploy auto-migrate saat `git push` tanpa backup otomatis, dan batch ini membawa migrasi baru (`announcements`).
+2. **Wajib `npm run build`** — banyak halaman & komponen baru.
+3. **Beri tahu sekolah dua perubahan yang tidak bisa dibatalkan sendiri:**
+   - Tombol **Reset data absen / jurnal** (admin) menghapus **permanen**, tanpa undo dan tanpa audit log. Pratinjau + password akun adalah pengamannya; backup terjadwal adalah mitigasi sebenarnya.
+   - **Orang Tua kehilangan menu Inbox Persetujuan.** Sakit/Izin kini satu tahap di Guru Pembimbing, sehingga antrean orang tua akan selalu kosong. Mereka tetap melihat hasilnya di dashboard anak.
 
----
+### Catatan lama yang masih berlaku
+
+Akun kembar dan email lama **tidak** diubah otomatis. `tsconfig.json` mengaktifkan `allowImportingTsExtensions` (dipakai pemeriksa mandiri `lib/grid.check.ts`).
 
 ## ⏭️ Next step — opsi terbaik
 
-1. **Fase 18 v2.4 — Pengumuman.** Satu-satunya fase v2.4 yang membawa **migrasi** (tabel `announcements`) → backup DB dulu. Keputusan kunci yang sudah dirancang: target role sebagai kolom JSON dengan `['*']` untuk "semua" (bukan pivot, dan bukan daftar semua role — supaya role baru di masa depan tidak diam-diam dikecualikan dari pengumuman lama), penyaringan target di PHP (bukan `JSON_CONTAINS`, yang tidak ada di SQLite yang dipakai test), dan dibagikan lewat `HandleInertiaRequests::share()` sebagai **lazy prop** yang hanya dieksekusi di rute dashboard. Rencana: `docs/v2.4/18-FASE-18-PENGUMUMAN.md`.
-2. **Verifikasi manual Fase 19–24, 26 & 27 di browser** — belum dilakukan sama sekali, semuanya baru terbukti lewat test:
+1. **Verifikasi manual seluruh batch v2.4 di browser** — ini satu-satunya yang tersisa, dan satu-satunya yang test tidak bisa buktikan (layout, seam border, alur klik nyata). Daftar lengkapnya di butir 3 di bawah.
+2. ~~Fase 18 — Pengumuman~~ **SELESAI.** Catatan lama: Satu-satunya fase v2.4 yang membawa **migrasi** (tabel `announcements`) → backup DB dulu. Keputusan kunci yang sudah dirancang: target role sebagai kolom JSON dengan `['*']` untuk "semua" (bukan pivot, dan bukan daftar semua role — supaya role baru di masa depan tidak diam-diam dikecualikan dari pengumuman lama), penyaringan target di PHP (bukan `JSON_CONTAINS`, yang tidak ada di SQLite yang dipakai test), dan dibagikan lewat `HandleInertiaRequests::share()` sebagai **lazy prop** yang hanya dieksekusi di rute dashboard. Rencana: `docs/v2.4/18-FASE-18-PENGUMUMAN.md`.
+3. **Rincian verifikasi manual Fase 18–27 di browser** — belum dilakukan sama sekali, semuanya baru terbukti lewat test:
    - Kartu Rate absensi sebagai **admin** dan sebagai **guru pembimbing** (angkanya harus berbeda — itu memang benar, lihat §54).
    - Panel "Presensi harian": tab Belum/Sudah, ganti tanggal, lencana **Alpha** merah pada tanggal lampau.
    - Presensikan beberapa murid sekaligus, lalu pastikan mereka pindah ke tab "Sudah" dan Alpha-nya hilang.
    - **Reset absen & jurnal** dengan password benar/salah — pakai data contoh, JANGAN di produksi.
    - Seam border kartu jurusan di 375px / 768px / 1366px setelah `gap-0` (tidak boleh ada garis dobel).
+   - **Fase 18:** buat pengumuman ber-target Murid → login murid (muncul di dashboard) & login orang tua (TIDAK muncul); ubah `ends_at` jadi kemarin → hilang; centang "All User" → checkbox lain non-aktif.
+   - **Fase 25:** login guru → buka detail industri bimbingannya → "Edit informasi" → ubah alamat → Simpan (halaman tidak melompat ke atas); pastikan guru TIDAK melihat tombol Edit besar di header.
    - **Fase 26:** siswa TANPA akun orang tua mengajukan sakit **dan** izin → keduanya masuk; login guru → keduanya langsung ada di Inbox; setujui → baris presensi `sakit`/`izin` terbentuk dan **foto bukti tampil** di rekap absen (kalau fotonya rusak, `getRawOriginal('bukti')` bocor jadi URL); login orang tua → menu Inbox Persetujuan **tidak ada**.
-3. **Fase 25** (guru pembimbing bisa edit info industri bimbingannya) — mandiri, tidak bergantung fase lain. Sekalian memperbaiki bug tetangga yang sudah ditemukan: `UpdateMyIndustryRequest` masih mewajibkan koordinat padahal Fase 11 (v2.2) membuatnya opsional, sehingga pembimbing industri tanpa koordinat **tidak bisa menyimpan profilnya**.
 4. ~~Fase 26 (sakit/izin satu tahap)~~ **SELESAI** — dikonfirmasi user bahwa izin pun tanpa orang tua sama sekali. **Perlu diberitahukan ke sekolah:** Orang Tua kehilangan menu Inbox Persetujuan (antreannya jadi kosong permanen). Mereka tetap melihat hasilnya di dashboard anak. Kalau ternyata sekolah ingin Orang Tua tetap *melihat* pengajuan tanpa menyetujui, itu halaman baca-saja terpisah — fase baru, jangan diselundupkan ke Fase 26.
 5. **Verifikasi manual batch v2.2 di browser** (breadcrumb Data Absen, tambah industri/orang tua tanpa koordinat/akun, dropdown guru pembimbing di Plotting).
 6. **Verifikasi manual enam alur roadmap v2** (impor Excel, multi-peran, dst. — lihat entri §52) — masih belum dilakukan sama sekali.

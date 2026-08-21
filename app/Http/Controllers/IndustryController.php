@@ -6,6 +6,7 @@ use App\Exports\IndustryExport;
 use App\Http\Controllers\Concerns\HandlesImportExport;
 use App\Http\Requests\StoreIndustryRequest;
 use App\Http\Requests\UpdateIndustryCoordinatesRequest;
+use App\Http\Requests\UpdateIndustryProfileRequest;
 use App\Http\Requests\UpdateIndustryRequest;
 use App\Imports\IndustryImport;
 use App\Models\Industry;
@@ -165,8 +166,30 @@ class IndustryController extends Controller
             'can' => [
                 'manage' => $user->hasAnyRole(['admin', 'kaprog']),
                 'updateCoordinates' => $user->can('updateCoordinates', $industry),
+                // Kemampuan TERPISAH dari `manage`: melonggarkan `manage`
+                // akan memberi guru halaman edit penuh, termasuk dropdown
+                // teacher_id — ia bisa memindahkan industri ke guru lain atau
+                // melepas dirinya sendiri.
+                'updateProfile' => $user->can('updateProfile', $industry),
             ],
         ]);
+    }
+
+    /**
+     * Perbarui profil industri langsung dari halaman detail.
+     *
+     * Memberi guru pembimbing (dan pembimbing industri) jalan memperbaiki data
+     * industrinya sendiri tanpa membuka halaman edit penuh milik admin.
+     */
+    public function updateProfile(UpdateIndustryProfileRequest $request, Industry $industry): RedirectResponse
+    {
+        Gate::authorize('updateProfile', $industry);
+
+        // validated(), bukan all(): inilah yang menjamin teacher_id atau
+        // pembimbing_id yang diselundupkan lewat payload tidak ikut tersimpan.
+        $industry->update($request->validated());
+
+        return back()->with('success', 'Informasi industri berhasil diperbarui.');
     }
 
     /**

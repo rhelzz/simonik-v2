@@ -127,4 +127,36 @@ class MyIndustryTest extends TestCase
 
         $this->actingAs($user)->get('/industri-saya/edit')->assertNotFound();
     }
+
+    /**
+     * v2.4 Fase 25 — REGRESI. Fase 11 (v2.2) melonggarkan koordinat industri
+     * jadi opsional di 5 titik, tapi UpdateMyIndustryRequest tertinggal masih
+     * `required` — sehingga pembimbing industri yang industrinya belum
+     * berkoordinat tidak bisa menyimpan profilnya sama sekali.
+     */
+    public function test_pembimbing_can_update_profile_without_coordinates(): void
+    {
+        $user = $this->user('pembimbing');
+        $pembimbing = Pembimbing::factory()->create(['user_id' => $user->id]);
+        Industry::factory()->create([
+            'pembimbing_id' => $pembimbing->id,
+            'latitude' => null,
+            'longitude' => null,
+        ]);
+
+        $this->actingAs($user)
+            ->put('/industri-saya', [
+                'name' => 'PT Tanpa Koordinat',
+                'bidang' => 'Jasa',
+                'alamat' => 'Jl. Tanpa Titik',
+                'radius' => 100,
+                'jam_masuk' => '08:00',
+                'jam_pulang' => '16:00',
+                'duration' => '6',
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('industries', ['name' => 'PT Tanpa Koordinat']);
+    }
 }

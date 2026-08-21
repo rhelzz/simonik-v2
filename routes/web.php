@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AspectController;
 use App\Http\Controllers\AssessmentController;
@@ -253,6 +254,15 @@ Route::middleware('auth')->group(function () {
         Route::get('streak', StreakController::class)->name('streak');
     });
 
+    // Pengumuman — dibuat admin & guru pembimbing, tampil di dashboard role
+    // sasaran. `show` tidak dibutuhkan: isinya sudah tampil penuh di dashboard.
+    Route::middleware('role:admin|guru')->group(function (): void {
+        Route::resource('pengumuman', AnnouncementController::class)
+            ->parameters(['pengumuman' => 'announcement'])
+            ->except('show')
+            ->names('announcements');
+    });
+
     // Approval engine — approve/reject (pembimbing, guru, kaprog).
     // Orang Tua dicabut sejak v2.4 Fase 26: Sakit/Izin jadi satu tahap, dan
     // itu satu-satunya jenis pengajuan yang dulu masuk antrean orang tua —
@@ -270,6 +280,13 @@ Route::middleware('auth')->group(function () {
         Route::get('industries', [IndustryController::class, 'index'])->name('industries.index');
         Route::get('industries/{industry}', [IndustryController::class, 'show'])->name('industries.show');
     });
+
+    // Update profil industri (nama, bidang, alamat, jam kerja) langsung dari
+    // halaman detail. Middleware hanya menyaring role yang jelas tidak
+    // berkepentingan — yang mengamankan adalah Gate per-industri di controller.
+    Route::patch('industries/{industry}/profil', [IndustryController::class, 'updateProfile'])
+        ->middleware('role:admin|kaprog|guru|pembimbing')
+        ->name('industries.update-profile');
 
     // Update koordinat/radius industri (admin, kaprog, guru, pembimbing).
     Route::patch('industries/{industry}/coordinates', [IndustryController::class, 'updateCoordinates'])

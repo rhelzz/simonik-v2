@@ -14,6 +14,7 @@ import type { LucideIcon } from 'lucide-react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/ApprovalController';
 import { index as industriesIndex } from '@/actions/App/Http/Controllers/IndustryController';
 import { index as placementsIndex } from '@/actions/App/Http/Controllers/PlacementController';
+import { AnnouncementBoard } from '@/components/announcements/announcement-board';
 import {
     HeroGreeting,
     RateCard,
@@ -67,6 +68,8 @@ export default function DashboardKaprog({
                     </>
                 )}
             </HeroGreeting>
+
+            <AnnouncementBoard />
 
             <section className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <StatCard

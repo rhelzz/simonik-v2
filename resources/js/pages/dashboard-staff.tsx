@@ -8,6 +8,7 @@ import {
     Workflow,
 } from 'lucide-react';
 import { index as assessmentsIndex } from '@/actions/App/Http/Controllers/AssessmentController';
+import { AnnouncementBoard } from '@/components/announcements/announcement-board';
 import {
     HeroGreeting,
     RateCard,
@@ -48,6 +49,8 @@ export default function DashboardStaff({
                 PKL. Pantau performa absen, jurnal, dan nilai anak magang Anda
                 di bawah.
             </HeroGreeting>
+
+            <AnnouncementBoard />
 
             <section className="mt-5 grid grid-cols-2 gap-4 lg:grid-cols-4">
                 <StatCard
