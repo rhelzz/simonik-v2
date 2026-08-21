@@ -75,18 +75,20 @@ class ResetStudentRecords
     }
 
     /**
-     * Satu pembangun kueri untuk count() DAN handle(), supaya pratinjau tidak
-     * mungkin menghitung himpunan yang berbeda dari yang dihapus — bug paling
-     * berbahaya di fitur ini.
+     * Siswa yang lolos kriteria — dipakai untuk membangun kueri penghapusan
+     * DAN untuk menawarkan daftar kandidat di modal.
      *
-     * @param  Builder<Student>  $scopedStudents
-     * @param  class-string<Model>  $model
+     * Publik supaya daftar yang ditawarkan ke operator dan himpunan yang
+     * benar-benar dihapus berasal dari SATU definisi. Dua definisi berarti
+     * modal bisa menampilkan murid yang ternyata tidak ikut terhapus.
+     *
+     * @param  Builder<Student>  $scopedStudents  wajib sudah dibatasi cakupan role
      * @param  array<string, mixed>  $criteria
-     * @return Builder<Model>
+     * @return Builder<Student>
      */
-    private function query(Builder $scopedStudents, string $model, array $criteria): Builder
+    public function students(Builder $scopedStudents, array $criteria): Builder
     {
-        $students = (clone $scopedStudents)
+        return (clone $scopedStudents)
             ->when(
                 ($criteria['departemen_id'] ?? null) !== null,
                 fn (Builder $query): Builder => $query->where('departemen_id', $criteria['departemen_id']),
@@ -106,6 +108,21 @@ class ResetStudentRecords
                 ! empty($criteria['student_ids']),
                 fn (Builder $query): Builder => $query->whereIn('id', $criteria['student_ids']),
             );
+    }
+
+    /**
+     * Satu pembangun kueri untuk count() DAN handle(), supaya pratinjau tidak
+     * mungkin menghitung himpunan yang berbeda dari yang dihapus — bug paling
+     * berbahaya di fitur ini.
+     *
+     * @param  Builder<Student>  $scopedStudents
+     * @param  class-string<Model>  $model
+     * @param  array<string, mixed>  $criteria
+     * @return Builder<Model>
+     */
+    private function query(Builder $scopedStudents, string $model, array $criteria): Builder
+    {
+        $students = $this->students($scopedStudents, $criteria);
 
         return $model::query()
             // Sub-kueri, bukan ->pluck(): pluck akan menarik ribuan ID ke

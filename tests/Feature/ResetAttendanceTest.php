@@ -298,4 +298,49 @@ class ResetAttendanceTest extends TestCase
 
         $this->assertDatabaseCount('attendances', 0);
     }
+
+    /**
+     * Butir permintaan "bisa diatur berdasarkan beberapa murid" hanya berarti
+     * kalau operator BISA MELIHAT daftar muridnya di modal. Backend yang
+     * menerima student_ids tapi tidak pernah menawarkan kandidat = fitur yang
+     * tidak terjangkau dari layar.
+     */
+    public function test_preview_offers_student_candidates_for_the_modal(): void
+    {
+        $departemen = Departemen::factory()->create();
+        $mine = $this->studentWithAttendance(['departemen_id' => $departemen->id]);
+        $this->studentWithAttendance(); // jurusan lain
+
+        $this->actingAs($this->admin())
+            ->postJson('/monitoring/absen/reset/pratinjau', [
+                'departemen_id' => $departemen->id,
+            ])
+            ->assertOk()
+            ->assertJsonCount(1, 'students')
+            ->assertJsonPath('students.0.id', $mine->id)
+            ->assertJsonPath('truncated', false);
+    }
+
+    /**
+     * Daftar kandidat DIABAIKAN oleh student_ids: kalau tidak, daftarnya
+     * menyusut sendiri setiap kali operator mencentang seorang murid dan
+     * pilihan tidak bisa dibatalkan lagi.
+     */
+    public function test_candidate_list_ignores_the_current_student_selection(): void
+    {
+        $departemen = Departemen::factory()->create();
+        $a = $this->studentWithAttendance(['departemen_id' => $departemen->id]);
+        $this->studentWithAttendance(['departemen_id' => $departemen->id]);
+
+        $this->actingAs($this->admin())
+            ->postJson('/monitoring/absen/reset/pratinjau', [
+                'departemen_id' => $departemen->id,
+                'student_ids' => [$a->id],
+            ])
+            ->assertOk()
+            // Kandidat tetap 2 …
+            ->assertJsonCount(2, 'students')
+            // … tapi yang akan terhapus hanya milik murid yang dicentang.
+            ->assertJsonPath('count', 1);
+    }
 }

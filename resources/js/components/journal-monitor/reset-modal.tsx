@@ -11,6 +11,8 @@ import type { SelectOption } from '@/components/ui/select';
 
 export type ResetOption = { id: number; name: string };
 
+export type ResetStudent = { id: number; name: string; nis: string };
+
 type Criteria = {
     departemen_id: string;
     class_id: string;
@@ -69,7 +71,13 @@ export function ResetJournalModal({
     const [result, setResult] = useState<{
         key: string;
         count: number | null;
+        students: ResetStudent[];
+        truncated: boolean;
     } | null>(null);
+
+    // Murid yang dicentang. Kosong = SEMUA murid yang lolos filter di atas —
+    // itulah butir "berdasarkan semua murid".
+    const [pickedStudents, setPickedStudents] = useState<number[]>([]);
 
     const payload = {
         departemen_id: criteria.departemen_id || null,
@@ -77,6 +85,7 @@ export function ResetJournalModal({
         industri_id: criteria.industri_id || null,
         from: criteria.from || null,
         to: criteria.to || null,
+        student_ids: pickedStudents,
     };
     const serialised = JSON.stringify(payload);
 
@@ -105,14 +114,30 @@ export function ResetJournalModal({
                 body: serialised,
             })
                 .then((response) => response.json())
-                .then((data: { count?: number }) =>
+                .then(
+                    (data: {
+                        count?: number;
+                        students?: ResetStudent[];
+                        truncated?: boolean;
+                    }) =>
+                        setResult({
+                            key: serialised,
+                            count:
+                                typeof data.count === 'number'
+                                    ? data.count
+                                    : null,
+                            students: data.students ?? [],
+                            truncated: data.truncated ?? false,
+                        }),
+                )
+                .catch(() =>
                     setResult({
                         key: serialised,
-                        count:
-                            typeof data.count === 'number' ? data.count : null,
+                        count: null,
+                        students: [],
+                        truncated: false,
                     }),
-                )
-                .catch(() => setResult({ key: serialised, count: null }));
+                );
         }, 300);
 
         return () => window.clearTimeout(timer);
@@ -130,6 +155,7 @@ export function ResetJournalModal({
                 setCriteria(EMPTY);
                 setPassword('');
                 setResult(null);
+                setPickedStudents([]);
                 onClose();
             },
             onError: (errors) =>
@@ -150,6 +176,7 @@ export function ResetJournalModal({
         ...list.map((item) => ({ value: String(item.id), label: item.name })),
     ];
 
+    const candidates = result?.students ?? [];
     const fresh = result !== null && result.key === serialised;
     const count = fresh ? result.count : null;
     const counting = !fresh;
@@ -238,6 +265,76 @@ export function ResetJournalModal({
                             className={inputClass}
                         />
                     </Field>
+                </div>
+
+                <div>
+                    <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                        <span className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">
+                            Murid tertentu (opsional)
+                        </span>
+                        {pickedStudents.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => setPickedStudents([])}
+                                className="text-xs font-semibold text-primary hover:underline"
+                            >
+                                Kosongkan pilihan
+                            </button>
+                        )}
+                    </div>
+
+                    <p className="mb-2 text-xs text-muted">
+                        {pickedStudents.length === 0
+                            ? 'Tidak ada yang dicentang \u2014 SEMUA murid yang cocok dengan filter di atas akan ikut direset.'
+                            : pickedStudents.length +
+                              ' murid dipilih. Hanya murid ini yang direset.'}
+                    </p>
+
+                    <div className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-line bg-canvas p-2">
+                        {candidates.length === 0 ? (
+                            <p className="px-1 py-2 text-xs text-muted">
+                                Tidak ada murid yang cocok dengan filter.
+                            </p>
+                        ) : (
+                            candidates.map((student) => (
+                                <label
+                                    key={student.id}
+                                    className="flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-surface"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={pickedStudents.includes(
+                                            student.id,
+                                        )}
+                                        onChange={() =>
+                                            setPickedStudents((current) =>
+                                                current.includes(student.id)
+                                                    ? current.filter(
+                                                          (id) =>
+                                                              id !== student.id,
+                                                      )
+                                                    : [...current, student.id],
+                                            )
+                                        }
+                                        className="size-4 accent-[var(--color-primary)]"
+                                    />
+                                    <span className="min-w-0 flex-1 truncate text-sm text-ink">
+                                        {student.name}
+                                    </span>
+                                    <span className="shrink-0 text-xs text-muted">
+                                        {student.nis}
+                                    </span>
+                                </label>
+                            ))
+                        )}
+                    </div>
+
+                    {result?.truncated && (
+                        <p className="mt-1.5 text-xs text-muted">
+                            Daftar dipotong. Persempit filter jurusan/kelas/
+                            industri untuk melihat murid lainnya.
+                        </p>
+                    )}
                 </div>
 
                 <div className="rounded-2xl bg-canvas p-3 text-center">

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,6 +30,13 @@ class JournalMonitorController extends Controller
 {
     use ScopesStudentsByRole;
     use SummarizesStudentPerformance;
+
+    /**
+     * Batas jumlah murid yang ditawarkan di modal reset. Sekolah besar bisa
+     * punya ribuan siswa; mengirim semuanya membuat modal berat tanpa ada yang
+     * benar-benar menggulir sejauh itu.
+     */
+    private const RESET_CANDIDATE_LIMIT = 200;
 
     public function __construct(private readonly ResetStudentRecords $reset) {}
 
@@ -44,12 +52,27 @@ class JournalMonitorController extends Controller
         /** @var User $user */
         $user = $request->user();
 
+        $criteria = $request->validated();
+
+        // Kandidat murid dihitung TANPA student_ids: daftar yang ditawarkan
+        // harus tetap sama saat operator mencentang sebagian, kalau tidak
+        // daftarnya menyusut sendiri setiap kali dicentang.
+        $candidates = $this->reset
+            ->students($this->scopedStudents($user), Arr::except($criteria, 'student_ids'))
+            ->orderBy('name')
+            ->limit(self::RESET_CANDIDATE_LIMIT)
+            ->get(['id', 'name', 'nis']);
+
         return response()->json([
             'count' => $this->reset->count(
                 $this->scopedStudents($user),
                 Activity::class,
-                $request->validated(),
+                $criteria,
             ),
+            'students' => $candidates,
+            // Beri tahu modal kalau daftarnya dipotong, agar operator tahu
+            // harus mempersempit filter — bukan mengira muridnya cuma segitu.
+            'truncated' => $candidates->count() >= self::RESET_CANDIDATE_LIMIT,
         ]);
     }
 
