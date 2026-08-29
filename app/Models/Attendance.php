@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\AttendanceFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -60,6 +61,38 @@ class Attendance extends Model
 {
     /** @use HasFactory<AttendanceFactory> */
     use HasFactory;
+
+    /** Aturan masuk + pulang berlaku mulai rilis v2.6 Fase 31. */
+    public const COMPLETE_ATTENDANCE_FROM = '2026-08-29';
+
+    /**
+     * Kehadiran yang sah untuk statistik: data lama tetap kompatibel, sedangkan
+     * sejak tanggal efektif wajib memiliki jam masuk dan pulang.
+     *
+     * @param  Builder<Attendance>  $query
+     * @return Builder<Attendance>
+     */
+    public function scopeCountedPresent(Builder $query): Builder
+    {
+        return $query
+            ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
+            ->where(function (Builder $query): void {
+                $query->whereDate('date', '<', self::COMPLETE_ATTENDANCE_FROM)
+                    ->orWhere(function (Builder $query): void {
+                        $query->whereNotNull('arrivalTime')->whereNotNull('departureTime');
+                    });
+            });
+    }
+
+    public function countsAsPresent(): bool
+    {
+        if (! \in_array(mb_strtolower((string) $this->status), ['hadir', 'masuk'], true)) {
+            return false;
+        }
+
+        return $this->date->toDateString() < self::COMPLETE_ATTENDANCE_FROM
+            || ($this->arrivalTime !== null && $this->departureTime !== null);
+    }
 
     /**
      * Get the attributes that should be cast.

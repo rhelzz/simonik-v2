@@ -301,7 +301,10 @@ class RaporController extends Controller
             ->groupBy('s')
             ->pluck('c', 's');
 
-        $hadir = (int) $counts->get('hadir', 0) + (int) $counts->get('masuk', 0);
+        $hadir = Attendance::query()
+            ->where('user_id', $userId)
+            ->countedPresent()
+            ->count();
         $izin = (int) $counts->get('izin', 0);
         $sakit = (int) $counts->get('sakit', 0);
         $alpha = (int) $counts->get('alpha', 0);

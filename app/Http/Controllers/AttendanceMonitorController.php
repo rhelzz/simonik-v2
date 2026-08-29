@@ -122,12 +122,16 @@ class AttendanceMonitorController extends Controller
 
                 // Tanggal PKL per-siswa menang atas tanggal periodenya —
                 // pola yang sama dengan SummarizesStudentPerformance.
-                $status = AttendanceStatus::for(
-                    $attendance?->status,
-                    $date,
-                    $student->pkl_start ?? $student->pkl_period?->start_period,
-                    $student->pkl_end ?? $student->pkl_period?->end_period,
-                );
+                $status = $attendance !== null
+                    && \in_array(mb_strtolower((string) $attendance->status), ['hadir', 'masuk'], true)
+                    && ! $attendance->countsAsPresent()
+                        ? AttendanceStatus::BELUM_LENGKAP
+                        : AttendanceStatus::for(
+                            $attendance?->status,
+                            $date,
+                            $student->pkl_start ?? $student->pkl_period?->start_period,
+                            $student->pkl_end ?? $student->pkl_period?->end_period,
+                        );
 
                 return [
                     'id' => $student->id,
@@ -139,6 +143,9 @@ class AttendanceMonitorController extends Controller
                     'statusLabel' => AttendanceStatus::label($status),
                     'arrivalTime' => $attendance?->arrivalTime
                         ? mb_substr($attendance->arrivalTime, 0, 5)
+                        : null,
+                    'departureTime' => $attendance?->departureTime
+                        ? mb_substr($attendance->departureTime, 0, 5)
                         : null,
                 ];
             });

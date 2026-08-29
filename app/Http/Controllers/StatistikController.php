@@ -47,7 +47,7 @@ class StatistikController extends Controller
                         ->count(),
                     'attendanceMonth' => Attendance::query()
                         ->whereIn('user_id', $userIds)
-                        ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
+                        ->countedPresent()
                         ->whereDate('date', '>=', $monthStart)
                         ->count(),
                 ];

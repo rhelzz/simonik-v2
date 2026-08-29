@@ -124,6 +124,47 @@ class AttendanceMonitorTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('attendanceRate.today', 25));
     }
 
+    public function test_check_in_without_check_out_is_recorded_but_not_counted_present(): void
+    {
+        Carbon::setTestNow('2026-09-01 10:00:00');
+        $data = $this->scenario();
+        $data['student']->update(['status_pkl' => 'proses']);
+        $data['attendance']->update([
+            'date' => Carbon::today(),
+            'arrivalTime' => '08:00:00',
+            'departureTime' => null,
+        ]);
+
+        $this->actingAs($this->user('admin'))
+            ->get('/monitoring/absen?tab=sudah')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('summary.sudah', 1)
+                ->where('attendanceRate.today', 0)
+                ->where('roster.data.0.status', 'belum-lengkap')
+                ->where('roster.data.0.statusLabel', 'Belum lengkap')
+                ->where('roster.data.0.arrivalTime', '08:00')
+                ->where('roster.data.0.departureTime', null)
+            );
+
+        Carbon::setTestNow();
+    }
+
+    public function test_incomplete_historical_attendance_before_phase_31_remains_present(): void
+    {
+        $data = $this->scenario();
+        $data['attendance']->update([
+            'date' => '2026-08-28',
+            'arrivalTime' => '08:00:00',
+            'departureTime' => null,
+        ]);
+
+        $this->actingAs($this->user('admin'))
+            ->get("/monitoring/absen/murid/{$data['student']->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('performance.attendance.hadir', 1)
+            );
+    }
+
     /**
      * v2.4 Fase 23 — roster harian memisahkan yang sudah & belum presensi.
      * Yang "sudah" ditentukan oleh ADANYA baris absen pada tanggal itu.
@@ -159,6 +200,7 @@ class AttendanceMonitorTest extends TestCase
                 ->has('roster.data', 1)
                 ->where('roster.data.0.id', $data['student']->id)
                 ->where('roster.data.0.statusLabel', 'Hadir')
+                ->where('roster.data.0.departureTime', '16:00')
             );
     }
 

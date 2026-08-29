@@ -35,10 +35,8 @@ trait SummarizesStudentPerformance
             ->groupBy('label')
             ->pluck('total', 'label');
 
-        $hadir = (int) ($statusCounts->get('hadir', 0) + $statusCounts->get('masuk', 0));
-
         $hadirDays = $student->attendances()
-            ->whereRaw('lower(status) in (?, ?)', ['hadir', 'masuk'])
+            ->countedPresent()
             ->distinct()
             ->count('date');
 
@@ -51,7 +49,7 @@ trait SummarizesStudentPerformance
 
         return [
             'attendance' => [
-                'hadir' => $hadir,
+                'hadir' => $hadirDays,
                 'izin' => (int) $statusCounts->get('izin', 0),
                 'sakit' => (int) $statusCounts->get('sakit', 0),
                 'alpha' => (int) $statusCounts->get('alpha', 0),

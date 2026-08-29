@@ -37,7 +37,7 @@ Gunakan nilai `Belum`, `Dikerjakan`, `Selesai`, atau `Ditunda`. Jangan menulis
 |---|---|---|
 | 29 | Selesai | Placeholder login dan profil memakai `nama@simonik.local`; type-check dan test autentikasi hijau. |
 | 30 | Selesai | Impor minimum menautkan siswa secara exact case-insensitive; data opsional, nama ambigu, dan tautan existing terlindungi. |
-| 31 | Belum | |
+| 31 | Selesai | Roster menampilkan Jam Masuk/Pulang; sejak 2026-08-29 hanya record lengkap dihitung hadir, sementara histori tetap kompatibel. |
 | 32 | Belum | |
 | 33 | Belum | |
 | 34 | Belum | |

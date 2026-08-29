@@ -17,6 +17,7 @@ export type RosterRow = {
     status: string;
     statusLabel: string;
     arrivalTime: string | null;
+    departureTime: string | null;
 };
 
 /**
@@ -32,6 +33,7 @@ const statusStyles: Record<string, string> = {
     libur: 'bg-canvas text-muted',
     alpha: 'bg-red-500/15 text-red-500',
     belum: 'bg-canvas text-muted',
+    'belum-lengkap': 'bg-warning/15 text-warning',
     'tidak-dihitung': 'bg-canvas text-muted',
 };
 
@@ -191,7 +193,14 @@ export function DailyRoster({
                                 <th className="px-3 py-2.5">Industri</th>
                                 <th className="px-3 py-2.5">Status</th>
                                 {filters.tab === 'sudah' && (
-                                    <th className="px-3 py-2.5">Jam</th>
+                                    <>
+                                        <th className="px-3 py-2.5">
+                                            Jam Masuk
+                                        </th>
+                                        <th className="px-3 py-2.5">
+                                            Jam Pulang
+                                        </th>
+                                    </>
                                 )}
                             </tr>
                         </thead>
@@ -237,9 +246,14 @@ export function DailyRoster({
                                         </span>
                                     </td>
                                     {filters.tab === 'sudah' && (
-                                        <td className="px-3 py-2.5 text-muted">
-                                            {row.arrivalTime ?? '—'}
-                                        </td>
+                                        <>
+                                            <td className="px-3 py-2.5 text-muted">
+                                                {row.arrivalTime ?? '—'}
+                                            </td>
+                                            <td className="px-3 py-2.5 text-muted">
+                                                {row.departureTime ?? '—'}
+                                            </td>
+                                        </>
                                     )}
                                 </tr>
                             ))}

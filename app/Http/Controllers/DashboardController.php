@@ -328,7 +328,7 @@ class DashboardController extends Controller
                 'attendanceMonth' => Attendance::query()
                     ->where('user_id', $userId)
                     ->whereDate('date', '>=', $monthStart)
-                    ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
+                    ->countedPresent()
                     ->distinct()
                     ->count('date'),
                 'journalMonth' => Activity::query()
@@ -371,7 +371,7 @@ class DashboardController extends Controller
                     'attendanceMonth' => Attendance::query()
                         ->where('user_id', $child->user_id)
                         ->whereDate('date', '>=', $monthStart)
-                        ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
+                        ->countedPresent()
                         ->distinct()
                         ->count('date'),
                     'journalMonth' => Activity::query()
@@ -412,7 +412,7 @@ class DashboardController extends Controller
 
         $attendanceDates = empty($activeUserIds) ? [] : Attendance::query()
             ->whereIn('user_id', $activeUserIds)
-            ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
+            ->countedPresent()
             ->whereDate('date', '>=', $windowStart)
             ->get(['date'])
             ->map(fn (Attendance $row): string => $row->date->format('Y-m-d'))

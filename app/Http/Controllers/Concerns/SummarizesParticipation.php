@@ -28,7 +28,7 @@ trait SummarizesParticipation
 
         $attendanceDays = $activeCount === 0 ? [] : Attendance::query()
             ->whereIn('user_id', $activeUserIds)
-            ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
+            ->countedPresent()
             ->get(['user_id', 'date'])
             ->map(fn (Attendance $row): array => ['u' => $row->user_id, 'd' => $row->date->format('Y-m-d')])
             ->all();

@@ -59,7 +59,7 @@ class StreakController extends Controller
                 'total_journal' => Activity::query()->where('user_id', $userId)->count(),
                 'total_attendance' => Attendance::query()
                     ->where('user_id', $userId)
-                    ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
+                    ->countedPresent()
                     ->count(),
             ],
             'badges' => $badges,

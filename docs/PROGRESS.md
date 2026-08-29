@@ -8,6 +8,12 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 
 ## ✅ Sudah dikerjakan
 
+### v2.6 Fase 31 — Jam pulang dan semantik kehadiran ✅
+- Roster harian menampilkan kolom Jam Masuk dan Jam Pulang; record masuk tanpa pulang berlabel `Belum lengkap` tetapi tetap berada di tab Sudah.
+- Definisi bersama `Attendance::countedPresent()` dipakai dashboard, monitoring, statistik, rapor, badge, dan streak: sejak 29 Agustus 2026 wajib ada jam masuk+pulang.
+- Data historis sebelum tanggal efektif tetap memakai semantik lama agar angka produksi tidak berubah massal.
+- ✅ `composer ci:check`: ESLint, Prettier, TypeScript, Pint, PHPStan, dan 560 test hijau.
+
 ### v2.6 Fase 30 — Impor orang tua minimal + tautan anak ✅
 - Template orang tua kini memakai kolom minimum Nama Anak, Nama Orang Tua, dan No HP; Email, gender, alamat, serta pekerjaan opsional.
 - Importer menautkan `students.parent_id` secara exact case-insensitive dalam transaksi dan menolak nama tidak ditemukan, ambigu, atau anak yang sudah tertaut.

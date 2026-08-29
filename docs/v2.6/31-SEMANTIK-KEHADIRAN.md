@@ -1,12 +1,15 @@
 # Fase 31 — Jam Pulang dan Semantik Kehadiran
 
-**Request:** PKL-003 · **Risiko:** tinggi · **Migrasi:** tidak.
+**Status:** Selesai · **Request:** PKL-003 · **Risiko:** tinggi · **Migrasi:** tidak.
 
 ## Keputusan wajib sebelum eksekusi
 
 Tentukan tanggal efektif aturan baru. Default aman: aturan “masuk + pulang”
 berlaku mulai tanggal rilis agar data historis tanpa checkout tidak berubah
 massal. Jika aturan harus retroaktif, dokumentasikan dampak angka sebelum deploy.
+
+**Keputusan implementasi:** tanggal efektif `2026-08-29`; data sebelumnya tetap
+mengikuti semantik lama.
 
 ## Definisi tunggal
 
@@ -41,4 +44,3 @@ mengubah label record sakit/izin/libur.
 - Izin/sakit/libur tidak berubah menjadi hadir.
 - Scope guru/pembimbing tidak bocor.
 - Perilaku data sebelum tanggal efektif sesuai keputusan.
-

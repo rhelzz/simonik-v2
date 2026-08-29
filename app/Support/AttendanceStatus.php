@@ -30,6 +30,9 @@ final class AttendanceStatus
     /** Belum ada data absen, tapi harinya belum selesai — bukan Alpha. */
     public const BELUM = 'belum';
 
+    /** Sudah absen masuk, tetapi jam pulang belum dilengkapi. */
+    public const BELUM_LENGKAP = 'belum-lengkap';
+
     /** Hari yang memang tidak dihitung: akhir pekan / di luar periode PKL. */
     public const TIDAK_DIHITUNG = 'tidak-dihitung';
 
@@ -47,6 +50,7 @@ final class AttendanceStatus
         'libur' => 'Libur',
         self::ALPHA => 'Alpha',
         self::BELUM => 'Belum presensi',
+        self::BELUM_LENGKAP => 'Belum lengkap',
         self::TIDAK_DIHITUNG => 'Tidak dihitung',
     ];
 

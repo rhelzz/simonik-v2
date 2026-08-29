@@ -53,7 +53,7 @@ class BadgeAwarder
         $totalJournal = $user->activities()->count();
 
         $totalAttendance = $user->attendances()
-            ->whereRaw('LOWER(status) in (?, ?)', ['hadir', 'masuk'])
+            ->countedPresent()
             ->count();
 
         return [
