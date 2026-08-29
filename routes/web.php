@@ -330,7 +330,7 @@ Route::middleware('auth')->group(function () {
         // Presensi yang diwakilkan guru pembimbing / admin (tanpa geolokasi &
         // foto). Cakupan murid tetap ditegakkan scopedStudents() di controller.
         Route::post('monitoring/absen/presensi', [AttendanceMonitorController::class, 'storeProxy'])
-            ->middleware('role:admin|guru')
+            ->middleware('role:admin|guru|pembimbing')
             ->name('attendance-monitor.store-proxy');
 
         // Reset data absen — DESTRUKTIF & permanen, admin saja, wajib password

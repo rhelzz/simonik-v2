@@ -3,6 +3,10 @@
 **Request:** PKL-005 + PKL-006 · **Risiko:** tinggi · **Migrasi:** tidak.
 **Dependency:** Fase 31–32 selesai.
 
+**Status:** Selesai — modal dan endpoint mendukung presensi masuk/pulang,
+batch campuran, serta pembatasan scope server-side untuk admin, guru, dan
+pembimbing industri.
+
 ## Role dan scope
 
 - Admin: siswa dalam scope admin.
@@ -40,4 +44,3 @@ Gunakan input native `date`, `time`, radio/select, dan checkbox yang sudah ada.
 - Pulang tanpa masuk, pulang terlalu awal, dan overwrite record ditolak.
 - Batch campuran melaporkan jumlah berhasil dan dilewati.
 - Absen mandiri dengan foto/GPS tetap utuh.
-

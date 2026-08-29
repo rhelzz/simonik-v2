@@ -190,7 +190,8 @@ class AttendanceMonitorController extends Controller
         $user = $request->user();
         $data = $request->validated();
         $date = Carbon::parse($data['date'])->startOfDay();
-        $arrival = $data['arrival_time'].':00';
+        $type = $data['type'];
+        $time = ($data[$type === 'masuk' ? 'arrival_time' : 'departure_time']).':00';
 
         // Cakupan role: murid di luar bimbingan pemanggil tidak pernah terambil
         // di sini, jadi ID sembarang dari devtools menghasilkan 0 baris.
@@ -199,7 +200,7 @@ class AttendanceMonitorController extends Controller
             ->with('industries:id,jam_masuk')
             ->get();
 
-        [$created, $skipped] = DB::transaction(function () use ($students, $date, $arrival, $user): array {
+        [$created, $skipped] = DB::transaction(function () use ($students, $date, $time, $type, $user): array {
             $created = 0;
             $skipped = 0;
 
@@ -208,13 +209,34 @@ class AttendanceMonitorController extends Controller
                 // bukti foto & GPS absen mandiri siswa, atau membatalkan status
                 // sakit/izin yang sudah lolos approval. Yang sudah punya data
                 // dilewati dan dilaporkan, bukan ditindih diam-diam.
-                $exists = Attendance::query()
+                $attendance = Attendance::query()
                     ->where('user_id', $student->user_id)
                     ->whereDate('date', $date)
-                    ->exists();
+                    ->first();
 
-                if ($exists) {
+                if ($type === 'masuk' && $attendance !== null) {
                     $skipped++;
+
+                    continue;
+                }
+
+                if ($type === 'pulang') {
+                    $valid = $attendance !== null
+                        && mb_strtolower((string) $attendance->status) === 'hadir'
+                        && $attendance->arrivalTime !== null
+                        && $attendance->departureTime === null
+                        && Carbon::parse($time)->greaterThanOrEqualTo(Carbon::parse($attendance->arrivalTime))
+                        && ($student->industries?->jam_pulang === null
+                            || Carbon::parse($time)->greaterThanOrEqualTo(Carbon::parse($student->industries->jam_pulang)));
+
+                    if (! $valid) {
+                        $skipped++;
+
+                        continue;
+                    }
+
+                    $attendance->update(['departureTime' => $time, 'mode' => 'proxy']);
+                    $created++;
 
                     continue;
                 }
@@ -224,13 +246,13 @@ class AttendanceMonitorController extends Controller
                 Attendance::create([
                     'user_id' => $student->user_id,
                     'date' => $date,
-                    'arrivalTime' => $arrival,
+                    'arrivalTime' => $time,
                     'status' => 'hadir',
                     'mode' => 'proxy',
                     // Keterlambatan tetap dihitung dari waktu yang diketik —
                     // kalau tidak, presensi diwakilkan jadi jalan pintas
                     // menghapus keterlambatan dan rekap kedisiplinan kehilangan arti.
-                    'is_late' => $jamMasuk !== null && $arrival > $jamMasuk,
+                    'is_late' => $jamMasuk !== null && Carbon::parse($time)->greaterThan(Carbon::parse($jamMasuk)),
                     'is_suspect' => false,
                     'description' => 'Presensi diwakilkan oleh '.$user->name.' ('.$user->getRoleNames()->first().')',
                 ]);
@@ -245,7 +267,7 @@ class AttendanceMonitorController extends Controller
         // semuanya beres dan baru tahu sebulan kemudian saat rekap tak cocok.
         return back()->with('success', $skipped === 0
             ? "{$created} murid berhasil dipresensikan."
-            : "{$created} murid berhasil dipresensikan. {$skipped} dilewati karena sudah punya data absen.");
+            : "{$created} murid berhasil dipresensikan. {$skipped} dilewati karena tidak memenuhi aturan {$type}.");
     }
 
     /**

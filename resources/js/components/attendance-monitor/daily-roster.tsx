@@ -68,7 +68,7 @@ export function DailyRoster({
     const [modalOpen, setModalOpen] = useState(false);
 
     // Presensi diwakilkan hanya masuk akal untuk murid yang BELUM presensi.
-    const canPick = can.proxyAttendance && filters.tab === 'belum';
+    const canPick = can.proxyAttendance;
     const showsAlpha = roster.data.some((row) => row.status === 'alpha');
     const pageIds = roster.data.map((row) => row.id);
     const allChecked =
@@ -126,7 +126,8 @@ export function DailyRoster({
                             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
                         >
                             <UserCheck className="size-4" />
-                            Presensikan
+                            Presensikan{' '}
+                            {filters.tab === 'belum' ? 'masuk' : 'pulang'}
                             {selected.length > 0 ? ` (${selected.length})` : ''}
                         </button>
                     )}
@@ -284,6 +285,7 @@ export function DailyRoster({
                     )}
                     date={filters.tanggal}
                     dateLabel={dateLabel}
+                    type={filters.tab === 'belum' ? 'masuk' : 'pulang'}
                     onDeselect={toggle}
                     onDone={() => {
                         setModalOpen(false);

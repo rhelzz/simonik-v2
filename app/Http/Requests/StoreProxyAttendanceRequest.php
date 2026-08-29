@@ -14,6 +14,11 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class StoreProxyAttendanceRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['type' => $this->input('type', 'masuk')]);
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -27,10 +32,12 @@ class StoreProxyAttendanceRequest extends FormRequest
         return [
             'student_ids' => ['required', 'array', 'min:1'],
             'student_ids.*' => ['integer', 'exists:students,id'],
+            'type' => ['required', 'in:masuk,pulang'],
             'date' => ['required', 'date'],
             // Cocok dengan <input type="time">; dikonversi ke H:i:s saat simpan
             // agar formatnya sama dengan yang ditulis AttendanceController.
-            'arrival_time' => ['required', 'date_format:H:i'],
+            'arrival_time' => ['nullable', 'required_if:type,masuk', 'date_format:H:i'],
+            'departure_time' => ['nullable', 'required_if:type,pulang', 'date_format:H:i'],
         ];
     }
 }

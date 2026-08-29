@@ -226,15 +226,18 @@ class ProxyAttendanceTest extends TestCase
         $this->assertDatabaseCount('attendances', 0);
     }
 
-    public function test_pembimbing_cannot_call_proxy_attendance(): void
+    public function test_pembimbing_can_proxy_attendance_for_own_students(): void
     {
         $data = $this->scenario();
 
-        $this->actingAs($this->user('pembimbing'))
+        $this->actingAs(Pembimbing::findOrFail($data['industry']->pembimbing_id)->user)
             ->post('/monitoring/absen/presensi', $this->payload($data['student']))
-            ->assertForbidden();
+            ->assertRedirect();
 
-        $this->assertDatabaseCount('attendances', 0);
+        $this->assertDatabaseHas('attendances', [
+            'user_id' => $data['student']->user_id,
+            'mode' => 'proxy',
+        ]);
     }
 
     /**
