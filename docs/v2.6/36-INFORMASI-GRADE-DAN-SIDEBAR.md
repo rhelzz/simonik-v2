@@ -3,6 +3,9 @@
 **Request:** PKL-009 + PKL-010 · **Risiko:** rendah · **Migrasi:** tidak.
 **Dependency:** Fase 35 selesai.
 
+**Status:** Selesai — informasi grade, modal keyboard-dismissible, terminologi
+rapor, dan urutan menu penilaian sudah diterapkan.
+
 ## Informasi grade
 
 - Tambahkan tombol berlabel/aria-label jelas di halaman Rekap Penilaian.
@@ -38,4 +41,3 @@ teks pengguna; nama class/controller boleh tetap agar diff kecil.
 - Modal dapat dioperasikan keyboard dan ditutup sesuai acceptance criteria.
 - Urutan/visibility menu benar untuk admin, siswa, dan pembimbing.
 - `rg "Rapor Digital" resources/js` tidak menemukan teks pengguna aktif.
-

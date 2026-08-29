@@ -42,5 +42,5 @@ Gunakan nilai `Belum`, `Dikerjakan`, `Selesai`, atau `Ditunda`. Jangan menulis
 | 33 | Selesai | Presensi wakil mendukung masuk/pulang, batch berhasil/dilewati, validasi waktu dan scope admin/guru/pembimbing; record mandiri tidak ditimpa. |
 | 34 | Selesai | Pemeriksa dalam scope dapat menandai jurnal Belum Dilihat/Sudah Dilihat; status memakai activities.verified dan persentase tersembunyi sampai semua jurnal diperiksa. |
 | 35 | Selesai | Lima slot teknis per siswa memakai label custom pada evaluations; pembimbing industri mengisi nilai teknis, guru non-teknis, dan rapor membaca label/nilai terbaru. |
-| 36 | Belum | |
+| 36 | Selesai | Modal informasi grade memakai helper batas yang sama dengan backend; urutan sidebar menjadi Aspek, Penilaian PKL, Rekap Penilaian, Sertifikat PKL, Template Sertifikat PKL tanpa istilah Rapor Digital. |
 | 37 | Belum | |

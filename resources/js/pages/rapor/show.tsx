@@ -82,7 +82,7 @@ export default function RaporShow({
     const isStudent = auth.roles?.includes('siswa');
 
     return (
-        <AppLayout title="Rapor Digital">
+        <AppLayout title="Penilaian PKL">
             <style>{printCss}</style>
 
             <div className="space-y-4">

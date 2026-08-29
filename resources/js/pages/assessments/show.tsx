@@ -1,12 +1,19 @@
 import { Link, useForm } from '@inertiajs/react';
-import { ArrowLeft, LoaderCircle, Save } from 'lucide-react';
+import { ArrowLeft, CircleHelp, LoaderCircle, Save } from 'lucide-react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import {
     index as assessmentsIndex,
     update,
 } from '@/actions/App/Http/Controllers/AssessmentController';
+import { Modal } from '@/components/ui/modal';
 import { AppLayout } from '@/layouts/app-layout';
-import { gradeFor, gradeStyles, qualificationFor } from '@/lib/grade';
+import {
+    gradeFor,
+    gradeRanges,
+    gradeStyles,
+    qualificationFor,
+} from '@/lib/grade';
 import type { Grade } from '@/lib/grade';
 import { cn } from '@/lib/utils';
 
@@ -57,6 +64,7 @@ export default function AssessmentShow({
     });
 
     const editable = can.teknis || can.nonTeknis;
+    const [gradeInfoOpen, setGradeInfoOpen] = useState(false);
 
     function setScore(id: number, value: string) {
         form.setData('scores', { ...form.data.scores, [id]: value });
@@ -88,6 +96,15 @@ export default function AssessmentShow({
                             {student.industry ? ` · ${student.industry}` : ''}
                         </p>
                     </div>
+                    <button
+                        type="button"
+                        onClick={() => setGradeInfoOpen(true)}
+                        aria-label="Informasi grade"
+                        className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+                    >
+                        <CircleHelp className="size-4" />
+                        Informasi grade
+                    </button>
                 </section>
 
                 <ScoreTable
@@ -148,6 +165,42 @@ export default function AssessmentShow({
                     </div>
                 )}
             </form>
+            <Modal
+                open={gradeInfoOpen}
+                onClose={() => setGradeInfoOpen(false)}
+                title="Informasi grade"
+            >
+                <div className="space-y-3">
+                    <p className="text-sm text-muted">
+                        Grade dihitung dari nilai 0–100.
+                    </p>
+                    {gradeRanges.map(({ grade, range }) => (
+                        <div
+                            key={grade}
+                            className="flex items-center gap-3 rounded-xl border border-line bg-canvas/40 p-3"
+                        >
+                            <span
+                                className={cn(
+                                    'inline-flex size-9 items-center justify-center rounded-xl text-sm font-bold',
+                                    gradeStyles[grade],
+                                )}
+                            >
+                                {grade}
+                            </span>
+                            <div>
+                                <p className="text-sm font-semibold text-ink">
+                                    {range}
+                                </p>
+                                <p className="text-xs text-muted">
+                                    {qualificationFor(
+                                        Number(range.split('–')[0]),
+                                    )}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </Modal>
         </AppLayout>
     );
 }

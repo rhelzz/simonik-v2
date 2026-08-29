@@ -283,34 +283,34 @@ export const navSections: NavSection[] = [
         title: 'Penilaian',
         items: [
             {
-                label: 'Rekap Penilaian',
-                icon: ClipboardCheck,
-                href: assessmentsIndex.url(),
-                roles: [...STAFF, 'siswa', 'orangtua'],
-            },
-            {
                 label: 'Aspek Penilaian',
                 icon: ListChecks,
                 href: aspectsIndex.url(),
                 roles: ['admin', 'kaprog'],
             },
             {
-                label: 'Sertifikat',
+                label: 'Rekap Penilaian',
+                icon: ClipboardCheck,
+                href: assessmentsIndex.url(),
+                roles: [...STAFF, 'siswa', 'orangtua'],
+            },
+            {
+                label: 'Penilaian PKL',
+                icon: FileText,
+                href: raporIndex.url(),
+                roles: ['admin', 'wakasek', 'kaprog', 'siswa', 'orangtua'],
+            },
+            {
+                label: 'Sertifikat PKL',
                 icon: Award,
                 href: certificatesIndex.url(),
                 roles: ['admin', 'wakasek', 'kaprog', 'siswa', 'pembimbing'],
             },
             {
-                label: 'Template Sertifikat',
+                label: 'Template Sertifikat PKL',
                 icon: FileImage,
                 href: certificateTemplatesIndex.url(),
                 roles: ['admin', 'kaprog', 'pembimbing'],
-            },
-            {
-                label: 'Rapor Digital',
-                icon: FileText,
-                href: raporIndex.url(),
-                roles: ['admin', 'wakasek', 'kaprog', 'siswa', 'orangtua'],
             },
         ],
     },

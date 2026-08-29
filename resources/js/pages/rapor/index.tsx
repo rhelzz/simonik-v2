@@ -17,7 +17,7 @@ type Props = {
 
 export default function RaporIndex({ departemens, scopeLabel }: Props) {
     return (
-        <AppLayout title="Rapor Digital">
+        <AppLayout title="Penilaian PKL">
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
                 <div className="flex items-start gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
@@ -25,7 +25,7 @@ export default function RaporIndex({ departemens, scopeLabel }: Props) {
                     </span>
                     <div>
                         <h2 className="text-base font-bold text-ink">
-                            Cetak rapor digital
+                            Cetak penilaian PKL
                         </h2>
                         <p className="text-sm text-muted">
                             Pilih jurusan untuk menelusuri kelas, murid, lalu

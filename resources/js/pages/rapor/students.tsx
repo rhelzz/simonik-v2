@@ -41,11 +41,11 @@ export default function RaporStudents({
     const [search, setSearch] = useState(filters.search);
 
     return (
-        <AppLayout title="Rapor Digital">
+        <AppLayout title="Penilaian PKL">
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
                 <Breadcrumb
                     items={[
-                        { label: 'Rapor Digital', href: index.url() },
+                        { label: 'Penilaian PKL', href: index.url() },
                         departemen
                             ? {
                                   label: departemen.name,

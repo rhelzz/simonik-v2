@@ -31,6 +31,13 @@ export const qualificationLabels: Record<Grade, string> = {
     D: 'Kurang',
 };
 
+export const gradeRanges: Array<{ grade: Grade; range: string }> = [
+    { grade: 'A', range: '80–100' },
+    { grade: 'B', range: '70–79' },
+    { grade: 'C', range: '60–69' },
+    { grade: 'D', range: '0–59' },
+];
+
 export function qualificationFor(
     score: number | null | undefined,
 ): string | null {
