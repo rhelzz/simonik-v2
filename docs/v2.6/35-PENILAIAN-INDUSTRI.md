@@ -2,6 +2,9 @@
 
 **Request:** PKL-008 · **Risiko:** tinggi · **Migrasi:** ya.
 
+**Status:** Selesai — migration forward-only menambah label teknis custom dan
+mengizinkan skor kosong, dengan write tetap dibatasi scope pembimbing industri.
+
 ## Keputusan wajib sebelum eksekusi
 
 - “Industri” dipetakan ke akun `pembimbing`, karena itulah role perwakilan
@@ -47,4 +50,3 @@ migration forward-only. Pilih perubahan terkecil setelah memeriksa constraint
 
 Backup DB sebelum migrate. Data evaluasi lama harus tetap terbaca; migration
 tidak boleh drop/recreate tabel berisi nilai produksi.
-

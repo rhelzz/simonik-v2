@@ -21,6 +21,8 @@ class AssessmentRequest extends FormRequest
         return [
             'scores' => ['array'],
             'scores.*' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'labels' => ['array'],
+            'labels.*' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

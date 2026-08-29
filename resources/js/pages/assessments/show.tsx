@@ -14,6 +14,7 @@ type AspectScoreRow = {
     id: number;
     no: number;
     kemampuan: string;
+    label: string | null;
     score: number | null;
     grade: Grade | null;
     qualification: string | null;
@@ -32,7 +33,10 @@ type AssessmentShowProps = {
     can: { teknis: boolean; nonTeknis: boolean };
 };
 
-type ScoresForm = { scores: Record<string, string> };
+type ScoresForm = {
+    scores: Record<string, string>;
+    labels: Record<string, string>;
+};
 
 export default function AssessmentShow({
     student,
@@ -46,6 +50,9 @@ export default function AssessmentShow({
                 row.id,
                 row.score === null ? '' : String(row.score),
             ]),
+        ),
+        labels: Object.fromEntries(
+            teknis.map((row) => [row.id, row.label ?? row.kemampuan]),
         ),
     });
 
@@ -91,6 +98,14 @@ export default function AssessmentShow({
                     scores={form.data.scores}
                     errors={form.errors}
                     onChange={setScore}
+                    labels={form.data.labels}
+                    onLabelChange={(id, value) =>
+                        form.setData('labels', {
+                            ...form.data.labels,
+                            [id]: value,
+                        })
+                    }
+                    labelEditable={false}
                 />
 
                 <ScoreTable
@@ -101,6 +116,14 @@ export default function AssessmentShow({
                     scores={form.data.scores}
                     errors={form.errors}
                     onChange={setScore}
+                    labels={form.data.labels}
+                    onLabelChange={(id, value) =>
+                        form.setData('labels', {
+                            ...form.data.labels,
+                            [id]: value,
+                        })
+                    }
+                    labelEditable={can.teknis}
                 />
 
                 {editable && (
@@ -137,6 +160,9 @@ function ScoreTable({
     scores,
     errors,
     onChange,
+    labels,
+    onLabelChange,
+    labelEditable,
 }: {
     title: string;
     subtitle: string;
@@ -145,6 +171,9 @@ function ScoreTable({
     scores: Record<string, string>;
     errors: Partial<Record<string, string>>;
     onChange: (id: number, value: string) => void;
+    labels: Record<string, string>;
+    onLabelChange: (id: number, value: string) => void;
+    labelEditable: boolean;
 }) {
     return (
         <section className="rounded-3xl bg-surface p-5 sm:p-6">
@@ -198,7 +227,20 @@ function ScoreTable({
                                             {row.no}
                                         </td>
                                         <td className="py-3 align-top font-medium text-ink">
-                                            {row.kemampuan}
+                                            {labelEditable ? (
+                                                <input
+                                                    value={labels[row.id] ?? ''}
+                                                    onChange={(event) =>
+                                                        onLabelChange(
+                                                            row.id,
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    className="w-full min-w-64 rounded-lg border border-line bg-canvas/40 px-3 py-1.5 text-sm text-ink focus:border-primary focus:outline-none"
+                                                />
+                                            ) : (
+                                                (row.label ?? row.kemampuan)
+                                            )}
                                         </td>
                                         <td className="py-3 align-top">
                                             {editable ? (

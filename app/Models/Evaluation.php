@@ -17,10 +17,11 @@ use Illuminate\Support\Carbon;
  * @property int $student_id
  * @property int $aspek_produktif_id
  * @property int $score
+ * @property string|null $technical_label
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['student_id', 'aspek_produktif_id', 'score'])]
+#[Fillable(['student_id', 'aspek_produktif_id', 'score', 'technical_label'])]
 class Evaluation extends Model
 {
     /** @use HasFactory<EvaluationFactory> */

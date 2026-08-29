@@ -13,7 +13,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -154,20 +153,21 @@ class AssessmentController extends Controller
             ->orderBy('id')
             ->get(['id', 'category', 'no', 'kemampuan']);
 
-        /** @var Collection<int, int> $scores */
-        $scores = $student->evaluations()->pluck('score', 'aspek_produktif_id');
+        $scores = $student->evaluations()->get(['aspek_produktif_id', 'score', 'technical_label'])->keyBy('aspek_produktif_id');
 
         $rows = fn (string $category): array => $aspects
             ->where('category', $category)
+            ->when($category === AspekProduktif::CATEGORY_TEKNIS, fn ($query) => $query->take(5))
             ->values()
             ->map(function (AspekProduktif $aspek) use ($scores): array {
-                $raw = $scores->get($aspek->id);
-                $score = $raw === null ? null : (int) $raw;
+                $evaluation = $scores->get($aspek->id);
+                $score = $evaluation?->score === null ? null : (int) $evaluation->score;
 
                 return [
                     'id' => $aspek->id,
                     'no' => $aspek->no,
                     'kemampuan' => $aspek->kemampuan,
+                    'label' => $evaluation?->technical_label,
                     'score' => $score,
                     'grade' => Evaluation::gradeFor($score),
                     'qualification' => Evaluation::qualificationFor($score),
@@ -212,6 +212,7 @@ class AssessmentController extends Controller
 
         /** @var array<int|string, int|null> $scores */
         $scores = $request->validated()['scores'] ?? [];
+        $labels = $request->validated()['labels'] ?? [];
 
         foreach ($scores as $aspekId => $score) {
             if (! $allowedIds->contains((int) $aspekId)) {
@@ -219,7 +220,7 @@ class AssessmentController extends Controller
             }
 
             // Nilai kosong (null setelah ConvertEmptyStringsToNull) menghapus skor.
-            if ($score === null) {
+            if ($score === null && ($category !== AspekProduktif::CATEGORY_TEKNIS || blank($labels[$aspekId] ?? null))) {
                 Evaluation::query()
                     ->where('student_id', $student->id)
                     ->where('aspek_produktif_id', (int) $aspekId)
@@ -230,7 +231,7 @@ class AssessmentController extends Controller
 
             Evaluation::query()->updateOrCreate(
                 ['student_id' => $student->id, 'aspek_produktif_id' => (int) $aspekId],
-                ['score' => (int) $score],
+                ['score' => $score === null ? null : (int) $score, 'technical_label' => $category === AspekProduktif::CATEGORY_TEKNIS ? ($labels[$aspekId] ?? null) : null],
             );
         }
 

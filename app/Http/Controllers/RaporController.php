@@ -180,8 +180,7 @@ class RaporController extends Controller
             ->orderBy('id')
             ->get(['id', 'category', 'no', 'kemampuan']);
 
-        /** @var Collection<int, int> $scores */
-        $scores = $student->evaluations()->pluck('score', 'aspek_produktif_id');
+        $scores = $student->evaluations()->get(['aspek_produktif_id', 'score', 'technical_label'])->keyBy('aspek_produktif_id');
 
         $teknis = $this->aspectRows($aspects, $scores, AspekProduktif::CATEGORY_TEKNIS);
         $nonTeknis = $this->aspectRows($aspects, $scores, AspekProduktif::CATEGORY_NON_TEKNIS);
@@ -233,7 +232,7 @@ class RaporController extends Controller
      * Baris nilai satu kategori aspek (teknis/non-teknis).
      *
      * @param  Collection<int, AspekProduktif>  $aspects
-     * @param  Collection<int, int>  $scores
+     * @param  Collection<int|string, Evaluation>  $scores
      * @return array<int, array<string, mixed>>
      */
     private function aspectRows(Collection $aspects, Collection $scores, string $category): array
@@ -242,13 +241,15 @@ class RaporController extends Controller
             ->where('category', $category)
             ->values()
             ->map(function (AspekProduktif $aspek) use ($scores): array {
-                $raw = $scores->get($aspek->id);
-                $score = $raw === null ? null : (int) $raw;
+                $evaluation = $scores->get($aspek->id);
+                $score = $evaluation?->score === null ? null : (int) $evaluation->score;
 
                 return [
                     'id' => $aspek->id,
                     'no' => $aspek->no,
-                    'kemampuan' => $aspek->kemampuan,
+                    'kemampuan' => $evaluation !== null && $evaluation->technical_label !== null
+                        ? $evaluation->technical_label
+                        : $aspek->kemampuan,
                     'score' => $score,
                     'grade' => Evaluation::gradeFor($score),
                     'qualification' => Evaluation::qualificationFor($score),
