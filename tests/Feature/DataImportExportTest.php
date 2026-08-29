@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\Departemen;
+use App\Models\Parents;
 use App\Models\Pembimbing;
+use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
@@ -123,6 +125,8 @@ class DataImportExportTest extends TestCase
 
     public function test_import_pembimbing_and_parent_create_profiles(): void
     {
+        $student = Student::factory()->create(['name' => 'Budi Anak', 'parent_id' => null]);
+
         $this->actingAs($this->admin())
             ->post('/pembimbings/import', ['file' => $this->csv(
                 "Nama,Email,No HP,Jenis Kelamin\nBudi,budi@simonik.local,081200001111,Laki-laki\n"
@@ -130,7 +134,7 @@ class DataImportExportTest extends TestCase
 
         $this->actingAs($this->admin())
             ->post('/parents/import', ['file' => $this->csv(
-                "Nama,Email,Jenis Kelamin,Alamat,Pekerjaan,No HP\nSantoso,santoso@simonik.local,Laki-laki,Jl. A,Wiraswasta,081298765432\n"
+                "Nama Anak,Nama Orang Tua,No HP,Email,Jenis Kelamin,Alamat,Pekerjaan\nBudi Anak,Santoso,081298765432,santoso@simonik.local,Laki-laki,Jl. A,Wiraswasta\n"
             )]);
 
         $pembimbing = User::where('email', 'budi@simonik.local')->firstOrFail();
@@ -140,6 +144,55 @@ class DataImportExportTest extends TestCase
         $parent = User::where('email', 'santoso@simonik.local')->firstOrFail();
         $this->assertTrue($parent->hasRole('orangtua'));
         $this->assertDatabaseHas('parents', ['user_id' => $parent->id, 'occupation' => 'Wiraswasta']);
+        $this->assertSame(Parents::where('user_id', $parent->id)->value('id'), $student->fresh()->parent_id);
+    }
+
+    public function test_import_parent_accepts_minimum_columns_and_matches_child_case_insensitively(): void
+    {
+        $student = Student::factory()->create(['name' => 'Ani Lestari', 'parent_id' => null]);
+
+        $this->actingAs($this->admin())
+            ->post('/parents/import', ['file' => $this->csv(
+                "Nama Anak,Nama Orang Tua,No HP\nani lestari,Ibu Ani,081234567890\n"
+            )])
+            ->assertSessionHas('success')
+            ->assertSessionMissing('error');
+
+        $parent = Parents::where('nama', 'Ibu Ani')->firstOrFail();
+        $this->assertNull($parent->user_id);
+        $this->assertNull($parent->gender);
+        $this->assertSame($parent->id, $student->fresh()->parent_id);
+    }
+
+    public function test_import_parent_rejects_unknown_and_duplicate_child_names_without_writes(): void
+    {
+        $first = Student::factory()->create(['name' => 'Nama Sama', 'parent_id' => null]);
+        $second = Student::factory()->create(['name' => 'Nama Sama', 'parent_id' => null]);
+
+        $response = $this->actingAs($this->admin())
+            ->post('/parents/import', ['file' => $this->csv(
+                "Nama Anak,Nama Orang Tua,No HP\nTidak Ada,Bapak A,0811\nNama Sama,Bapak B,0822\n"
+            )]);
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseCount('parents', 0);
+        $this->assertNull($first->fresh()->parent_id);
+        $this->assertNull($second->fresh()->parent_id);
+    }
+
+    public function test_import_parent_does_not_replace_an_existing_parent(): void
+    {
+        $existing = Parents::factory()->create();
+        $student = Student::factory()->create(['name' => 'Anak Bertaut', 'parent_id' => $existing->id]);
+
+        $this->actingAs($this->admin())
+            ->post('/parents/import', ['file' => $this->csv(
+                "Nama Anak,Nama Orang Tua,No HP\nAnak Bertaut,Orang Baru,0811\n"
+            )])
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('parents', 1);
+        $this->assertSame($existing->id, $student->fresh()->parent_id);
     }
 
     public function test_import_industry_resolves_relations(): void

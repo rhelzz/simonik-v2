@@ -1,6 +1,6 @@
 # Fase 30 — Impor Orang Tua Minimal + Tautan Anak
 
-**Request:** PKL-014 · **Risiko:** sedang · **Migrasi:** tidak.
+**Status:** Selesai · **Request:** PKL-014 · **Risiko:** sedang · **Migrasi:** tidak.
 
 ## Kontrak data
 
@@ -38,4 +38,3 @@ atau tidak unik harus gagal pada baris tersebut; jangan menebak siswa.
 
 Fuzzy matching nama, membuat siswa baru, atau menautkan satu orang tua ke
 beberapa anak dari satu sel. Tambahkan hanya jika spreadsheet nyata membutuhkannya.
-

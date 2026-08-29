@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Exports\StudentsTemplateExport;
 use App\Models\Classes;
 use App\Models\Departemen;
+use App\Models\Parents;
+use App\Models\Student;
 use App\Models\User;
 use App\Support\ImportTemplates;
 use Database\Seeders\RoleSeeder;
@@ -144,6 +146,24 @@ class ImportTemplateRoundTripTest extends TestCase
             ->assertSessionMissing('error');
 
         $this->assertDatabaseHas('pembimbings', ['name' => 'Budi Hartono']);
+    }
+
+    public function test_template_orang_tua_dapat_langsung_diimpor_dengan_kolom_minimum(): void
+    {
+        $student = Student::factory()->create(['name' => 'Ani Lestari', 'parent_id' => null]);
+        $file = $this->fill(
+            $this->writeTemplate(ImportTemplates::parent()),
+            'Data Orang Tua',
+            [['Ani Lestari', 'Ibu Ani', '081234567890']],
+        );
+
+        $this->actingAs($this->admin())
+            ->post('/parents/import', ['file' => $file])
+            ->assertSessionHas('success')
+            ->assertSessionMissing('error');
+
+        $parent = Parents::where('nama', 'Ibu Ani')->firstOrFail();
+        $this->assertSame($parent->id, $student->fresh()->parent_id);
     }
 
     public function test_baris_invalid_tidak_membatalkan_baris_valid(): void

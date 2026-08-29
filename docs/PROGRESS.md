@@ -8,6 +8,12 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 
 ## ✅ Sudah dikerjakan
 
+### v2.6 Fase 30 — Impor orang tua minimal + tautan anak ✅
+- Template orang tua kini memakai kolom minimum Nama Anak, Nama Orang Tua, dan No HP; Email, gender, alamat, serta pekerjaan opsional.
+- Importer menautkan `students.parent_id` secara exact case-insensitive dalam transaksi dan menolak nama tidak ditemukan, ambigu, atau anak yang sudah tertaut.
+- Orang tua tanpa email dibuat tanpa akun; email yang diisi tetap membuat akun role `orangtua` dengan domain baku.
+- ✅ `composer ci:check`: ESLint, Prettier, TypeScript, Pint, PHPStan, dan 558 test hijau.
+
 ### v2.6 Fase 29 — Domain pada login ✅
 - Placeholder email pada halaman login dan profil diselaraskan dari `nama@sekolah.sch.id` menjadi `nama@simonik.local`.
 - Normalisasi email backend tidak berubah karena sudah memakai domain yang benar.

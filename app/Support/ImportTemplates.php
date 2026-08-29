@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Exports\GenericTemplateExport;
 use App\Models\Departemen;
 use App\Models\Pembimbing;
+use App\Models\Student;
 use App\Models\Teacher;
 
 /**
@@ -125,17 +126,19 @@ class ImportTemplates
     {
         return new GenericTemplateExport(
             heading: 'PETUNJUK IMPOR ORANG TUA',
-            notes: self::accountNote(),
+            notes: 'Impor siswa terlebih dahulu. Akun login orang tua hanya dibuat bila Email diisi. '.self::SKIP_NOTE,
             dataTitle: ImportDefaults::SHEETS['orangtua'],
             instructions: [
-                ['Nama', 'Wajib', 'Nama lengkap orang tua/wali.'],
-                ['Email', 'Wajib', 'Boleh diisi username saja, mis. "rasyad.helza" — otomatis menjadi rasyad.helza@'.ImportDefaults::EMAIL_DOMAIN.'. Harus unik.'],
-                ['Jenis Kelamin', 'Wajib', 'Laki-laki atau Perempuan (boleh L / P).'],
-                ['Alamat', 'Wajib', 'Alamat tempat tinggal.'],
-                ['Pekerjaan', 'Wajib', 'Pekerjaan orang tua/wali.'],
+                ['Nama Anak', 'Wajib', 'Ketik sama persis dengan nama siswa di sheet "Referensi". Nama harus unik.'],
+                ['Nama Orang Tua', 'Wajib', 'Nama lengkap orang tua/wali.'],
                 ['No HP', 'Wajib', 'Nomor HP aktif.'],
+                ['Email', 'Opsional', 'Boleh diisi username saja; otomatis memakai @'.ImportDefaults::EMAIL_DOMAIN.'. Jika kosong, profil dibuat tanpa akun login.'],
+                ['Jenis Kelamin', 'Opsional', 'Laki-laki atau Perempuan (boleh L / P).'],
+                ['Alamat', 'Opsional', 'Alamat tempat tinggal.'],
+                ['Pekerjaan', 'Opsional', 'Pekerjaan orang tua/wali.'],
             ],
-            headings: ['Nama', 'Email', 'Jenis Kelamin', 'Alamat', 'Pekerjaan', 'No HP'],
+            headings: ['Nama Anak', 'Nama Orang Tua', 'No HP', 'Email', 'Jenis Kelamin', 'Alamat', 'Pekerjaan'],
+            references: ['Nama Anak' => Student::query()->orderBy('name')->pluck('name')->all()],
         );
     }
 

@@ -36,7 +36,7 @@ Gunakan nilai `Belum`, `Dikerjakan`, `Selesai`, atau `Ditunda`. Jangan menulis
 | Fase | Status | Commit/catatan |
 |---|---|---|
 | 29 | Selesai | Placeholder login dan profil memakai `nama@simonik.local`; type-check dan test autentikasi hijau. |
-| 30 | Belum | |
+| 30 | Selesai | Impor minimum menautkan siswa secara exact case-insensitive; data opsional, nama ambigu, dan tautan existing terlindungi. |
 | 31 | Belum | |
 | 32 | Belum | |
 | 33 | Belum | |
