@@ -168,4 +168,38 @@ class JournalMonitorTest extends TestCase
             ->get("/monitoring/jurnal/murid/{$other->id}")
             ->assertForbidden();
     }
+
+    public function test_reviewer_can_toggle_journal_status_and_rate_waits_for_all(): void
+    {
+        $s = $this->scenario();
+
+        $this->actingAs($s['teacher'])
+            ->patch("/monitoring/jurnal/{$s['activity']->id}/verified", ['verified' => true])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('activities', ['id' => $s['activity']->id, 'verified' => '1']);
+
+        $this->actingAs($s['teacher'])
+            ->get("/monitoring/jurnal/murid/{$s['student']->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('records.data.0.verified', true)
+                ->where('performance.journalRate', 100));
+
+        $new = Activity::factory()->create(['user_id' => $s['student']->user_id, 'verified' => null]);
+        $this->actingAs($s['teacher'])
+            ->get("/monitoring/jurnal/murid/{$s['student']->id}")
+            ->assertInertia(fn (Assert $page) => $page->where('performance.journalRate', null));
+
+        $this->assertNotNull($new->id);
+    }
+
+    public function test_reviewer_cannot_verify_journal_outside_scope(): void
+    {
+        $s = $this->scenario();
+        $other = Activity::factory()->create();
+
+        $this->actingAs($s['teacher'])
+            ->patch("/monitoring/jurnal/{$other->id}/verified", ['verified' => true])
+            ->assertForbidden();
+    }
 }

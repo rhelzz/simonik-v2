@@ -11,7 +11,7 @@ export type Performance = {
     };
     journal: { total: number };
     attendanceRate: number;
-    journalRate: number;
+    journalRate: number | null;
     effectiveDays: number;
     avg: number | null;
     grade: string | null;
@@ -67,7 +67,13 @@ export function PerformanceSummary({
                         </span>
                         Pengisian jurnal
                     </div>
-                    <RateBar value={journalRate} tint="bg-warning" />
+                    {journalRate === null ? (
+                        <p className="mt-3 text-xs text-muted">
+                            Persentase tampil setelah semua jurnal dilihat.
+                        </p>
+                    ) : (
+                        <RateBar value={journalRate} tint="bg-warning" />
+                    )}
                     <div className="mt-3 text-center">
                         <Stat label="Total jurnal" value={journal.total} />
                     </div>

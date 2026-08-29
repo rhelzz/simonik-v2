@@ -348,6 +348,9 @@ Route::middleware('auth')->group(function () {
         Route::get('monitoring/jurnal/jurusan/{departemen}', [JournalMonitorController::class, 'classes'])->name('journal-monitor.classes');
         Route::get('monitoring/jurnal/kelas/{class}', [JournalMonitorController::class, 'students'])->name('journal-monitor.students');
         Route::get('monitoring/jurnal/murid/{student}', [JournalMonitorController::class, 'show'])->name('journal-monitor.show');
+        Route::patch('monitoring/jurnal/{activity}/verified', [JournalMonitorController::class, 'verified'])
+            ->middleware('role:guru|pembimbing')
+            ->name('journal-monitor.verified');
 
         // Reset data jurnal — DESTRUKTIF & permanen, admin saja, wajib password
         // akun sendiri. Memakai action yang sama dengan reset Data Absen.

@@ -22,7 +22,7 @@ trait SummarizesStudentPerformance
      *     attendance: array{hadir: int, izin: int, sakit: int, alpha: int, total: int},
      *     journal: array{total: int},
      *     attendanceRate: int,
-     *     journalRate: int,
+     *     journalRate: int|null,
      *     effectiveDays: int,
      *     avg: int|null,
      *     grade: string|null
@@ -41,8 +41,12 @@ trait SummarizesStudentPerformance
             ->count('date');
 
         $journalDays = $student->activities()->distinct()->count('date');
-
         $effectiveDays = $this->effectiveWorkdays($student, $hadirDays, $journalDays);
+        $journalTotal = $student->activities()->count();
+        $journalRate = $journalTotal > 0
+            && $student->activities()->where('verified', '1')->count() === $journalTotal
+            ? $this->rate($journalDays, $effectiveDays)
+            : null;
 
         $avgRaw = Evaluation::query()->where('student_id', $student->id)->avg('score');
         $avg = $avgRaw === null ? null : (int) round((float) $avgRaw);
@@ -56,10 +60,10 @@ trait SummarizesStudentPerformance
                 'total' => $student->attendances()->count(),
             ],
             'journal' => [
-                'total' => $student->activities()->count(),
+                'total' => $journalTotal,
             ],
             'attendanceRate' => $this->rate($hadirDays, $effectiveDays),
-            'journalRate' => $this->rate($journalDays, $effectiveDays),
+            'journalRate' => $journalRate,
             'effectiveDays' => $effectiveDays,
             'avg' => $avg,
             'grade' => Evaluation::gradeFor($avg),

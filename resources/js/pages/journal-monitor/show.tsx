@@ -1,6 +1,10 @@
+import { Link } from '@inertiajs/react';
 import { Clock, Eye, NotebookPen, Wrench } from 'lucide-react';
 import { useState } from 'react';
-import { index } from '@/actions/App/Http/Controllers/JournalMonitorController';
+import {
+    index,
+    verified,
+} from '@/actions/App/Http/Controllers/JournalMonitorController';
 import { PerformanceSummary } from '@/components/performance-summary';
 import type { Performance } from '@/components/performance-summary';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
@@ -20,6 +24,7 @@ type JournalRecord = {
     description: string;
     tools: string;
     image: string | null;
+    verified: boolean;
 };
 
 type Props = {
@@ -184,7 +189,7 @@ function RecordCard({
                 </span>
             </div>
 
-            <div className="mt-3 flex items-center border-t border-line pt-3">
+            <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
                 <button
                     type="button"
                     onClick={() => onShowDetail(record)}
@@ -193,6 +198,19 @@ function RecordCard({
                     <Eye className="size-4" />
                     Detail
                 </button>
+                <Link
+                    href={verified.url(record.id)}
+                    method="patch"
+                    data={{ verified: !record.verified }}
+                    preserveScroll
+                    className={
+                        record.verified
+                            ? 'rounded-lg bg-positive/15 px-3 py-1.5 text-sm font-semibold text-positive'
+                            : 'rounded-lg bg-red-500/10 px-3 py-1.5 text-sm font-semibold text-red-600'
+                    }
+                >
+                    {record.verified ? 'Sudah Dilihat' : 'Belum Dilihat'}
+                </Link>
             </div>
         </article>
     );

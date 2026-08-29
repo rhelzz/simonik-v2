@@ -2,6 +2,10 @@
 
 **Request:** PKL-007 · **Risiko:** sedang · **Migrasi:** tidak.
 
+**Status:** Selesai — pemeriksa scoped dapat mengubah status `verified` secara
+idempoten, label tampil di detail jurnal, dan persentase hanya muncul setelah
+seluruh jurnal siswa diperiksa.
+
 ## Keputusan data
 
 Gunakan `activities.verified` yang sudah ada sebagai status pemeriksaan. Nilai
@@ -42,4 +46,3 @@ kecuali diputuskan eksplisit saat eksekusi.
 - Persentase tersembunyi saat satu jurnal belum diperiksa dan muncul ketika semua selesai.
 - Menambah jurnal baru menyembunyikan persentase lagi.
 - Rumus persentase tidak berubah; hanya visibilitasnya yang berubah.
-

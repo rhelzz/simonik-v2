@@ -40,7 +40,7 @@ Gunakan nilai `Belum`, `Dikerjakan`, `Selesai`, atau `Ditunda`. Jangan menulis
 | 31 | Selesai | Roster menampilkan Jam Masuk/Pulang; sejak 2026-08-29 hanya record lengkap dihitung hadir, sementara histori tetap kompatibel. |
 | 32 | Selesai | Menit terlambat dihitung dari jam masuk industri pada riwayat, monitor, dan dashboard siswa; checkout WFO/proxy sebelum jam pulang ditolak server; konfigurasi jam masuk kosong menghasilkan null. |
 | 33 | Selesai | Presensi wakil mendukung masuk/pulang, batch berhasil/dilewati, validasi waktu dan scope admin/guru/pembimbing; record mandiri tidak ditimpa. |
-| 34 | Belum | |
+| 34 | Selesai | Pemeriksa dalam scope dapat menandai jurnal Belum Dilihat/Sudah Dilihat; status memakai activities.verified dan persentase tersembunyi sampai semua jurnal diperiksa. |
 | 35 | Belum | |
 | 36 | Belum | |
 | 37 | Belum | |

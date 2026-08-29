@@ -236,6 +236,18 @@ class JournalMonitorController extends Controller
         ]);
     }
 
+    public function verified(Request $request, Activity $activity): RedirectResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+        abort_unless($this->scopedStudents($user)->where('user_id', $activity->user_id)->exists(), 403);
+
+        $verified = $request->boolean('verified');
+        $activity->update(['verified' => $verified ? '1' : '0']);
+
+        return back()->with('success', $verified ? 'Jurnal ditandai sudah dilihat.' : 'Jurnal dikembalikan menjadi belum dilihat.');
+    }
+
     /**
      * Bentuk data jurnal untuk halaman Inertia (uraian HTML disanitasi saat render).
      *
@@ -253,6 +265,7 @@ class JournalMonitorController extends Controller
             'description' => $activity->description,
             'tools' => $activity->tools,
             'image' => $activity->image,
+            'verified' => $activity->verified === '1',
         ];
     }
 }
