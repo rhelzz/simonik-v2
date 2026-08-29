@@ -289,6 +289,13 @@ class DashboardController extends Controller
         $avg = $avgRaw === null ? null : (int) round((float) $avgRaw);
 
         $student?->loadMissing(['industries:id,name', 'pkl_period:id,name_period']);
+        $jamMasuk = $student?->industries?->jam_masuk;
+        $lateMinutes = $jamMasuk === null ? null : (int) Attendance::query()
+            ->where('user_id', $userId)
+            ->when($student->pkl_start, fn ($query, $start) => $query->whereDate('date', '>=', $start))
+            ->when($student->pkl_end, fn ($query, $end) => $query->whereDate('date', '<=', $end))
+            ->get(['arrivalTime'])
+            ->sum(fn (Attendance $attendance): int => $attendance->lateMinutes($jamMasuk) ?? 0);
 
         $streaks = $this->streakCalculator->calculate($user);
 
@@ -340,6 +347,7 @@ class DashboardController extends Controller
                 'grade' => Evaluation::gradeFor($avg),
                 'current_streak' => $streaks['current_streak'],
                 'longest_streak' => $streaks['longest_streak'],
+                'lateMinutes' => $lateMinutes,
             ],
             'badges' => $badges,
             'today' => Carbon::now()->translatedFormat('l, d F Y'),

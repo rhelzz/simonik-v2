@@ -147,6 +147,7 @@ class AttendanceMonitorController extends Controller
                     'departureTime' => $attendance?->departureTime
                         ? mb_substr($attendance->departureTime, 0, 5)
                         : null,
+                    'lateMinutes' => $attendance?->lateMinutes($student->industries?->jam_masuk),
                 ];
             });
 

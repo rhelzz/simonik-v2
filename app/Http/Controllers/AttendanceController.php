@@ -28,19 +28,18 @@ class AttendanceController extends Controller
         $userId = (int) $request->user()->id;
         $today = $this->todayRecord($userId);
 
+        $student = $request->user()->students;
+        $industry = $student?->industries;
         $history = Attendance::query()
             ->with('approval')
             ->where('user_id', $userId)
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->paginate(10)
-            ->through(fn (Attendance $attendance): array => $this->present($attendance));
-
-        $student = $request->user()->students;
-        $industry = $student?->industries;
+            ->through(fn (Attendance $attendance): array => $this->present($attendance, $industry?->jam_masuk));
 
         return Inertia::render('attendance/index', [
-            'today' => $today ? $this->present($today) : null,
+            'today' => $today ? $this->present($today, $industry?->jam_masuk) : null,
             'history' => $history,
             'todayLabel' => Carbon::today()->translatedFormat('l, d F Y'),
             'industry' => $industry ? [
@@ -168,7 +167,7 @@ class AttendanceController extends Controller
         $attendance->load('approval');
 
         return Inertia::render('attendance/show', [
-            'attendance' => $this->present($attendance),
+            'attendance' => $this->present($attendance, $request->user()->students?->industries?->jam_masuk),
         ]);
     }
 
@@ -208,6 +207,10 @@ class AttendanceController extends Controller
         $student = $request->user()->students;
         $industry = $student?->industries;
         $isSuspect = $today->is_suspect;
+
+        if ($today->mode !== 'wfa' && $industry?->jam_pulang !== null && Carbon::now()->format('H:i:s') < $industry->jam_pulang) {
+            return back()->with('error', 'Absen pulang belum dibuka sampai '.substr($industry->jam_pulang, 0, 5).'.');
+        }
 
         // Heuristic 2: Tandai is_suspect jika akurasi GPS buruk (> 50m)
         if ($gpsAccuracy > 50) {
@@ -299,7 +302,7 @@ class AttendanceController extends Controller
      *
      * @return array<string, mixed>
      */
-    private function present(Attendance $attendance): array
+    private function present(Attendance $attendance, ?string $jamMasuk = null): array
     {
         return [
             'id' => $attendance->id,
@@ -309,6 +312,7 @@ class AttendanceController extends Controller
             'arrivalTime' => $attendance->arrivalTime ? mb_substr($attendance->arrivalTime, 0, 5) : null,
             'departureTime' => $attendance->departureTime ? mb_substr($attendance->departureTime, 0, 5) : null,
             'isLate' => $attendance->is_late,
+            'lateMinutes' => $attendance->lateMinutes($jamMasuk),
             'isSuspect' => $attendance->is_suspect,
             'mode' => $attendance->mode,
             'approval' => $attendance->approval ? [

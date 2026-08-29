@@ -470,4 +470,39 @@ class AttendanceTest extends TestCase
 
         $this->assertNotNull($attendance->fresh()->departureTime);
     }
+
+    public function test_late_minutes_use_industry_start_time(): void
+    {
+        $attendance = new Attendance(['arrivalTime' => '08:17:00']);
+
+        $this->assertSame(0, $attendance->lateMinutes('08:17:00'));
+        $this->assertSame(17, $attendance->lateMinutes('08:00:00'));
+        $this->assertNull($attendance->lateMinutes(null));
+    }
+
+    public function test_student_cannot_check_out_before_industry_end_time(): void
+    {
+        Storage::fake('public');
+        Carbon::setTestNow('2026-09-01 16:59:00');
+        $siswa = $this->siswa();
+        $industry = Industry::factory()->create(['jam_pulang' => '17:00:00']);
+        Student::factory()->create(['user_id' => $siswa->id, 'industri_id' => $industry->id]);
+        $attendance = Attendance::factory()->create([
+            'user_id' => $siswa->id,
+            'date' => Carbon::today()->toDateString(),
+            'status' => 'hadir',
+            'mode' => 'wfo',
+            'departureTime' => null,
+        ]);
+
+        $this->actingAs($siswa)->post('/absen/pulang', [
+            'image' => UploadedFile::fake()->image('selfie.jpg'),
+            'latitude' => '-6.2',
+            'longitude' => '106.8',
+            'gps_accuracy' => 10,
+        ])->assertSessionHas('error');
+
+        $this->assertNull($attendance->fresh()->departureTime);
+        Carbon::setTestNow();
+    }
 }

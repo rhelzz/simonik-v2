@@ -3,6 +3,10 @@
 **Request:** PKL-004 · **Risiko:** tinggi · **Migrasi:** tidak.
 **Dependency:** Fase 31 selesai.
 
+**Status:** Selesai — helper menit, akumulasi periode PKL, tampilan lintas role,
+dan guard checkout sudah diuji. Mode WFA tetap tidak dibatasi jam pulang karena
+tidak terikat lokasi industri.
+
 ## Definisi
 
 - Menit terlambat = `max(0, arrivalTime - industry.jam_masuk)` pada tanggal absen.
@@ -45,4 +49,3 @@ diinginkan, hentikan fase dan sepakati snapshot jam kerja per attendance.
 Aturan spreadsheet tentang keterlambatan “terus bertambah sampai 18.00” tidak
 diterapkan karena bertentangan dengan definisi keterlambatan kedatangan. Itu
 memerlukan keputusan produk terpisah tentang penalti lupa checkout.
-

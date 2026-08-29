@@ -94,6 +94,18 @@ class Attendance extends Model
             || ($this->arrivalTime !== null && $this->departureTime !== null);
     }
 
+    public function lateMinutes(?string $jamMasuk): ?int
+    {
+        if ($this->arrivalTime === null || $jamMasuk === null) {
+            return null;
+        }
+
+        $arrival = Carbon::parse($this->arrivalTime);
+        $start = Carbon::parse($jamMasuk);
+
+        return $arrival->greaterThan($start) ? (int) $start->diffInMinutes($arrival) : 0;
+    }
+
     /**
      * Get the attributes that should be cast.
      *

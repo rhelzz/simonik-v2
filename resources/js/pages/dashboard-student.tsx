@@ -4,6 +4,7 @@ import {
     CalendarCheck,
     Camera,
     ClipboardCheck,
+    Clock,
     NotebookPen,
     Zap,
 } from 'lucide-react';
@@ -43,6 +44,7 @@ type DashboardStudentProps = {
         grade: Grade | null;
         current_streak: number;
         longest_streak: number;
+        lateMinutes: number | null;
     };
     badges: BadgeData[];
     today: string;
@@ -153,7 +155,7 @@ export default function DashboardStudent({
             </section>
 
             {/* Counters */}
-            <section className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <section className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <StatCard
                     icon={CalendarCheck}
                     label="Hari hadir bulan ini"
@@ -164,6 +166,16 @@ export default function DashboardStudent({
                     icon={NotebookPen}
                     label="Jurnal bulan ini"
                     value={stats.journalMonth}
+                    tint="bg-warning/15 text-warning"
+                />
+                <StatCard
+                    icon={Clock}
+                    label="Keterlambatan"
+                    value={
+                        stats.lateMinutes === null
+                            ? '—'
+                            : `${stats.lateMinutes} mnt`
+                    }
                     tint="bg-warning/15 text-warning"
                 />
                 <StatCard

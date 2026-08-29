@@ -18,6 +18,7 @@ export type RosterRow = {
     statusLabel: string;
     arrivalTime: string | null;
     departureTime: string | null;
+    lateMinutes: number | null;
 };
 
 /**
@@ -200,6 +201,9 @@ export function DailyRoster({
                                         <th className="px-3 py-2.5">
                                             Jam Pulang
                                         </th>
+                                        <th className="px-3 py-2.5">
+                                            Keterlambatan
+                                        </th>
                                     </>
                                 )}
                             </tr>
@@ -252,6 +256,13 @@ export function DailyRoster({
                                             </td>
                                             <td className="px-3 py-2.5 text-muted">
                                                 {row.departureTime ?? '—'}
+                                            </td>
+                                            <td className="px-3 py-2.5 text-muted">
+                                                {row.lateMinutes === null
+                                                    ? '—'
+                                                    : row.lateMinutes > 0
+                                                      ? `${row.lateMinutes} menit`
+                                                      : 'Tepat waktu'}
                                             </td>
                                         </>
                                     )}
