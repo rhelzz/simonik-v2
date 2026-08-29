@@ -261,7 +261,7 @@ export default function ProfileEdit({ profile, student }: ProfileEditProps) {
                                             name="email"
                                             type="email"
                                             defaultValue={profile.email}
-                                            placeholder="nama@sekolah.sch.id"
+                                            placeholder="nama@simonik.local"
                                             className={inputClass}
                                             required
                                         />

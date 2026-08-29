@@ -8,6 +8,11 @@ Dokumen hidup yang merekam posisi migrasi dari aplikasi lama (`backend/` Laravel
 
 ## ✅ Sudah dikerjakan
 
+### v2.6 Fase 29 — Domain pada login ✅
+- Placeholder email pada halaman login dan profil diselaraskan dari `nama@sekolah.sch.id` menjadi `nama@simonik.local`.
+- Normalisasi email backend tidak berubah karena sudah memakai domain yang benar.
+- ✅ TypeScript `tsc --noEmit` dan 6 test autentikasi hijau.
+
 ### 1. Database migrations — `database/migrations/`
 - 58 migration backend (banyak `add_/drop_/rename_`) dikonsolidasi jadi **26 migration `create_` murni** (forward-only).
 - Auth pakai session → JWT/Sanctum/`personal_access_tokens` backend **tidak** diport.

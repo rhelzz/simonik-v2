@@ -302,7 +302,7 @@ export default function Login({ status }: { status?: string }) {
                                             autoComplete="email"
                                             required
                                             autoFocus
-                                            placeholder="nama@sekolah.sch.id"
+                                            placeholder="nama@simonik.local"
                                             className={inputClass}
                                         />
                                     </Field>
