@@ -3,6 +3,9 @@
 **Request:** PKL-011 · **Risiko:** rendah · **Migrasi:** tidak.
 **Dependency:** Fase 36 selesai.
 
+**Status:** Selesai — ringkasan rapor dipadatkan sesuai scope tanpa mengubah
+nilai akhir, grade, aspek penilaian, QR, atau tata letak cetak.
+
 ## Scope
 
 - Pada bagian D, pertahankan Hadir, Izin, Sakit, dan Alpha.
@@ -32,4 +35,3 @@ Setelah fase ini, jalankan ulang test sertifikat untuk PKL-012/013 dan verifikas
 - siswa melihat sertifikat sekolah serta industri;
 - pembimbing hanya mengelola template dan siswa industrinya;
 - tidak ada perubahan hak akses sertifikat akibat perubahan sidebar.
-

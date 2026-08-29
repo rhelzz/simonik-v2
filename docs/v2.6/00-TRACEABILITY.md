@@ -43,4 +43,4 @@ Gunakan nilai `Belum`, `Dikerjakan`, `Selesai`, atau `Ditunda`. Jangan menulis
 | 34 | Selesai | Pemeriksa dalam scope dapat menandai jurnal Belum Dilihat/Sudah Dilihat; status memakai activities.verified dan persentase tersembunyi sampai semua jurnal diperiksa. |
 | 35 | Selesai | Lima slot teknis per siswa memakai label custom pada evaluations; pembimbing industri mengisi nilai teknis, guru non-teknis, dan rapor membaca label/nilai terbaru. |
 | 36 | Selesai | Modal informasi grade memakai helper batas yang sama dengan backend; urutan sidebar menjadi Aspek, Penilaian PKL, Rekap Penilaian, Sertifikat PKL, Template Sertifikat PKL tanpa istilah Rapor Digital. |
-| 37 | Belum | |
+| 37 | Selesai | Bagian D hanya Hadir/Izin/Sakit/Alpha; prop Jurnal/Libur dan blok rata-rata dihapus, nilai akhir/grade, aspek, QR, dan print tetap tersedia. |

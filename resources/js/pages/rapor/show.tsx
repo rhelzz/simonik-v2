@@ -37,21 +37,14 @@ type Props = {
         penguji2: string | null;
         deskripsi: string | null;
         status: string | null;
-        average: number | null;
     };
     attendance: {
         hadir: number;
         izin: number;
         sakit: number;
         alpha: number;
-        libur: number;
-        total: number;
     };
-    journalTotal: number;
     summary: {
-        teknis: number | null;
-        nonTeknis: number | null;
-        sidang: number | null;
         final: number | null;
         grade: Grade | null;
         qualification: string | null;
@@ -73,7 +66,6 @@ export default function RaporShow({
     nonTeknis,
     sidang,
     attendance,
-    journalTotal,
     summary,
     qr,
     printedAt,
@@ -244,33 +236,19 @@ export default function RaporShow({
                         {/* Rekap kehadiran & jurnal */}
                         <section className="mt-5 break-inside-avoid">
                             <h3 className="text-sm font-bold">
-                                D. Rekap Kehadiran & Jurnal
+                                D. Rekap Kehadiran
                             </h3>
-                            <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+                            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                                 <Recap label="Hadir" value={attendance.hadir} />
                                 <Recap label="Izin" value={attendance.izin} />
                                 <Recap label="Sakit" value={attendance.sakit} />
                                 <Recap label="Alpha" value={attendance.alpha} />
-                                <Recap label="Libur" value={attendance.libur} />
-                                <Recap label="Jurnal" value={journalTotal} />
                             </div>
                         </section>
 
-                        {/* Ringkasan nilai akhir */}
+                        {/* Nilai akhir */}
                         <section className="mt-5 break-inside-avoid rounded-lg border border-black/20 p-3">
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-1 sm:grid-cols-4">
-                                <Summary
-                                    label="Rata-rata teknis"
-                                    value={summary.teknis}
-                                />
-                                <Summary
-                                    label="Rata-rata non-teknis"
-                                    value={summary.nonTeknis}
-                                />
-                                <Summary
-                                    label="Rata-rata sidang"
-                                    value={summary.sidang}
-                                />
+                            <div>
                                 <div>
                                     <p className="text-[11px] text-black/60">
                                         Nilai akhir
@@ -389,15 +367,6 @@ function Recap({ label, value }: { label: string; value: number }) {
         <div className="rounded border border-black/15 px-2 py-1.5 text-center">
             <p className="text-lg font-extrabold">{value}</p>
             <p className="text-[11px] text-black/60">{label}</p>
-        </div>
-    );
-}
-
-function Summary({ label, value }: { label: string; value: number | null }) {
-    return (
-        <div>
-            <p className="text-[11px] text-black/60">{label}</p>
-            <p className="text-base font-bold">{value ?? '—'}</p>
         </div>
     );
 }

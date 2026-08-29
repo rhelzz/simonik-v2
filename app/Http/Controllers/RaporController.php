@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\ScopesStudentsByRole;
-use App\Models\Activity;
 use App\Models\AspekProduktif;
 use App\Models\Attendance;
 use App\Models\Classes;
@@ -190,6 +189,7 @@ class RaporController extends Controller
         $avgTeknis = $this->average(array_column($teknis, 'score'));
         $avgNonTeknis = $this->average(array_column($nonTeknis, 'score'));
         $avgSidang = $sidang['average'];
+        unset($sidang['average']);
 
         $components = array_values(array_filter(
             [$avgTeknis, $avgNonTeknis, $avgSidang],
@@ -214,11 +214,7 @@ class RaporController extends Controller
             'nonTeknis' => $nonTeknis,
             'sidang' => $sidang,
             'attendance' => $this->attendanceRecap((int) $student->user_id),
-            'journalTotal' => Activity::query()->where('user_id', $student->user_id)->count(),
             'summary' => [
-                'teknis' => $avgTeknis,
-                'nonTeknis' => $avgNonTeknis,
-                'sidang' => $avgSidang,
                 'final' => $final,
                 'grade' => Evaluation::gradeFor($final),
                 'qualification' => Evaluation::qualificationFor($final),
@@ -261,7 +257,7 @@ class RaporController extends Controller
     /**
      * Nilai sidang siswa: daftar aspek + nilai, penguji, status, dan rata-rata.
      *
-     * @return array{scores: array<int, array<string, mixed>>, penguji1: string|null, penguji2: string|null, deskripsi: string|null, status: string|null, average: int|null}
+     * @return array<string, mixed>
      */
     private function sidang(Student $student): array
     {
@@ -291,7 +287,7 @@ class RaporController extends Controller
     /**
      * Rekap kehadiran per status untuk seorang siswa (via user_id).
      *
-     * @return array{hadir: int, izin: int, sakit: int, alpha: int, libur: int, total: int}
+     * @return array{hadir: int, izin: int, sakit: int, alpha: int}
      */
     private function attendanceRecap(int $userId): array
     {
@@ -309,15 +305,12 @@ class RaporController extends Controller
         $izin = (int) $counts->get('izin', 0);
         $sakit = (int) $counts->get('sakit', 0);
         $alpha = (int) $counts->get('alpha', 0);
-        $libur = (int) $counts->get('libur', 0);
 
         return [
             'hadir' => $hadir,
             'izin' => $izin,
             'sakit' => $sakit,
             'alpha' => $alpha,
-            'libur' => $libur,
-            'total' => $hadir + $izin + $sakit + $alpha + $libur,
         ];
     }
 
