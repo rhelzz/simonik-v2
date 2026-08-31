@@ -429,6 +429,23 @@ export type RecentStudent = {
     class: string | null;
     industry: string | null;
     joined: string | null;
+    daily?: {
+        status: 'Belum lengkap' | 'Hadir' | 'Terlambat' | 'Alpa';
+        arrivalTime: string | null;
+        departureTime: string | null;
+        lateMinutes: number | null;
+        hasJournal: boolean;
+    };
+};
+
+const dailyStatusStyles: Record<
+    NonNullable<RecentStudent['daily']>['status'],
+    string
+> = {
+    'Belum lengkap': 'bg-warning/15 text-warning',
+    Hadir: 'bg-positive/15 text-positive',
+    Terlambat: 'bg-orange-500/15 text-orange-600',
+    Alpa: 'bg-red-500/15 text-red-600',
 };
 
 /** Warna avatar deterministik dari nama agar konsisten antar-render. */
@@ -468,6 +485,8 @@ export function RecentStudentsTable({
     subtitle: string;
     emptyText: string;
 }) {
+    const hasDailySummary = students.some((student) => student.daily);
+
     return (
         <section className="rounded-3xl bg-surface p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3">
@@ -492,18 +511,40 @@ export function RecentStudentsTable({
                 </div>
             ) : (
                 <div className="mt-4 overflow-x-auto">
-                    <table className="w-full min-w-160 border-collapse text-left text-sm">
+                    <table className="w-full min-w-240 border-collapse text-left text-sm">
                         <thead>
                             <tr className="border-b border-line text-xs font-semibold tracking-wide text-muted uppercase">
-                                <th className="pb-3 font-semibold">Siswa</th>
+                                <th className="pb-3 font-semibold">Nama</th>
                                 <th className="pb-3 font-semibold">Kelas</th>
                                 <th className="pb-3 font-semibold">Industri</th>
-                                <th className="pb-3 font-semibold">
-                                    Bergabung
-                                </th>
-                                <th className="pb-3 text-right font-semibold">
-                                    Status
-                                </th>
+                                {hasDailySummary ? (
+                                    <>
+                                        <th className="pb-3 font-semibold">
+                                            Status
+                                        </th>
+                                        <th className="pb-3 font-semibold">
+                                            Jam masuk
+                                        </th>
+                                        <th className="pb-3 font-semibold">
+                                            Jam pulang
+                                        </th>
+                                        <th className="pb-3 font-semibold">
+                                            Keterlambatan
+                                        </th>
+                                        <th className="pb-3 text-right font-semibold">
+                                            Jurnal
+                                        </th>
+                                    </>
+                                ) : (
+                                    <>
+                                        <th className="pb-3 font-semibold">
+                                            Bergabung
+                                        </th>
+                                        <th className="pb-3 text-right font-semibold">
+                                            Status
+                                        </th>
+                                    </>
+                                )}
                             </tr>
                         </thead>
                         <tbody>
@@ -549,21 +590,63 @@ export function RecentStudentsTable({
                                             </span>
                                         )}
                                     </td>
-                                    <td className="py-3 text-ink/70">
-                                        {student.joined ?? '—'}
-                                    </td>
-                                    <td className="rounded-r-xl py-3 text-right">
-                                        <span
-                                            className={cn(
-                                                'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
-                                                statusStyles[
-                                                    student.status_pkl
-                                                ],
-                                            )}
-                                        >
-                                            {statusLabels[student.status_pkl]}
-                                        </span>
-                                    </td>
+                                    {hasDailySummary && student.daily ? (
+                                        <>
+                                            <td className="py-3">
+                                                <span
+                                                    className={cn(
+                                                        'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
+                                                        dailyStatusStyles[
+                                                            student.daily.status
+                                                        ],
+                                                    )}
+                                                >
+                                                    {student.daily.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 text-ink/80">
+                                                {student.daily.arrivalTime ??
+                                                    '—'}
+                                            </td>
+                                            <td className="py-3 text-ink/80">
+                                                {student.daily.departureTime ??
+                                                    '—'}
+                                            </td>
+                                            <td className="py-3 text-ink/80">
+                                                {student.daily.lateMinutes ===
+                                                null
+                                                    ? '—'
+                                                    : `${student.daily.lateMinutes} menit`}
+                                            </td>
+                                            <td className="rounded-r-xl py-3 text-right text-ink/80">
+                                                {student.daily.hasJournal
+                                                    ? 'Sudah isi'
+                                                    : 'Belum'}
+                                            </td>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <td className="py-3 text-ink/70">
+                                                {student.joined ?? '—'}
+                                            </td>
+                                            <td className="rounded-r-xl py-3 text-right">
+                                                <span
+                                                    className={cn(
+                                                        'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
+                                                        statusStyles[
+                                                            student.status_pkl
+                                                        ],
+                                                    )}
+                                                >
+                                                    {
+                                                        statusLabels[
+                                                            student.status_pkl
+                                                        ]
+                                                    }
+                                                </span>
+                                            </td>
+                                        </>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

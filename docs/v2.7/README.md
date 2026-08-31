@@ -13,6 +13,7 @@ dan diverifikasi pada 31 Agustus 2026.
 | [39](39-ANULIR-PRESENSI-PEMBIMBING.md) | Izinkan pembimbing melakukan presensi masuk/pulang untuk murid dalam cakupannya | P1 | Sedang | Tidak | **Selesai** |
 | [40](40-INFORMASI-GRADE-PENILAIAN.md) | Informasi kategori grade pada Rekap Penilaian Industri serta revisi rentang grade | P1 | Rendah | Tidak | **Selesai** |
 | [41](41-FAVICON-DINAMIS.md) | Perbaiki favicon tab dan dukung format ICO, PNG, JPG/JPEG, serta SVG | P1 | Rendah | Tidak | **Selesai** |
+| [42](42-RINGKASAN-HARIAN-SISWA-BIMBINGAN.md) | Ringkasan presensi dan jurnal harian pada dashboard pembimbing | P1 | Rendah | Tidak | **Selesai** |
 
 ## Cakupan role
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Activity;
 use App\Models\Attendance;
 use App\Models\Departemen;
 use App\Models\Industry;
@@ -146,8 +147,16 @@ class DashboardTest extends TestCase
     {
         $guruUser = $this->user('guru');
         $teacher = Teacher::factory()->create(['user_id' => $guruUser->id]);
-        $industry = Industry::factory()->create(['teacher_id' => $teacher->id]);
-        Student::factory()->create(['industri_id' => $industry->id]);
+        $industry = Industry::factory()->create(['teacher_id' => $teacher->id, 'jam_masuk' => '08:00:00']);
+        $student = Student::factory()->create(['industri_id' => $industry->id]);
+        Attendance::factory()->create([
+            'user_id' => $student->user_id,
+            'date' => Carbon::today(),
+            'status' => 'hadir',
+            'arrivalTime' => '08:15:00',
+            'departureTime' => '16:00:00',
+        ]);
+        Activity::factory()->create(['user_id' => $student->user_id, 'date' => Carbon::today()]);
         // Siswa di PT lain tidak masuk cakupan guru ini.
         Student::factory()->create();
 
@@ -157,6 +166,11 @@ class DashboardTest extends TestCase
                 ->component('dashboard-staff')
                 ->where('stats.students', 1)
                 ->has('attendanceRate.today')
+                ->where('recentStudents.0.daily.status', 'Terlambat')
+                ->where('recentStudents.0.daily.arrivalTime', '08:15')
+                ->where('recentStudents.0.daily.departureTime', '16:00')
+                ->where('recentStudents.0.daily.lateMinutes', 15)
+                ->where('recentStudents.0.daily.hasJournal', true)
             );
     }
 

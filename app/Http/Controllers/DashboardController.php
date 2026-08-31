@@ -263,7 +263,8 @@ class DashboardController extends Controller
             'attendanceRate' => $participation['attendance'],
             'journalRate' => $participation['journal'],
             'recentStudents' => $this->presentStudents(
-                (clone $scoped)->with(['classes:id,name', 'industries:id,name'])->latest()->take(5),
+                (clone $scoped)->with(['classes:id,name', 'industries:id,name,jam_masuk'])->latest()->take(5),
+                daily: true,
             ),
             'today' => Carbon::now()->translatedFormat('l, d F Y'),
         ]);
@@ -496,11 +497,26 @@ class DashboardController extends Controller
      * @param  Builder<Student>  $query
      * @return array<int, array<string, mixed>>
      */
-    private function presentStudents(Builder $query): array
+    private function presentStudents(Builder $query, bool $daily = false): array
     {
-        return $query
-            ->get(['id', 'name', 'nis', 'status_pkl', 'class_id', 'industri_id', 'created_at'])
-            ->map(fn (Student $student): array => [
+        $students = $query->get(['id', 'user_id', 'name', 'nis', 'status_pkl', 'class_id', 'industri_id', 'created_at']);
+        $attendances = $daily
+            ? Attendance::query()->whereIn('user_id', $students->pluck('user_id'))->whereDate('date', Carbon::today())->get()->keyBy('user_id')
+            : collect();
+        $journals = $daily
+            ? Activity::query()->whereIn('user_id', $students->pluck('user_id'))->whereDate('date', Carbon::today())->pluck('user_id')->flip()
+            : collect();
+
+        return $students->map(function (Student $student) use ($daily, $attendances, $journals): array {
+            $attendance = $attendances->get($student->user_id);
+            $lateMinutes = $attendance?->lateMinutes($student->industries?->jam_masuk);
+            $status = $attendance?->status === 'alpha'
+                ? 'Alpa'
+                : ($attendance?->arrivalTime === null || $attendance?->departureTime === null
+                    ? 'Belum lengkap'
+                    : ($lateMinutes > 0 ? 'Terlambat' : 'Hadir'));
+
+            return [
                 'id' => $student->id,
                 'name' => $student->name,
                 'nis' => $student->nis,
@@ -508,7 +524,14 @@ class DashboardController extends Controller
                 'class' => $student->classes?->name,
                 'industry' => $student->industries?->name,
                 'joined' => $student->created_at?->translatedFormat('d M Y'),
-            ])
-            ->all();
+                ...($daily ? ['daily' => [
+                    'status' => $status,
+                    'arrivalTime' => $attendance?->arrivalTime ? mb_substr($attendance->arrivalTime, 0, 5) : null,
+                    'departureTime' => $attendance?->departureTime ? mb_substr($attendance->departureTime, 0, 5) : null,
+                    'lateMinutes' => $lateMinutes,
+                    'hasJournal' => $journals->has($student->user_id),
+                ]] : []),
+            ];
+        })->all();
     }
 }
