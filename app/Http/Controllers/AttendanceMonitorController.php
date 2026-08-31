@@ -160,7 +160,7 @@ class AttendanceMonitorController extends Controller
             'filters' => ['tanggal' => $date->format('Y-m-d'), 'tab' => $tab],
             'dateLabel' => $date->translatedFormat('l, d F Y'),
             'can' => [
-                'proxyAttendance' => $user->hasAnyRole(['admin', 'guru']),
+                'proxyAttendance' => $user->hasAnyRole(['admin', 'guru', 'pembimbing']),
                 'reset' => $user->hasRole('admin'),
             ],
             // Opsi filter modal reset. Jurusan memakai ulang prop `departemens`

@@ -473,6 +473,17 @@ class AttendanceMonitorTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('attendance-monitor/index'));
     }
 
+    public function test_pembimbing_can_open_proxy_attendance_modal(): void
+    {
+        $data = $this->scenario();
+
+        $this->actingAs($data['pembimbing'])
+            ->get('/monitoring/absen')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('can.proxyAttendance', true)
+            );
+    }
+
     public function test_siswa_cannot_access_monitor(): void
     {
         $this->actingAs($this->user('siswa'))
