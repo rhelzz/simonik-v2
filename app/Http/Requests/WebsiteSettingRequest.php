@@ -23,7 +23,7 @@ class WebsiteSettingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'favicon' => ['required', 'file', 'mimes:ico', 'max:512'],
+            'favicon' => ['required', 'file', 'mimes:ico,png,jpg,jpeg,svg', 'max:512'],
         ];
     }
 }

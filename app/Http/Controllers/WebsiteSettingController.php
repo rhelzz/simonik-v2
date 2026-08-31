@@ -9,8 +9,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Pengaturan favicon situs (admin): satu berkas favicon.ico yang dipakai
- * di seluruh halaman lewat <link> statis di app.blade.php.
+ * Pengaturan favicon situs (admin) yang dipakai di seluruh halaman.
  */
 class WebsiteSettingController extends Controller
 {
@@ -20,7 +19,7 @@ class WebsiteSettingController extends Controller
 
         return Inertia::render('website-settings/edit', [
             'favicon' => [
-                'url' => asset('favicon.ico').'?v='.$setting->updated_at?->timestamp,
+                'url' => asset($setting->favicon ?? 'favicon.ico').'?v='.$setting->updated_at?->timestamp,
                 'updatedAt' => $setting->updated_at,
             ],
         ]);
@@ -30,9 +29,12 @@ class WebsiteSettingController extends Controller
     {
         $setting = Setting::query()->firstOrCreate([]);
 
-        $request->file('favicon')->move(public_path(), 'favicon.ico');
+        $file = $request->file('favicon');
+        $favicon = 'favicon.'.strtolower($file->getClientOriginalExtension());
 
-        $setting->update(['favicon' => 'favicon.ico']);
+        $file->move(public_path(), $favicon);
+
+        $setting->update(['favicon' => $favicon]);
 
         return back()->with('success', 'Favicon berhasil diperbarui.');
     }

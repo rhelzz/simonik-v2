@@ -12,7 +12,8 @@ class WebsiteSettingTest extends TestCase
 {
     use RefreshDatabase;
 
-    private ?string $originalFavicon = null;
+    /** @var array<string, string|null> */
+    private array $originalFavicons = [];
 
     protected function setUp(): void
     {
@@ -21,15 +22,20 @@ class WebsiteSettingTest extends TestCase
 
         // Uploads overwrite the real public/favicon.ico — snapshot it so the
         // repo's actual favicon isn't left replaced by test fixture bytes.
-        $this->originalFavicon = file_exists(public_path('favicon.ico'))
-            ? file_get_contents(public_path('favicon.ico'))
-            : null;
+        foreach (['ico', 'png', 'jpg', 'jpeg', 'svg'] as $extension) {
+            $path = public_path("favicon.{$extension}");
+            $this->originalFavicons[$path] = file_exists($path) ? file_get_contents($path) : null;
+        }
     }
 
     protected function tearDown(): void
     {
-        if ($this->originalFavicon !== null) {
-            file_put_contents(public_path('favicon.ico'), $this->originalFavicon);
+        foreach ($this->originalFavicons as $path => $contents) {
+            if ($contents !== null) {
+                file_put_contents($path, $contents);
+            } elseif (file_exists($path)) {
+                unlink($path);
+            }
         }
 
         parent::tearDown();
@@ -73,13 +79,16 @@ class WebsiteSettingTest extends TestCase
         $this->assertFileExists(public_path('favicon.ico'));
     }
 
-    public function test_favicon_upload_requires_ico_file(): void
+    public function test_admin_can_upload_png_favicon(): void
     {
         $file = UploadedFile::fake()->image('favicon.png');
 
         $this->actingAs($this->admin())
             ->put('/pengaturan-website', ['favicon' => $file])
-            ->assertSessionHasErrors('favicon');
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('settings', ['favicon' => 'favicon.png']);
+        $this->assertFileExists(public_path('favicon.png'));
     }
 
     public function test_favicon_upload_is_required(): void

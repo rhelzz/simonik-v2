@@ -4,8 +4,8 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        @php($favicon = \App\Models\Setting::query()->first(['favicon', 'updated_at']))
+        <link rel="icon" href="{{ asset($favicon?->favicon ?? 'favicon.ico') }}?v={{ $favicon?->updated_at?->timestamp }}">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         {{-- PWA (M6.1) --}}

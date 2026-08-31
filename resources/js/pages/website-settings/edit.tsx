@@ -38,8 +38,8 @@ export default function WebsiteSettingsEdit({ favicon }: WebsiteSettingsProps) {
                                 Favicon situs
                             </h3>
                             <p className="text-xs text-muted">
-                                Ikon yang tampil di tab browser. Berkas .ico,
-                                maksimal 512 KB.
+                                Ikon yang tampil di tab browser. Berkas ICO,
+                                PNG, JPG, atau SVG, maksimal 512 KB.
                             </p>
                         </div>
                     </div>
@@ -56,12 +56,12 @@ export default function WebsiteSettingsEdit({ favicon }: WebsiteSettingsProps) {
                                 className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-canvas/40 px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-primary hover:text-primary"
                             >
                                 <UploadCloud className="size-4" />
-                                Pilih berkas .ico
+                                Pilih favicon
                             </label>
                             <input
                                 id="favicon"
                                 type="file"
-                                accept=".ico,image/x-icon,image/vnd.microsoft.icon"
+                                accept=".ico,.png,.jpg,.jpeg,.svg,image/x-icon,image/vnd.microsoft.icon,image/png,image/jpeg,image/svg+xml"
                                 className="hidden"
                                 onChange={(event) =>
                                     onFile(event.target.files?.[0] ?? null)
