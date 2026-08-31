@@ -109,7 +109,7 @@ class AttendanceMonitorController extends Controller
             )
             ->with([
                 'classes:id,name',
-                'industries:id,name',
+                'industries:id,name,jam_masuk',
                 // Tanpa eager-load berkondisi ini, tabel 15 baris = 15 kueri.
                 'users.attendances' => $onDate,
                 'pkl_period:id,start_period,end_period',
@@ -407,13 +407,14 @@ class AttendanceMonitorController extends Controller
         $user = $request->user();
         abort_unless($this->scopedStudents($user)->whereKey($student->id)->exists(), 403);
 
+        $student->loadMissing(['classes:id,name', 'industries:id,name,jam_masuk', 'pkl_period:id,start_period,end_period']);
+        $jamMasuk = $student->industries?->jam_masuk;
+
         $records = $student->attendances()
             ->orderByDesc('date')
             ->orderByDesc('id')
             ->paginate(15)
-            ->through(fn (Attendance $attendance): array => $this->present($attendance));
-
-        $student->loadMissing(['classes:id,name', 'industries:id,name', 'pkl_period:id,start_period,end_period']);
+            ->through(fn (Attendance $attendance): array => $this->present($attendance, $jamMasuk));
 
         return Inertia::render('attendance-monitor/show', [
             'student' => [
@@ -433,7 +434,7 @@ class AttendanceMonitorController extends Controller
      *
      * @return array<string, mixed>
      */
-    private function present(Attendance $attendance): array
+    private function present(Attendance $attendance, ?string $jamMasuk): array
     {
         return [
             'id' => $attendance->id,
@@ -442,6 +443,7 @@ class AttendanceMonitorController extends Controller
             'status' => $attendance->status,
             'arrivalTime' => $attendance->arrivalTime ? mb_substr($attendance->arrivalTime, 0, 5) : null,
             'departureTime' => $attendance->departureTime ? mb_substr($attendance->departureTime, 0, 5) : null,
+            'lateMinutes' => $attendance->lateMinutes($jamMasuk),
             'absenceReason' => $attendance->absenceReason,
             'image' => $attendance->image,
             'departureImage' => $attendance->departure_image,

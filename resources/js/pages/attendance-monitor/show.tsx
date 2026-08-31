@@ -24,6 +24,7 @@ type AttendanceRecord = {
     status: string | null;
     arrivalTime: string | null;
     departureTime: string | null;
+    lateMinutes: number | null;
     absenceReason: string | null;
     image: string | null;
     departureImage: string | null;
@@ -133,6 +134,14 @@ function RecordCard({ record }: { record: AttendanceRecord }) {
                     <span className="inline-flex items-center gap-1.5">
                         <LogOut className="size-4 text-muted" />
                         Pulang {record.departureTime}
+                    </span>
+                )}
+                {record.lateMinutes !== null && (
+                    <span className="inline-flex items-center gap-1.5">
+                        <Clock className="size-4 text-muted" />
+                        {record.lateMinutes > 0
+                            ? `${record.lateMinutes} menit terlambat`
+                            : 'Tepat waktu'}
                     </span>
                 )}
                 {hasGeo && (

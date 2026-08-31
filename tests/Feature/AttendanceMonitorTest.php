@@ -149,6 +149,29 @@ class AttendanceMonitorTest extends TestCase
         Carbon::setTestNow();
     }
 
+    public function test_late_minutes_are_visible_in_roster_and_scoped_student_detail(): void
+    {
+        $data = $this->scenario();
+        $data['student']->update(['status_pkl' => 'proses']);
+        $data['attendance']->update([
+            'date' => Carbon::today(),
+            'arrivalTime' => '08:17:00',
+        ]);
+
+        $this->actingAs($data['teacher'])
+            ->get('/monitoring/absen?tab=sudah')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('roster.data.0.lateMinutes', 17)
+            );
+
+        $this->actingAs($data['teacher'])
+            ->get("/monitoring/absen/murid/{$data['student']->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('records.data.0.lateMinutes', 17)
+                ->where('performance.lateMinutes', 17)
+            );
+    }
+
     public function test_incomplete_historical_attendance_before_phase_31_remains_present(): void
     {
         $data = $this->scenario();

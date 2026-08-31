@@ -23,6 +23,7 @@ trait SummarizesStudentPerformance
      *     journal: array{total: int},
      *     attendanceRate: int,
      *     journalRate: int|null,
+     *     lateMinutes: int|null,
      *     effectiveDays: int,
      *     avg: int|null,
      *     grade: string|null
@@ -64,6 +65,7 @@ trait SummarizesStudentPerformance
             ],
             'attendanceRate' => $this->rate($hadirDays, $effectiveDays),
             'journalRate' => $journalRate,
+            'lateMinutes' => $student->cumulativeLateMinutes(),
             'effectiveDays' => $effectiveDays,
             'avg' => $avg,
             'grade' => Evaluation::gradeFor($avg),

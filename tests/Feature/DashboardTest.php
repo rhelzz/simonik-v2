@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Departemen;
 use App\Models\Industry;
 use App\Models\Parents;
+use App\Models\PKLPeriod;
 use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
@@ -170,6 +171,48 @@ class DashboardTest extends TestCase
                 ->component('dashboard-student')
                 ->has('stats.journalTotal')
                 ->has('todayStatus')
+            );
+    }
+
+    public function test_student_dashboard_accumulates_late_minutes_within_pkl_period(): void
+    {
+        $siswa = $this->user('siswa');
+        $industry = Industry::factory()->create(['jam_masuk' => '08:00:00']);
+        $period = PKLPeriod::factory()->create([
+            'start_period' => '2026-08-01',
+            'end_period' => '2026-08-31',
+        ]);
+
+        Student::factory()->create([
+            'user_id' => $siswa->id,
+            'industri_id' => $industry->id,
+            'p_k_l_period_id' => $period->id,
+            'pkl_start' => null,
+            'pkl_end' => null,
+        ]);
+
+        Attendance::factory()->create(['user_id' => $siswa->id, 'date' => '2026-08-10', 'arrivalTime' => '08:17:00']);
+        Attendance::factory()->create(['user_id' => $siswa->id, 'date' => '2026-08-11', 'arrivalTime' => '08:13:00']);
+        Attendance::factory()->create(['user_id' => $siswa->id, 'date' => '2026-09-01', 'arrivalTime' => '09:00:00']);
+
+        $this->actingAs($siswa)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.lateMinutes', 30)
+            );
+    }
+
+    public function test_student_dashboard_reports_zero_when_never_late(): void
+    {
+        $siswa = $this->user('siswa');
+        $industry = Industry::factory()->create(['jam_masuk' => '08:00:00']);
+        Student::factory()->create(['user_id' => $siswa->id, 'industri_id' => $industry->id]);
+        Attendance::factory()->create(['user_id' => $siswa->id, 'arrivalTime' => '08:00:00']);
+
+        $this->actingAs($siswa)
+            ->get('/dashboard')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('stats.lateMinutes', 0)
             );
     }
 

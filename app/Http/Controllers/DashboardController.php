@@ -288,14 +288,8 @@ class DashboardController extends Controller
             : Evaluation::query()->where('student_id', $student->id)->avg('score');
         $avg = $avgRaw === null ? null : (int) round((float) $avgRaw);
 
-        $student?->loadMissing(['industries:id,name', 'pkl_period:id,name_period']);
-        $jamMasuk = $student?->industries?->jam_masuk;
-        $lateMinutes = $jamMasuk === null ? null : (int) Attendance::query()
-            ->where('user_id', $userId)
-            ->when($student->pkl_start, fn ($query, $start) => $query->whereDate('date', '>=', $start))
-            ->when($student->pkl_end, fn ($query, $end) => $query->whereDate('date', '<=', $end))
-            ->get(['arrivalTime'])
-            ->sum(fn (Attendance $attendance): int => $attendance->lateMinutes($jamMasuk) ?? 0);
+        $student?->loadMissing(['industries:id,name,jam_masuk', 'pkl_period:id,name_period,start_period,end_period']);
+        $lateMinutes = $student?->cumulativeLateMinutes();
 
         $streaks = $this->streakCalculator->calculate($user);
 

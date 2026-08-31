@@ -221,7 +221,7 @@ class JournalMonitorController extends Controller
             ->paginate(10)
             ->through(fn (Activity $activity): array => $this->present($activity));
 
-        $student->loadMissing(['classes:id,name', 'industries:id,name', 'pkl_period:id,start_period,end_period']);
+        $student->loadMissing(['classes:id,name', 'industries:id,name,jam_masuk', 'pkl_period:id,start_period,end_period']);
 
         return Inertia::render('journal-monitor/show', [
             'student' => [

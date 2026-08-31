@@ -12,6 +12,7 @@ export type Performance = {
     journal: { total: number };
     attendanceRate: number;
     journalRate: number | null;
+    lateMinutes: number | null;
     effectiveDays: number;
     avg: number | null;
     grade: string | null;
@@ -33,8 +34,15 @@ export function PerformanceSummary({
 }: {
     performance: Performance;
 }) {
-    const { attendance, journal, attendanceRate, journalRate, avg, grade } =
-        performance;
+    const {
+        attendance,
+        journal,
+        attendanceRate,
+        journalRate,
+        lateMinutes,
+        avg,
+        grade,
+    } = performance;
 
     return (
         <section className="rounded-3xl bg-surface p-5 sm:p-6">
@@ -58,6 +66,14 @@ export function PerformanceSummary({
                         <Stat label="Sakit" value={attendance.sakit} />
                         <Stat label="Alpha" value={attendance.alpha} />
                     </div>
+                    <p className="mt-3 border-t border-line pt-3 text-xs text-muted">
+                        Total keterlambatan:{' '}
+                        <strong className="text-ink">
+                            {lateMinutes === null
+                                ? 'Jam masuk belum diatur'
+                                : `${lateMinutes} menit`}
+                        </strong>
+                    </p>
                 </div>
 
                 <div className="rounded-2xl border border-line bg-canvas/30 p-4">

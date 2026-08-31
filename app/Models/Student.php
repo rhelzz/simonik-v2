@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Database\Factories\StudentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -147,6 +148,26 @@ class Student extends Model
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class, 'user_id', 'user_id');
+    }
+
+    /** Total menit terlambat selama periode PKL efektif. */
+    public function cumulativeLateMinutes(): ?int
+    {
+        $this->loadMissing(['industries:id,jam_masuk', 'pkl_period:id,start_period,end_period']);
+        $jamMasuk = $this->industries?->jam_masuk;
+
+        if ($jamMasuk === null) {
+            return null;
+        }
+
+        $start = $this->pkl_start ?? $this->pkl_period?->start_period;
+        $end = $this->pkl_end ?? $this->pkl_period?->end_period;
+
+        return (int) $this->attendances()
+            ->when($start, fn (Builder $query, CarbonInterface $date): Builder => $query->whereDate('date', '>=', $date))
+            ->when($end, fn (Builder $query, CarbonInterface $date): Builder => $query->whereDate('date', '<=', $date))
+            ->get(['arrivalTime'])
+            ->sum(fn (Attendance $attendance): int => $attendance->lateMinutes($jamMasuk) ?? 0);
     }
 
     /**

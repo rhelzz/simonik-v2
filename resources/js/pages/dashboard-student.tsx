@@ -173,7 +173,7 @@ export default function DashboardStudent({
                     label="Keterlambatan"
                     value={
                         stats.lateMinutes === null
-                            ? '—'
+                            ? 'Belum diatur'
                             : `${stats.lateMinutes} mnt`
                     }
                     tint="bg-warning/15 text-warning"
