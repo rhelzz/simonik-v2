@@ -6,14 +6,9 @@ import {
     index as assessmentsIndex,
     update,
 } from '@/actions/App/Http/Controllers/AssessmentController';
-import { Modal } from '@/components/ui/modal';
+import { GradeInfoModal } from '@/components/grade-info-modal';
 import { AppLayout } from '@/layouts/app-layout';
-import {
-    gradeFor,
-    gradeRanges,
-    gradeStyles,
-    qualificationFor,
-} from '@/lib/grade';
+import { gradeFor, gradeStyles, qualificationFor } from '@/lib/grade';
 import type { Grade } from '@/lib/grade';
 import { cn } from '@/lib/utils';
 
@@ -165,42 +160,10 @@ export default function AssessmentShow({
                     </div>
                 )}
             </form>
-            <Modal
+            <GradeInfoModal
                 open={gradeInfoOpen}
                 onClose={() => setGradeInfoOpen(false)}
-                title="Informasi grade"
-            >
-                <div className="space-y-3">
-                    <p className="text-sm text-muted">
-                        Grade dihitung dari nilai 0–100.
-                    </p>
-                    {gradeRanges.map(({ grade, range }) => (
-                        <div
-                            key={grade}
-                            className="flex items-center gap-3 rounded-xl border border-line bg-canvas/40 p-3"
-                        >
-                            <span
-                                className={cn(
-                                    'inline-flex size-9 items-center justify-center rounded-xl text-sm font-bold',
-                                    gradeStyles[grade],
-                                )}
-                            >
-                                {grade}
-                            </span>
-                            <div>
-                                <p className="text-sm font-semibold text-ink">
-                                    {range}
-                                </p>
-                                <p className="text-xs text-muted">
-                                    {qualificationFor(
-                                        Number(range.split('–')[0]),
-                                    )}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </Modal>
+            />
         </AppLayout>
     );
 }

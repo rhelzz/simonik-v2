@@ -11,9 +11,11 @@ import type { SharedData } from '@/types';
 export function AppLayout({
     title,
     children,
+    topbarAction,
 }: {
     title: string;
     children: ReactNode;
+    topbarAction?: ReactNode;
 }) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const { auth, flash } = usePage<SharedData>().props;
@@ -65,6 +67,7 @@ export function AppLayout({
                     <AppTopbar
                         title={title}
                         onOpenSidebar={() => setMobileOpen(true)}
+                        action={topbarAction}
                     />
                     {/* Akun guru/pembimbing yang belum tertaut industri: semua
                         halaman akan tampil kosong, jadi sebutkan sebabnya. */}

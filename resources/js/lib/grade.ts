@@ -9,15 +9,15 @@ export function gradeFor(score: number | null | undefined): Grade | null {
         return null;
     }
 
-    if (score >= 80) {
+    if (score >= 90) {
         return 'A';
     }
 
-    if (score >= 70) {
+    if (score >= 80) {
         return 'B';
     }
 
-    if (score >= 60) {
+    if (score >= 71) {
         return 'C';
     }
 
@@ -32,10 +32,10 @@ export const qualificationLabels: Record<Grade, string> = {
 };
 
 export const gradeRanges: Array<{ grade: Grade; range: string }> = [
-    { grade: 'A', range: '80–100' },
-    { grade: 'B', range: '70–79' },
-    { grade: 'C', range: '60–69' },
-    { grade: 'D', range: '0–59' },
+    { grade: 'A', range: '90–100' },
+    { grade: 'B', range: '80–89' },
+    { grade: 'C', range: '71–79' },
+    { grade: 'D', range: '0–70' },
 ];
 
 export function qualificationFor(

@@ -10,6 +10,8 @@ dan diverifikasi pada 31 Agustus 2026.
 | Fase | Isi | Prioritas | Risiko | Migrasi | Status |
 |---|---|---:|---|---|---|
 | [38](38-REVISI-COUNT-KETERLAMBATAN.md) | Perbaiki count dan akumulasi menit keterlambatan pada seluruh role terkait modul presensi | P1 | Sedang | Tidak | **Selesai** |
+| [39](39-ANULIR-PRESENSI-PEMBIMBING.md) | Izinkan pembimbing melakukan presensi masuk/pulang untuk murid dalam cakupannya | P1 | Sedang | Tidak | **Selesai** |
+| [40](40-INFORMASI-GRADE-PENILAIAN.md) | Informasi kategori grade pada Rekap Penilaian Industri serta revisi rentang grade | P1 | Rendah | Tidak | **Selesai** |
 
 ## Cakupan role
 

@@ -1,6 +1,8 @@
 import { Link } from '@inertiajs/react';
-import { ChevronRight, ClipboardList, Network } from 'lucide-react';
+import { ChevronRight, CircleHelp, ClipboardList, Network } from 'lucide-react';
+import { useState } from 'react';
 import { classes } from '@/actions/App/Http/Controllers/AssessmentController';
+import { GradeInfoModal } from '@/components/grade-info-modal';
 import { ScopeNote } from '@/components/ui/scope-note';
 import { AppLayout } from '@/layouts/app-layout';
 
@@ -21,8 +23,23 @@ export default function AssessmentsIndex({
     aspectTotal,
     scopeLabel,
 }: Props) {
+    const [gradeInfoOpen, setGradeInfoOpen] = useState(false);
+
     return (
-        <AppLayout title="Rekap Penilaian">
+        <AppLayout
+            title="Rekap Penilaian"
+            topbarAction={
+                <button
+                    type="button"
+                    onClick={() => setGradeInfoOpen(true)}
+                    aria-label="Informasi penilaian"
+                    title="Informasi penilaian"
+                    className="grid size-10 place-items-center rounded-full bg-surface text-ink transition-colors hover:bg-canvas"
+                >
+                    <CircleHelp className="size-5" />
+                </button>
+            }
+        >
             <section className="rounded-3xl bg-surface p-5 sm:p-6">
                 <div className="flex items-start gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
@@ -75,6 +92,11 @@ export default function AssessmentsIndex({
                     </div>
                 )}
             </section>
+
+            <GradeInfoModal
+                open={gradeInfoOpen}
+                onClose={() => setGradeInfoOpen(false)}
+            />
         </AppLayout>
     );
 }

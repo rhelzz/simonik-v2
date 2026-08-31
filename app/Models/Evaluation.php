@@ -61,9 +61,9 @@ class Evaluation extends Model
         }
 
         return match (true) {
-            $score >= 80 => 'A',
-            $score >= 70 => 'B',
-            $score >= 60 => 'C',
+            $score >= 90 => 'A',
+            $score >= 80 => 'B',
+            $score >= 71 => 'C',
             default => 'D',
         };
     }

@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { Bell, Menu, Search } from 'lucide-react';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/ApprovalController';
 import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import type { SharedData } from '@/types';
@@ -8,9 +9,11 @@ import type { SharedData } from '@/types';
 export function AppTopbar({
     title,
     onOpenSidebar,
+    action,
 }: {
     title: string;
     onOpenSidebar: () => void;
+    action?: ReactNode;
 }) {
     const { auth } = usePage<SharedData>().props;
     const [search, setSearch] = useState('');
@@ -71,6 +74,8 @@ export function AppTopbar({
                         />
                     </form>
                 )}
+
+                {action}
 
                 {canApprove && (
                     <Link

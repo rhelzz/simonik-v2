@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\AspekProduktif;
+use App\Models\Evaluation;
 use App\Models\Industry;
 use App\Models\Pembimbing;
 use App\Models\Student;
@@ -241,5 +242,23 @@ class AssessmentTest extends TestCase
                 ->has('nonTeknis', 1)
                 ->has('teknis', 1)
             );
+    }
+
+    public function test_grade_boundaries_follow_the_revised_scale(): void
+    {
+        $grades = [
+            100 => 'A',
+            90 => 'A',
+            89 => 'B',
+            80 => 'B',
+            79 => 'C',
+            71 => 'C',
+            70 => 'D',
+            0 => 'D',
+        ];
+
+        foreach ($grades as $score => $grade) {
+            $this->assertSame($grade, Evaluation::gradeFor($score));
+        }
     }
 }
