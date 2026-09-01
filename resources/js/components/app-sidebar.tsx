@@ -163,7 +163,10 @@ export function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
                 </Link>
                 <button
                     type="button"
-                    onClick={() => router.post(logout.url())}
+                    onClick={() => {
+                        onNavigate?.();
+                        router.post(logout.url());
+                    }}
                     title="Keluar"
                     className="grid size-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
                 >
