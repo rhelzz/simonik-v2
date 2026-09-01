@@ -221,6 +221,14 @@ class AttendanceMonitorTest extends TestCase
                 ->where('filters.industri', $absentIndustry->id)
             );
 
+        $this->actingAs($admin)
+            ->get("/monitoring/absen?kategori=hadir&industri={$absentIndustry->id}")
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('roster.data', 1)
+                ->where('roster.data.0.id', $absent->id)
+                ->where('summary.hadir', 1)
+            );
+
         $data['attendance']->update(['mode' => 'wfa']);
 
         $this->actingAs($admin)

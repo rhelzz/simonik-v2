@@ -42,7 +42,7 @@ type Props = {
 };
 
 const categories: { value: RosterCategory; label: string }[] = [
-    { value: 'hadir', label: 'Hadir semua' },
+    { value: 'hadir', label: 'Semua siswa' },
     { value: 'terlambat', label: 'Terlambat' },
     { value: 'alpha', label: 'Alpa' },
     { value: 'wfh', label: 'WFH' },

@@ -170,7 +170,7 @@ class AttendanceMonitorController extends Controller
             ->values();
 
         $summary = [
-            'hadir' => $rows->where('hasAttendance', true)->count(),
+            'hadir' => $rows->count(),
             'terlambat' => $rows->where('lateMinutes', '>', 0)->count(),
             'alpha' => $rows->where('hasAttendance', false)->count(),
             'wfh' => $rows->where('mode', 'wfa')->count(),
@@ -181,7 +181,8 @@ class AttendanceMonitorController extends Controller
 
         $filterCategory = $legacyTab ?? $category;
         $filteredRows = $rows->filter(fn (array $row): bool => match ($filterCategory) {
-            'hadir', 'sudah' => $row['hasAttendance'],
+            'hadir' => true,
+            'sudah' => $row['hasAttendance'],
             'terlambat' => $row['lateMinutes'] !== null && $row['lateMinutes'] > 0,
             'alpha', 'belum' => ! $row['hasAttendance'] && $countsAsWorkday,
             'wfh' => $row['mode'] === 'wfa',

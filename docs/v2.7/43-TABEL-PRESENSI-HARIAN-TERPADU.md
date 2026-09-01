@@ -10,7 +10,7 @@
 Panel Data Absen untuk Admin, Guru Pembimbing, dan Pembimbing Industri memakai
 satu tabel. Pemisahan tabel/tab Belum dan Sudah diganti kategori:
 
-1. Hadir semua;
+1. Semua siswa;
 2. Terlambat;
 3. Alpa; dan
 4. WFH (data tersimpan dengan mode `wfa`).
@@ -21,7 +21,8 @@ server sehingga hasil tetap benar saat data memiliki beberapa halaman.
 
 ## Aturan penggunaan
 
-- Hadir semua memuat murid yang mempunyai catatan presensi pada tanggal aktif.
+- Semua siswa memuat seluruh murid PKL aktif di industri yang dipilih, termasuk
+  murid yang belum membuat presensi pada tanggal aktif.
 - Terlambat memakai selisih jam masuk terhadap jam masuk industri.
 - Alpa memuat murid tanpa catatan. Pada hari berjalan statusnya masih Belum
   lengkap; Alpa baru ditetapkan setelah hari kerja berlalu.
