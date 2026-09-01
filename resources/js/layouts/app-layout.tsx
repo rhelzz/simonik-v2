@@ -62,8 +62,8 @@ export function AppLayout({
             </div>
 
             {/* Content */}
-            <div className="lg:pl-64">
-                <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6">
+            <div className="min-w-0 lg:pl-64">
+                <div className="mx-auto max-w-7xl min-w-0 space-y-5 p-4 sm:p-6">
                     <AppTopbar
                         title={title}
                         onOpenSidebar={() => setMobileOpen(true)}
@@ -89,7 +89,7 @@ export function AppLayout({
                             {flash.error}
                         </div>
                     )}
-                    <main>{children}</main>
+                    <main className="min-w-0">{children}</main>
                 </div>
             </div>
 

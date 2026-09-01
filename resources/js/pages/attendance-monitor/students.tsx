@@ -36,7 +36,7 @@ export default function AttendanceMonitorStudents({
 
     return (
         <AppLayout title="Data Absen">
-            <section className="rounded-3xl bg-surface p-5 sm:p-6">
+            <section className="min-w-0 rounded-3xl bg-surface p-5 sm:p-6">
                 <Breadcrumb
                     items={[
                         { label: 'Data Absen', href: index.url() },
@@ -90,7 +90,7 @@ export default function AttendanceMonitorStudents({
                         </p>
                     </div>
                 ) : (
-                    <div className="mt-4 overflow-x-auto">
+                    <div className="mt-4 max-w-full overflow-x-auto overscroll-x-contain">
                         <table className="w-full min-w-lg border-collapse text-left text-sm">
                             <thead>
                                 <tr className="text-xs font-semibold tracking-wide text-muted uppercase">

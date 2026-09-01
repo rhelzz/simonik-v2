@@ -17,19 +17,24 @@ export function Pagination({ meta }: { meta: PaginationMeta }) {
     const numbered = meta.links.slice(1, -1);
 
     return (
-        <div className="mt-5 flex items-center justify-between">
-            <p className="text-xs text-muted">
+        <nav
+            aria-label="Navigasi halaman"
+            className="mt-5 flex min-w-0 items-center justify-between gap-2"
+        >
+            <p className="shrink-0 text-xs text-muted">
                 Hal. {meta.current_page} dari {meta.last_page}
             </p>
-            <div className="flex items-center gap-1">
+            <div className="flex min-w-0 items-center gap-1">
                 <PageLink url={meta.links[0]?.url ?? null} ariaLabel="Sebelumnya">
                     <ChevronLeft className="size-4" />
                 </PageLink>
-                {numbered.map((link, i) => (
-                    <PageLink key={i} url={link.url} active={link.active}>
-                        {link.label}
-                    </PageLink>
-                ))}
+                <span className="hidden items-center gap-1 sm:flex">
+                    {numbered.map((link, i) => (
+                        <PageLink key={i} url={link.url} active={link.active}>
+                            {link.label}
+                        </PageLink>
+                    ))}
+                </span>
                 <PageLink
                     url={meta.links[meta.links.length - 1]?.url ?? null}
                     ariaLabel="Berikutnya"
@@ -37,7 +42,7 @@ export function Pagination({ meta }: { meta: PaginationMeta }) {
                     <ChevronRight className="size-4" />
                 </PageLink>
             </div>
-        </div>
+        </nav>
     );
 }
 

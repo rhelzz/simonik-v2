@@ -51,7 +51,7 @@ export default function AttendanceMonitorShow({
 }: Props) {
     return (
         <AppLayout title="Data Absen">
-            <div className="space-y-5">
+            <div className="min-w-0 space-y-5">
                 <section className="rounded-3xl bg-surface p-5 sm:p-6">
                     <Breadcrumb
                         items={[
@@ -111,7 +111,7 @@ function RecordCard({ record }: { record: AttendanceRecord }) {
 
     return (
         <div className="rounded-2xl border border-line bg-canvas/30 p-4">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-semibold text-ink">{record.dateLabel}</p>
                 <span
                     className={cn(
@@ -179,7 +179,7 @@ function RecordCard({ record }: { record: AttendanceRecord }) {
                     </button>
 
                     {expanded && (
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid gap-3 sm:grid-cols-2">
                             <div className="space-y-1.5">
                                 <p className="text-xs font-semibold tracking-widest text-muted uppercase">
                                     Foto Masuk

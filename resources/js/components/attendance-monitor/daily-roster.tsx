@@ -131,14 +131,14 @@ export function DailyRoster({
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-2">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:justify-end">
                     {can.proxyAttendance && (
                         <>
                             <button
                                 type="button"
                                 onClick={() => setProxyType('masuk')}
                                 disabled={selectedCheckIns === 0}
-                                className="inline-flex items-center gap-2 rounded-xl border border-primary/25 px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary-soft disabled:opacity-40"
+                                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/25 px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary-soft disabled:opacity-40 sm:flex-none"
                             >
                                 <UserCheck className="size-4" />
                                 Masuk
@@ -150,7 +150,7 @@ export function DailyRoster({
                                 type="button"
                                 onClick={() => setProxyType('pulang')}
                                 disabled={selectedCheckOuts === 0}
-                                className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
+                                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-40 sm:flex-none"
                             >
                                 <UserCheck className="size-4" />
                                 Pulang
@@ -167,7 +167,7 @@ export function DailyRoster({
                         onChange={(event) =>
                             apply({ tanggal: event.target.value })
                         }
-                        className="rounded-xl border border-line bg-canvas px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                        className="w-full rounded-xl border border-line bg-canvas px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none sm:w-auto"
                     />
                 </div>
             </div>
@@ -194,26 +194,28 @@ export function DailyRoster({
                 ))}
             </div>
 
-            <div className="mt-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_16rem]">
+            <div className="mt-3 grid min-w-0 gap-2 md:grid-cols-[minmax(0,1fr)_16rem]">
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
                         apply({ search });
                     }}
-                    className="relative"
+                    className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2"
                 >
-                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
-                    <input
-                        type="search"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Cari nama siswa"
-                        aria-label="Cari berdasarkan nama siswa"
-                        className="w-full rounded-xl border border-line bg-canvas py-2.5 pr-24 pl-9 text-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none"
-                    />
+                    <div className="relative min-w-0">
+                        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
+                        <input
+                            type="search"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Cari nama siswa"
+                            aria-label="Cari berdasarkan nama siswa"
+                            className="w-full min-w-0 rounded-xl border border-line bg-canvas py-2.5 pr-3 pl-9 text-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none"
+                        />
+                    </div>
                     <button
                         type="submit"
-                        className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-lg bg-surface px-3 py-1.5 text-xs font-semibold text-primary"
+                        className="rounded-xl border border-line bg-surface px-3 text-xs font-semibold text-primary"
                     >
                         Cari
                     </button>
@@ -229,7 +231,7 @@ export function DailyRoster({
                         })
                     }
                     aria-label="Filter industri"
-                    className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+                    className="w-full min-w-0 rounded-xl border border-line bg-canvas px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
                 >
                     <option value="">Semua industri</option>
                     {industries.map((industry) => (
