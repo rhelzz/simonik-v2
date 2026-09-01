@@ -19,9 +19,8 @@ type Props = {
 /**
  * Presensi diwakilkan: pilih murid + satu waktu, tanpa geolokasi & foto.
  *
- * Murid yang sudah punya data absen dilewati di server (bukan ditimpa), jadi
- * modal ini tidak perlu mengecek ulang — daftarnya memang berasal dari tab
- * "Belum".
+ * Daftar murid sudah disaring tabel berdasarkan kelayakan aksi masuk/pulang;
+ * server tetap memvalidasi ulang agar data lama tidak tertimpa.
  */
 export function ProxyAttendanceModal({
     open,

@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { classes } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { DailyRoster } from '@/components/attendance-monitor/daily-roster';
 import type {
+    RosterCategory,
     RosterRow,
-    RosterTab,
 } from '@/components/attendance-monitor/daily-roster';
 import { ResetAttendanceModal } from '@/components/attendance-monitor/reset-modal';
 import type { ResetOption } from '@/components/attendance-monitor/reset-modal';
@@ -28,8 +28,14 @@ type Props = {
     scopeLabel: string;
     attendanceRate: RateByRange;
     roster: Paginated<RosterRow>;
-    summary: { sudah: number; belum: number };
-    filters: { tanggal: string; tab: RosterTab };
+    summary: Record<RosterCategory, number> & { sudah: number; belum: number };
+    filters: {
+        tanggal: string;
+        category: RosterCategory;
+        search: string;
+        industri: number | null;
+    };
+    filterIndustries: ResetOption[];
     dateLabel: string;
     can: { proxyAttendance: boolean; reset: boolean };
     classOptions: ResetOption[];
@@ -43,6 +49,7 @@ export default function AttendanceMonitorIndex({
     roster,
     summary,
     filters,
+    filterIndustries,
     dateLabel,
     can,
     classOptions,
@@ -86,6 +93,7 @@ export default function AttendanceMonitorIndex({
                     filters={filters}
                     dateLabel={dateLabel}
                     can={can}
+                    industries={filterIndustries}
                 />
             </div>
 

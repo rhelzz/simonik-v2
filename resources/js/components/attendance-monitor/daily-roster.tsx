@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { CalendarDays, CheckCircle2, UserCheck, UserX } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Search, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import { index } from '@/actions/App/Http/Controllers/AttendanceMonitorController';
 import { Pagination } from '@/components/ui/pagination';
@@ -13,66 +13,96 @@ export type RosterRow = {
     nis: string;
     class: string | null;
     industry: string | null;
-    /** Status efektif: 'hadir'|'sakit'|'izin'|'libur'|'alpha'|'belum'|'tidak-dihitung'. */
     status: string;
     statusLabel: string;
     arrivalTime: string | null;
     departureTime: string | null;
     lateMinutes: number | null;
+    mode: string | null;
+    canCheckIn: boolean;
+    canCheckOut: boolean;
 };
 
-/**
- * Warna lencana status. 'alpha' merah karena ia menandai ketidakhadiran tanpa
- * keterangan — satu-satunya status yang lahir dari ketiadaan data, dan
- * satu-satunya yang perlu ditindaklanjuti.
- */
+export type RosterCategory = 'hadir' | 'terlambat' | 'alpha' | 'wfh';
+
+type Filters = {
+    tanggal: string;
+    category: RosterCategory;
+    search: string;
+    industri: number | null;
+};
+
+type Props = {
+    roster: Paginated<RosterRow>;
+    summary: Record<RosterCategory, number>;
+    filters: Filters;
+    dateLabel: string;
+    can: { proxyAttendance: boolean };
+    industries: { id: number; name: string }[];
+};
+
+const categories: { value: RosterCategory; label: string }[] = [
+    { value: 'hadir', label: 'Hadir semua' },
+    { value: 'terlambat', label: 'Terlambat' },
+    { value: 'alpha', label: 'Alpa' },
+    { value: 'wfh', label: 'WFH' },
+];
+
 const statusStyles: Record<string, string> = {
     hadir: 'bg-positive/15 text-positive',
     masuk: 'bg-positive/15 text-positive',
+    terlambat: 'bg-orange-500/15 text-orange-600',
     sakit: 'bg-warning/15 text-warning',
     izin: 'bg-warning/15 text-warning',
     libur: 'bg-canvas text-muted',
     alpha: 'bg-red-500/15 text-red-500',
-    belum: 'bg-canvas text-muted',
     'belum-lengkap': 'bg-warning/15 text-warning',
-    'tidak-dihitung': 'bg-canvas text-muted',
 };
 
-export type RosterTab = 'belum' | 'sudah';
-
-type Props = {
-    roster: Paginated<RosterRow>;
-    summary: { sudah: number; belum: number };
-    filters: { tanggal: string; tab: RosterTab };
-    dateLabel: string;
-    can: { proxyAttendance: boolean };
-};
-
-/**
- * Panel "Presensi hari ini" — siapa yang sudah dan belum presensi pada satu
- * tanggal, dalam cakupan role pemanggil.
- *
- * Satu tabel dengan dua tab, bukan dua tabel bersanding: dua paginasi
- * independen di satu layar membingungkan, dan di HP keduanya menumpuk jadi
- * layar yang sangat panjang. Jumlah kedua kelompok tetap terlihat sekaligus
- * karena ditulis di label tabnya.
- */
 export function DailyRoster({
     roster,
     summary,
     filters,
     dateLabel,
     can,
+    industries,
 }: Props) {
     const [selected, setSelected] = useState<number[]>([]);
-    const [modalOpen, setModalOpen] = useState(false);
+    const [proxyType, setProxyType] = useState<'masuk' | 'pulang' | null>(null);
+    const [search, setSearch] = useState(filters.search);
 
-    // Presensi diwakilkan hanya masuk akal untuk murid yang BELUM presensi.
-    const canPick = can.proxyAttendance;
-    const showsAlpha = roster.data.some((row) => row.status === 'alpha');
-    const pageIds = roster.data.map((row) => row.id);
+    const selectableRows = roster.data.filter(
+        (row) => row.canCheckIn || row.canCheckOut,
+    );
+    const pageIds = selectableRows.map((row) => row.id);
     const allChecked =
         pageIds.length > 0 && pageIds.every((id) => selected.includes(id));
+    const selectedRows = roster.data.filter((row) => selected.includes(row.id));
+    const proxyStudents = selectedRows.filter((row) =>
+        proxyType === 'masuk' ? row.canCheckIn : row.canCheckOut,
+    );
+    const selectedCheckIns = selectedRows.filter(
+        (row) => row.canCheckIn,
+    ).length;
+    const selectedCheckOuts = selectedRows.filter(
+        (row) => row.canCheckOut,
+    ).length;
+
+    function apply(next: Partial<Filters>) {
+        setSelected([]);
+
+        const params = { ...filters, ...next };
+        router.get(
+            index.url(),
+            {
+                tanggal: params.tanggal,
+                kategori: params.category,
+                search: params.search || undefined,
+                industri: params.industri || undefined,
+            },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    }
 
     function toggle(id: number) {
         setSelected((current) =>
@@ -86,24 +116,8 @@ export function DailyRoster({
         setSelected(allChecked ? [] : pageIds);
     }
 
-    /**
-     * preserveScroll: mengganti tab tidak boleh melempar operator ke atas
-     * halaman. preserveState: menjaga posisi & state komponen lain.
-     */
-    function apply(next: Partial<{ tanggal: string; tab: RosterTab }>) {
-        // Pilihan murid tidak boleh terbawa saat tanggal/tab berganti — daftar
-        // yang tampil berubah, jadi ID yang tersimpan tidak lagi bermakna.
-        setSelected([]);
-
-        router.get(
-            index.url(),
-            { ...filters, ...next },
-            { preserveState: true, preserveScroll: true, replace: true },
-        );
-    }
-
     return (
-        <section className="rounded-3xl bg-surface p-5 sm:p-6">
+        <section className="rounded-3xl bg-surface p-4 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
@@ -117,75 +131,142 @@ export function DailyRoster({
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {canPick && (
-                        <button
-                            type="button"
-                            onClick={() => setModalOpen(true)}
-                            disabled={selected.length === 0}
-                            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
-                        >
-                            <UserCheck className="size-4" />
-                            Presensikan{' '}
-                            {filters.tab === 'belum' ? 'masuk' : 'pulang'}
-                            {selected.length > 0 ? ` (${selected.length})` : ''}
-                        </button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                    {can.proxyAttendance && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => setProxyType('masuk')}
+                                disabled={selectedCheckIns === 0}
+                                className="inline-flex items-center gap-2 rounded-xl border border-primary/25 px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary-soft disabled:opacity-40"
+                            >
+                                <UserCheck className="size-4" />
+                                Masuk
+                                {selectedCheckIns > 0
+                                    ? ` (${selectedCheckIns})`
+                                    : ''}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setProxyType('pulang')}
+                                disabled={selectedCheckOuts === 0}
+                                className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover disabled:opacity-40"
+                            >
+                                <UserCheck className="size-4" />
+                                Pulang
+                                {selectedCheckOuts > 0
+                                    ? ` (${selectedCheckOuts})`
+                                    : ''}
+                            </button>
+                        </>
                     )}
-
-                    <label className="text-xs font-semibold text-muted">
-                        <span className="sr-only">Tanggal</span>
-                        <input
-                            type="date"
-                            value={filters.tanggal}
-                            onChange={(event) =>
-                                apply({ tanggal: event.target.value })
-                            }
-                            className="block rounded-xl border border-line bg-canvas px-3 py-2 text-sm font-normal text-ink focus:border-primary focus:outline-none"
-                        />
-                    </label>
+                    <input
+                        type="date"
+                        aria-label="Tanggal presensi"
+                        value={filters.tanggal}
+                        onChange={(event) =>
+                            apply({ tanggal: event.target.value })
+                        }
+                        className="rounded-xl border border-line bg-canvas px-3 py-2 text-sm text-ink focus:border-primary focus:outline-none"
+                    />
                 </div>
             </div>
 
-            <div className="mt-4 flex gap-1 rounded-xl bg-canvas p-1">
-                <TabButton
-                    active={filters.tab === 'belum'}
-                    onClick={() => apply({ tab: 'belum' })}
-                >
-                    Belum ({summary.belum})
-                </TabButton>
-                <TabButton
-                    active={filters.tab === 'sudah'}
-                    onClick={() => apply({ tab: 'sudah' })}
-                >
-                    Sudah ({summary.sudah})
-                </TabButton>
+            <div className="mt-5 grid grid-cols-2 gap-2 lg:grid-cols-4">
+                {categories.map((category) => (
+                    <button
+                        key={category.value}
+                        type="button"
+                        aria-pressed={filters.category === category.value}
+                        onClick={() => apply({ category: category.value })}
+                        className={cn(
+                            'flex items-center justify-between rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition-colors',
+                            filters.category === category.value
+                                ? 'border-primary bg-primary-soft text-primary'
+                                : 'border-line bg-canvas/50 text-muted hover:border-primary/30 hover:text-ink',
+                        )}
+                    >
+                        <span>{category.label}</span>
+                        <span className="tabular-nums">
+                            {summary[category.value]}
+                        </span>
+                    </button>
+                ))}
             </div>
 
-            {/* Alpha adalah kesimpulan yang ditarik sistem, bukan sanksi yang
-                diketik seseorang — dinyatakan agar tidak jadi sengketa dengan
-                siswa/orang tua. */}
-            {showsAlpha && (
+            <div className="mt-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_16rem]">
+                <form
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        apply({ search });
+                    }}
+                    className="relative"
+                >
+                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted" />
+                    <input
+                        type="search"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder="Cari nama siswa"
+                        aria-label="Cari berdasarkan nama siswa"
+                        className="w-full rounded-xl border border-line bg-canvas py-2.5 pr-24 pl-9 text-sm text-ink placeholder:text-muted focus:border-primary focus:outline-none"
+                    />
+                    <button
+                        type="submit"
+                        className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded-lg bg-surface px-3 py-1.5 text-xs font-semibold text-primary"
+                    >
+                        Cari
+                    </button>
+                </form>
+
+                <select
+                    value={filters.industri ?? ''}
+                    onChange={(event) =>
+                        apply({
+                            industri: event.target.value
+                                ? Number(event.target.value)
+                                : null,
+                        })
+                    }
+                    aria-label="Filter industri"
+                    className="rounded-xl border border-line bg-canvas px-3 py-2.5 text-sm text-ink focus:border-primary focus:outline-none"
+                >
+                    <option value="">Semua industri</option>
+                    {industries.map((industry) => (
+                        <option key={industry.id} value={industry.id}>
+                            {industry.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            {filters.category === 'alpha' && (
                 <p className="mt-3 text-xs text-muted">
-                    Alpha dihitung otomatis dari ketiadaan data presensi pada
-                    hari kerja. Akhir pekan dan tanggal di luar periode PKL
-                    tidak dihitung.
+                    Pada hari berjalan, murid yang belum presensi ditampilkan
+                    sebagai Belum lengkap. Status Alpa baru dihitung setelah
+                    hari kerja berlalu.
                 </p>
             )}
 
             {roster.data.length === 0 ? (
-                <EmptyState tab={filters.tab} />
+                <div className="mt-4 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line py-12 text-center">
+                    <CheckCircle2 className="size-8 text-muted" />
+                    <p className="text-sm font-medium text-ink">
+                        Tidak ada data yang cocok dengan filter ini
+                    </p>
+                </div>
             ) : (
                 <div className="mt-4 overflow-x-auto">
-                    <table className="w-full min-w-[34rem] text-sm">
+                    <table className="w-full min-w-[58rem] text-sm">
                         <thead>
                             <tr className="border-b border-line text-left text-xs font-semibold tracking-[0.08em] text-muted uppercase">
-                                {canPick && (
+                                {can.proxyAttendance && (
                                     <th className="w-10 px-3 py-2.5">
                                         <input
                                             type="checkbox"
                                             checked={allChecked}
                                             onChange={toggleAll}
-                                            aria-label="Pilih semua murid di halaman ini"
+                                            aria-label="Pilih semua murid yang dapat dipresensikan"
                                             className="size-4 accent-[var(--color-primary)]"
                                         />
                                     </th>
@@ -194,81 +275,76 @@ export function DailyRoster({
                                 <th className="px-3 py-2.5">Kelas</th>
                                 <th className="px-3 py-2.5">Industri</th>
                                 <th className="px-3 py-2.5">Status</th>
-                                {filters.tab === 'sudah' && (
-                                    <>
-                                        <th className="px-3 py-2.5">
-                                            Jam Masuk
-                                        </th>
-                                        <th className="px-3 py-2.5">
-                                            Jam Pulang
-                                        </th>
-                                        <th className="px-3 py-2.5">
-                                            Keterlambatan
-                                        </th>
-                                    </>
-                                )}
+                                <th className="px-3 py-2.5">Jam Masuk</th>
+                                <th className="px-3 py-2.5">Jam Pulang</th>
+                                <th className="px-3 py-2.5">Keterlambatan</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-line">
-                            {roster.data.map((row) => (
-                                <tr key={row.id}>
-                                    {canPick && (
-                                        <td className="px-3 py-2.5">
-                                            <input
-                                                type="checkbox"
-                                                checked={selected.includes(
-                                                    row.id,
-                                                )}
-                                                onChange={() => toggle(row.id)}
-                                                aria-label={`Pilih ${row.name}`}
-                                                className="size-4 accent-[var(--color-primary)]"
-                                            />
+                            {roster.data.map((row) => {
+                                const selectable =
+                                    row.canCheckIn || row.canCheckOut;
+
+                                return (
+                                    <tr
+                                        key={row.id}
+                                        className="hover:bg-canvas/50"
+                                    >
+                                        {can.proxyAttendance && (
+                                            <td className="px-3 py-3">
+                                                <input
+                                                    type="checkbox"
+                                                    disabled={!selectable}
+                                                    checked={selected.includes(
+                                                        row.id,
+                                                    )}
+                                                    onChange={() =>
+                                                        toggle(row.id)
+                                                    }
+                                                    aria-label={`Pilih ${row.name}`}
+                                                    className="size-4 accent-[var(--color-primary)] disabled:opacity-30"
+                                                />
+                                            </td>
+                                        )}
+                                        <td className="px-3 py-3">
+                                            <p className="font-semibold text-ink">
+                                                {row.name}
+                                            </p>
+                                            <p className="text-xs text-muted">
+                                                {row.nis}
+                                            </p>
                                         </td>
-                                    )}
-                                    <td className="px-3 py-2.5">
-                                        <p className="font-semibold text-ink">
-                                            {row.name}
-                                        </p>
-                                        <p className="text-xs text-muted">
-                                            {row.nis}
-                                        </p>
-                                    </td>
-                                    <td className="px-3 py-2.5 text-muted">
-                                        {row.class ?? '—'}
-                                    </td>
-                                    <td className="px-3 py-2.5 text-muted">
-                                        {row.industry ?? '—'}
-                                    </td>
-                                    <td className="px-3 py-2.5">
-                                        <span
-                                            className={cn(
-                                                'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
-                                                statusStyles[row.status] ??
-                                                    'bg-canvas text-muted',
-                                            )}
-                                        >
-                                            {row.statusLabel}
-                                        </span>
-                                    </td>
-                                    {filters.tab === 'sudah' && (
-                                        <>
-                                            <td className="px-3 py-2.5 text-muted">
-                                                {row.arrivalTime ?? '—'}
-                                            </td>
-                                            <td className="px-3 py-2.5 text-muted">
-                                                {row.departureTime ?? '—'}
-                                            </td>
-                                            <td className="px-3 py-2.5 text-muted">
-                                                {row.lateMinutes === null
-                                                    ? '—'
-                                                    : row.lateMinutes > 0
-                                                      ? `${row.lateMinutes} menit`
-                                                      : 'Tepat waktu'}
-                                            </td>
-                                        </>
-                                    )}
-                                </tr>
-                            ))}
+                                        <td className="px-3 py-3 text-muted">
+                                            {row.class ?? '-'}
+                                        </td>
+                                        <td className="px-3 py-3 text-muted">
+                                            {row.industry ?? '-'}
+                                        </td>
+                                        <td className="px-3 py-3">
+                                            <span
+                                                className={cn(
+                                                    'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
+                                                    statusStyles[row.status] ??
+                                                        'bg-canvas text-muted',
+                                                )}
+                                            >
+                                                {row.statusLabel}
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-3 text-muted">
+                                            {row.arrivalTime ?? '-'}
+                                        </td>
+                                        <td className="px-3 py-3 text-muted">
+                                            {row.departureTime ?? '-'}
+                                        </td>
+                                        <td className="px-3 py-3 text-muted">
+                                            {row.lateMinutes === null
+                                                ? '-'
+                                                : `${row.lateMinutes} menit`}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -276,72 +352,21 @@ export function DailyRoster({
 
             <Pagination meta={roster} />
 
-            {canPick && (
+            {can.proxyAttendance && proxyType && (
                 <ProxyAttendanceModal
-                    open={modalOpen}
-                    onClose={() => setModalOpen(false)}
-                    students={roster.data.filter((row) =>
-                        selected.includes(row.id),
-                    )}
+                    open
+                    onClose={() => setProxyType(null)}
+                    students={proxyStudents}
                     date={filters.tanggal}
                     dateLabel={dateLabel}
-                    type={filters.tab === 'belum' ? 'masuk' : 'pulang'}
+                    type={proxyType}
                     onDeselect={toggle}
                     onDone={() => {
-                        setModalOpen(false);
+                        setProxyType(null);
                         setSelected([]);
                     }}
                 />
             )}
         </section>
-    );
-}
-
-function TabButton({
-    active,
-    onClick,
-    children,
-}: {
-    active: boolean;
-    onClick: () => void;
-    children: React.ReactNode;
-}) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={cn(
-                'flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors',
-                active
-                    ? 'bg-surface text-primary shadow-sm'
-                    : 'text-muted hover:text-ink',
-            )}
-        >
-            {children}
-        </button>
-    );
-}
-
-/**
- * Tab "belum" yang kosong adalah keadaan SUKSES, bukan "tidak ada data" —
- * dibedakan supaya operator tidak mengira fiturnya rusak.
- */
-function EmptyState({ tab }: { tab: RosterTab }) {
-    const Icon = tab === 'belum' ? CheckCircle2 : UserX;
-
-    return (
-        <div className="mt-4 flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line py-12 text-center">
-            <Icon
-                className={cn(
-                    'size-8',
-                    tab === 'belum' ? 'text-positive' : 'text-muted',
-                )}
-            />
-            <p className="text-sm font-medium text-ink">
-                {tab === 'belum'
-                    ? 'Semua murid sudah presensi pada tanggal ini'
-                    : 'Belum ada murid yang presensi pada tanggal ini'}
-            </p>
-        </div>
     );
 }

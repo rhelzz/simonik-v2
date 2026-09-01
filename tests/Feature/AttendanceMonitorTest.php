@@ -159,9 +159,10 @@ class AttendanceMonitorTest extends TestCase
         ]);
 
         $this->actingAs($data['teacher'])
-            ->get('/monitoring/absen?tab=sudah')
+            ->get('/monitoring/absen?kategori=terlambat')
             ->assertInertia(fn (Assert $page) => $page
                 ->where('roster.data.0.lateMinutes', 17)
+                ->where('roster.data.0.statusLabel', 'Terlambat')
             );
 
         $this->actingAs($data['teacher'])
@@ -200,30 +201,36 @@ class AttendanceMonitorTest extends TestCase
         $data['student']->update(['status_pkl' => 'proses', 'name' => 'Ada Absen']);
         $data['attendance']->update(['date' => $today, 'status' => 'hadir']);
 
+        $absentIndustry = Industry::factory()->create(['name' => 'Industri Pencarian']);
         $absent = Student::factory()->create([
             'status_pkl' => 'proses',
             'name' => 'Tanpa Absen',
+            'industri_id' => $absentIndustry->id,
         ]);
 
         $admin = $this->user('admin');
 
         $this->actingAs($admin)
-            ->get('/monitoring/absen?tab=belum')
+            ->get("/monitoring/absen?kategori=alpha&search=Tanpa&industri={$absentIndustry->id}")
             ->assertInertia(fn (Assert $page) => $page
                 ->has('roster.data', 1)
                 ->where('roster.data.0.id', $absent->id)
-                ->where('roster.data.0.statusLabel', 'Belum presensi')
-                ->where('summary.belum', 1)
-                ->where('summary.sudah', 1)
+                ->where('roster.data.0.statusLabel', 'Belum lengkap')
+                ->where('summary.alpha', 1)
+                ->where('filters.search', 'Tanpa')
+                ->where('filters.industri', $absentIndustry->id)
             );
 
+        $data['attendance']->update(['mode' => 'wfa']);
+
         $this->actingAs($admin)
-            ->get('/monitoring/absen?tab=sudah')
+            ->get('/monitoring/absen?kategori=wfh')
             ->assertInertia(fn (Assert $page) => $page
                 ->has('roster.data', 1)
                 ->where('roster.data.0.id', $data['student']->id)
                 ->where('roster.data.0.statusLabel', 'Hadir')
                 ->where('roster.data.0.departureTime', '16:00')
+                ->where('summary.wfh', 1)
             );
     }
 

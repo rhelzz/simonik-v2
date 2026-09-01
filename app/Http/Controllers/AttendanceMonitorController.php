@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -77,7 +78,14 @@ class AttendanceMonitorController extends Controller
             ->where('status_pkl', 'proses');
 
         $date = $request->date('tanggal') ?? Carbon::today();
-        $tab = $request->query('tab') === 'sudah' ? 'sudah' : 'belum';
+        $category = \in_array($request->query('kategori'), ['hadir', 'terlambat', 'alpha', 'wfh'], true)
+            ? $request->query('kategori')
+            : 'hadir';
+        $search = trim((string) $request->query('search', ''));
+        $industryId = $request->integer('industri') ?: null;
+        $legacyTab = \in_array($request->query('tab'), ['belum', 'sudah'], true)
+            ? $request->query('tab')
+            : null;
 
         // "Sudah presensi" = ADA baris absen pada tanggal itu — bukan
         // status 'hadir'. Siswa sakit/izin/libur (lewat approval) sudah
@@ -97,27 +105,18 @@ class AttendanceMonitorController extends Controller
         $sudah = $activeStudents()->whereHas('users.attendances', $onDate)->count();
         $belum = $countsAsWorkday ? $activeStudents()->count() - $sudah : 0;
 
-        $roster = $activeStudents()
-            ->when(
-                $tab === 'sudah',
-                fn (Builder $query): Builder => $query->whereHas('users.attendances', $onDate),
-                fn (Builder $query): Builder => $query->whereDoesntHave('users.attendances', $onDate),
-            )
-            ->when(
-                $tab === 'belum' && ! $countsAsWorkday,
-                fn (Builder $query): Builder => $query->whereRaw('1 = 0'),
-            )
+        $rows = $activeStudents()
+            ->when($search !== '', fn (Builder $query): Builder => $query->where('name', 'like', "%{$search}%"))
+            ->when($industryId !== null, fn (Builder $query): Builder => $query->where('industri_id', $industryId))
             ->with([
                 'classes:id,name',
                 'industries:id,name,jam_masuk',
-                // Tanpa eager-load berkondisi ini, tabel 15 baris = 15 kueri.
                 'users.attendances' => $onDate,
                 'pkl_period:id,start_period,end_period',
             ])
             ->orderBy('name')
-            ->paginate(15)
-            ->withQueryString()
-            ->through(function (Student $student) use ($date): array {
+            ->get()
+            ->map(function (Student $student) use ($date, $legacyTab): array {
                 $attendance = $student->users?->attendances->first();
 
                 // Tanggal PKL per-siswa menang atas tanggal periodenya —
@@ -133,6 +132,16 @@ class AttendanceMonitorController extends Controller
                             $student->pkl_end ?? $student->pkl_period?->end_period,
                         );
 
+                $lateMinutes = $attendance?->lateMinutes($student->industries?->jam_masuk);
+
+                if ($status === AttendanceStatus::BELUM && $legacyTab === null) {
+                    $status = AttendanceStatus::BELUM_LENGKAP;
+                } elseif (\in_array($status, ['hadir', 'masuk'], true)
+                    && $attendance?->countsAsPresent()
+                    && $lateMinutes > 0) {
+                    $status = 'terlambat';
+                }
+
                 return [
                     'id' => $student->id,
                     'name' => $student->name,
@@ -140,24 +149,72 @@ class AttendanceMonitorController extends Controller
                     'class' => $student->classes?->name,
                     'industry' => $student->industries?->name,
                     'status' => $status,
-                    'statusLabel' => AttendanceStatus::label($status),
+                    'statusLabel' => $status === 'terlambat' ? 'Terlambat' : AttendanceStatus::label($status),
                     'arrivalTime' => $attendance?->arrivalTime
                         ? mb_substr($attendance->arrivalTime, 0, 5)
                         : null,
                     'departureTime' => $attendance?->departureTime
                         ? mb_substr($attendance->departureTime, 0, 5)
                         : null,
-                    'lateMinutes' => $attendance?->lateMinutes($student->industries?->jam_masuk),
+                    'lateMinutes' => $lateMinutes,
+                    'mode' => $attendance?->mode,
+                    'hasAttendance' => $attendance !== null,
+                    'canCheckIn' => $attendance === null,
+                    'canCheckOut' => $attendance !== null
+                        && mb_strtolower((string) $attendance->status) === 'hadir'
+                        && $attendance->arrivalTime !== null
+                        && $attendance->departureTime === null,
                 ];
-            });
+            })
+            ->reject(fn (array $row): bool => $row['status'] === AttendanceStatus::TIDAK_DIHITUNG)
+            ->values();
+
+        $summary = [
+            'hadir' => $rows->where('hasAttendance', true)->count(),
+            'terlambat' => $rows->where('lateMinutes', '>', 0)->count(),
+            'alpha' => $rows->where('hasAttendance', false)->count(),
+            'wfh' => $rows->where('mode', 'wfa')->count(),
+            // Kompatibilitas query lama dan test regresi sebelum PKL-018.
+            'sudah' => $sudah,
+            'belum' => $belum,
+        ];
+
+        $filterCategory = $legacyTab ?? $category;
+        $filteredRows = $rows->filter(fn (array $row): bool => match ($filterCategory) {
+            'hadir', 'sudah' => $row['hasAttendance'],
+            'terlambat' => $row['lateMinutes'] !== null && $row['lateMinutes'] > 0,
+            'alpha', 'belum' => ! $row['hasAttendance'] && $countsAsWorkday,
+            'wfh' => $row['mode'] === 'wfa',
+            default => true,
+        })->values();
+
+        $page = max(1, $request->integer('page', 1));
+        $roster = new LengthAwarePaginator(
+            $filteredRows->forPage($page, 15)->values(),
+            $filteredRows->count(),
+            15,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()],
+        );
+
+        $filterIndustries = Industry::query()
+            ->whereIn('id', $activeStudents()->whereNotNull('industri_id')->distinct()->pluck('industri_id'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return Inertia::render('attendance-monitor/index', [
             'departemens' => $departemens,
             'scopeLabel' => $this->scopeLabel($user),
             'attendanceRate' => $this->participation($activeStudents()->pluck('user_id')->all())['attendance'],
             'roster' => $roster,
-            'summary' => ['sudah' => $sudah, 'belum' => $belum],
-            'filters' => ['tanggal' => $date->format('Y-m-d'), 'tab' => $tab],
+            'summary' => $summary,
+            'filters' => [
+                'tanggal' => $date->format('Y-m-d'),
+                'category' => $legacyTab === 'belum' ? 'alpha' : ($legacyTab === 'sudah' ? 'hadir' : $category),
+                'search' => $search,
+                'industri' => $industryId,
+            ],
+            'filterIndustries' => $filterIndustries,
             'dateLabel' => $date->translatedFormat('l, d F Y'),
             'can' => [
                 'proxyAttendance' => $user->hasAnyRole(['admin', 'guru', 'pembimbing']),

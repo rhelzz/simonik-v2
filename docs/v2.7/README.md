@@ -14,6 +14,7 @@ dan diverifikasi pada 31 Agustus 2026.
 | [40](40-INFORMASI-GRADE-PENILAIAN.md) | Informasi kategori grade pada Rekap Penilaian Industri serta revisi rentang grade | P1 | Rendah | Tidak | **Selesai** |
 | [41](41-FAVICON-DINAMIS.md) | Perbaiki favicon tab dan dukung format ICO, PNG, JPG/JPEG, serta SVG | P1 | Rendah | Tidak | **Selesai** |
 | [42](42-RINGKASAN-HARIAN-SISWA-BIMBINGAN.md) | Ringkasan presensi dan jurnal harian pada dashboard pembimbing | P1 | Rendah | Tidak | **Selesai** |
+| [43](43-TABEL-PRESENSI-HARIAN-TERPADU.md) | Satu tabel presensi harian dengan kategori, pencarian nama, dan filter industri | P1 | Sedang | Tidak | **Selesai** |
 
 ## Cakupan role
 
