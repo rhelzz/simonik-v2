@@ -117,7 +117,7 @@ export function DailyRoster({
     }
 
     return (
-        <section className="rounded-3xl bg-surface p-4 sm:p-6">
+        <section className="max-w-full min-w-0 rounded-3xl bg-surface p-4 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
@@ -256,7 +256,7 @@ export function DailyRoster({
                     </p>
                 </div>
             ) : (
-                <div className="mt-4 overflow-x-auto">
+                <div className="mt-4 max-w-full overflow-x-auto overscroll-x-contain">
                     <table className="w-full min-w-[58rem] text-sm">
                         <thead>
                             <tr className="border-b border-line text-left text-xs font-semibold tracking-[0.08em] text-muted uppercase">
