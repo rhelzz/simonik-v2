@@ -137,4 +137,86 @@ class UserManagementTest extends TestCase
                 ->where('users.data.0.password_masked', '••••••••')
             );
     }
+
+    public function test_admin_can_reset_single_user_password_to_default(): void
+    {
+        $admin = $this->admin();
+        $target = User::factory()->create(['password' => 'secret123']);
+
+        $this->actingAs($admin)
+            ->post("/users/{$target->id}/reset-password")
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password', $target->fresh()->password));
+    }
+
+    public function test_admin_cannot_reset_their_own_password(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->post("/users/{$admin->id}/reset-password")
+            ->assertRedirect()
+            ->assertSessionHas('error');
+    }
+
+    public function test_admin_can_bulk_reset_passwords(): void
+    {
+        $admin = $this->admin();
+        $u1 = User::factory()->create(['password' => 'secret1']);
+        $u2 = User::factory()->create(['password' => 'secret2']);
+
+        $this->actingAs($admin)
+            ->post('/users/bulk-reset-password', [
+                'ids' => [$u1->id, $u2->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password', $u1->fresh()->password));
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password', $u2->fresh()->password));
+    }
+
+    public function test_admin_can_delete_user(): void
+    {
+        $admin = $this->admin();
+        $target = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->delete("/users/{$target->id}")
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('users', ['id' => $target->id]);
+    }
+
+    public function test_admin_cannot_delete_themselves(): void
+    {
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->delete("/users/{$admin->id}")
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('users', ['id' => $admin->id]);
+    }
+
+    public function test_admin_can_bulk_delete_users(): void
+    {
+        $admin = $this->admin();
+        $u1 = User::factory()->create();
+        $u2 = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->delete('/users/bulk', [
+                'ids' => [$u1->id, $u2->id],
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('users', ['id' => $u1->id]);
+        $this->assertDatabaseMissing('users', ['id' => $u2->id]);
+    }
 }

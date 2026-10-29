@@ -95,6 +95,10 @@ Route::middleware('auth')->group(function () {
     // Pengaturan favicon situs & User Management — hanya Super Admin.
     Route::middleware('role:admin')->group(function () {
         Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::post('users/bulk-reset-password', [UserController::class, 'bulkResetPassword'])->name('users.bulk-reset-password');
+        Route::delete('users/bulk', [UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
+        Route::post('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::get('pengaturan-website', [WebsiteSettingController::class, 'edit'])->name('website-settings.edit');
         Route::put('pengaturan-website', [WebsiteSettingController::class, 'update'])->name('website-settings.update');
 
