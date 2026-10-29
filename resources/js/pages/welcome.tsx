@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import { DynamicPopup } from '@/components/dynamic-popup';
 import { Cta } from '@/components/welcome/cta';
 import { Faq } from '@/components/welcome/faq';
 import { Features } from '@/components/welcome/features';
@@ -30,6 +31,7 @@ export default function Welcome({ whatsappCtaUrl }: WelcomeProps) {
                     <Cta whatsappCtaUrl={whatsappCtaUrl} />
                 </main>
                 <SiteFooter />
+                <DynamicPopup />
             </div>
         </>
     );

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { AppSidebar } from '@/components/app-sidebar';
 import { AppTopbar } from '@/components/app-topbar';
+import { DynamicPopup } from '@/components/dynamic-popup';
 import { PwaPrompt } from '@/components/pwa/pwa-prompt';
 import { cn } from '@/lib/utils';
 import type { SharedData } from '@/types';
@@ -94,6 +95,7 @@ export function AppLayout({
             </div>
 
             <PwaPrompt />
+            <DynamicPopup />
         </div>
     );
 }

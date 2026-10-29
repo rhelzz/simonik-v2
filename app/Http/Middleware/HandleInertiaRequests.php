@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Announcement;
 use App\Models\Approval;
 use App\Models\Industry;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -74,6 +75,11 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
             ],
+            'dynamicPopup' => function () {
+                $setting = Setting::query()->first();
+
+                return ($setting && $setting->popup_active) ? $setting->dynamicPopupData() : null;
+            },
         ];
     }
 

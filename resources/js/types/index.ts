@@ -3,6 +3,17 @@ import type { Auth, Role } from './auth';
 
 export type * from './auth';
 
+export type DynamicPopupData = {
+    active: boolean;
+    icon: string;
+    title: string;
+    description: string;
+    has_button: boolean;
+    button_text: string;
+    button_url: string;
+    interval_minutes: number;
+};
+
 /**
  * Props shared on every Inertia page via HandleInertiaRequests::share().
  */
@@ -10,6 +21,7 @@ export type SharedData = {
     name: string;
     auth: Auth;
     flash: { success: string | null; error: string | null };
+    dynamicPopup?: DynamicPopupData | null;
     [key: string]: unknown;
 };
 

@@ -97,4 +97,69 @@ class WebsiteSettingTest extends TestCase
             ->put('/pengaturan-website', [])
             ->assertSessionHasErrors('favicon');
     }
+
+    public function test_admin_can_update_dynamic_popup_settings(): void
+    {
+        $this->actingAs($this->admin())
+            ->put('/pengaturan-website/popup', [
+                'popup_active' => true,
+                'popup_icon' => 'bell',
+                'popup_title' => 'Pemberitahuan Khusus',
+                'popup_description' => 'Silakan unduh aplikasi PKL resmi.',
+                'popup_has_button' => true,
+                'popup_button_text' => 'Buka Link',
+                'popup_button_url' => 'https://example.com/app',
+                'popup_interval_minutes' => 15,
+            ])
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('settings', [
+            'popup_active' => true,
+            'popup_icon' => 'bell',
+            'popup_title' => 'Pemberitahuan Khusus',
+            'popup_description' => 'Silakan unduh aplikasi PKL resmi.',
+            'popup_has_button' => true,
+            'popup_button_text' => 'Buka Link',
+            'popup_button_url' => 'https://example.com/app',
+            'popup_interval_minutes' => 15,
+        ]);
+    }
+
+    public function test_dynamic_popup_is_shared_when_active(): void
+    {
+        \App\Models\Setting::query()->firstOrCreate([])->update([
+            'popup_active' => true,
+            'popup_icon' => 'sparkles',
+            'popup_title' => 'Info Aktif',
+            'popup_description' => 'Deskripsi aktif',
+            'popup_has_button' => false,
+            'popup_button_text' => 'Tombol',
+            'popup_button_url' => '#',
+            'popup_interval_minutes' => 10,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+                ->where('dynamicPopup.active', true)
+                ->where('dynamicPopup.icon', 'sparkles')
+                ->where('dynamicPopup.title', 'Info Aktif')
+                ->where('dynamicPopup.description', 'Deskripsi aktif')
+                ->where('dynamicPopup.has_button', false)
+                ->where('dynamicPopup.interval_minutes', 10)
+            );
+    }
+
+    public function test_dynamic_popup_is_null_when_inactive(): void
+    {
+        \App\Models\Setting::query()->firstOrCreate([])->update([
+            'popup_active' => false,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+                ->where('dynamicPopup', null)
+            );
+    }
 }

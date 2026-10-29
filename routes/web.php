@@ -101,6 +101,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::get('pengaturan-website', [WebsiteSettingController::class, 'edit'])->name('website-settings.edit');
         Route::put('pengaturan-website', [WebsiteSettingController::class, 'update'])->name('website-settings.update');
+        Route::put('pengaturan-website/popup', [WebsiteSettingController::class, 'updatePopup'])->name('website-settings.popup.update');
 
         // Tombol CTA WhatsApp di landing page — nomor tujuan + template pesan.
         Route::get('pengaturan-cta-whatsapp', [WhatsappCtaSettingController::class, 'edit'])->name('whatsapp-cta.edit');
