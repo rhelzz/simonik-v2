@@ -12,8 +12,9 @@ class GuideRequest extends FormRequest
     }
 
     /**
-     * Panduan PKL: judul, deskripsi opsional, dan berkas dokumen. Berkas wajib
-     * saat menambah; opsional saat memperbarui (kosongkan untuk pertahankan).
+     * Panduan PKL: artikel panduan dengan judul, konten rich text, kategori,
+     * urutan tampil, status (draft/published), gambar/screenshot opsional,
+     * serta dokumen pendukung (PDF/Office) opsional.
      *
      * @return array<string, mixed>
      */
@@ -21,13 +22,21 @@ class GuideRequest extends FormRequest
     {
         return [
             'judul' => ['required', 'string', 'max:255'],
+            'kategori' => ['nullable', 'string', 'max:100'],
             'deskripsi' => ['nullable', 'string', 'max:2000'],
+            'konten' => ['nullable', 'string'],
+            'status' => ['nullable', 'in:draft,published'],
+            'urutan' => ['nullable', 'integer', 'min:0'],
+            'published_at' => ['nullable', 'date'],
+            'gambar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
             'dokumen' => [
-                $this->route('guide') ? 'nullable' : 'required',
+                'nullable',
                 'file',
                 'mimes:pdf,doc,docx,ppt,pptx,xls,xlsx',
                 'max:10240',
             ],
+            'hapus_gambar' => ['nullable', 'boolean'],
+            'hapus_dokumen' => ['nullable', 'boolean'],
         ];
     }
 
@@ -37,7 +46,10 @@ class GuideRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'dokumen.required' => 'Berkas dokumen wajib diunggah.',
+            'judul.required' => 'Judul panduan wajib diisi.',
+            'gambar.image' => 'Berkas gambar harus berupa foto/tangkapan layar.',
+            'gambar.mimes' => 'Format gambar harus JPG, JPEG, PNG, atau WEBP.',
+            'gambar.max' => 'Ukuran gambar maksimal 5 MB.',
             'dokumen.mimes' => 'Format harus PDF, Word, Excel, atau PowerPoint.',
             'dokumen.max' => 'Ukuran berkas maksimal 10 MB.',
         ];

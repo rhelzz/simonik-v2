@@ -14,16 +14,48 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $user_id
  * @property string $judul
+ * @property string|null $kategori
  * @property string|null $deskripsi
- * @property string $dokumen
+ * @property string|null $konten
+ * @property string|null $gambar
+ * @property string|null $dokumen
+ * @property string $status
+ * @property int $urutan
+ * @property Carbon|null $published_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['user_id', 'judul', 'deskripsi', 'dokumen'])]
+#[Fillable([
+    'user_id',
+    'judul',
+    'kategori',
+    'deskripsi',
+    'konten',
+    'gambar',
+    'dokumen',
+    'status',
+    'urutan',
+    'published_at',
+])]
 class Guide extends Model
 {
     /** @use HasFactory<GuideFactory> */
     use HasFactory;
+
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_PUBLISHED = 'published';
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'published_at' => 'datetime',
+            'urutan' => 'integer',
+        ];
+    }
 
     /** @return BelongsTo<User, $this> */
     public function users(): BelongsTo
@@ -37,6 +69,18 @@ class Guide extends Model
      * @return Attribute<string|null, never>
      */
     protected function dokumen(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value): ?string => $value ? asset("/storage/{$value}") : null,
+        );
+    }
+
+    /**
+     * Akses URL publik gambar panduan dari path yang tersimpan.
+     *
+     * @return Attribute<string|null, never>
+     */
+    protected function gambar(): Attribute
     {
         return Attribute::make(
             get: fn (?string $value): ?string => $value ? asset("/storage/{$value}") : null,

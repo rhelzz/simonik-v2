@@ -1,16 +1,21 @@
 import { X } from 'lucide-react';
 import { type ReactNode, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 export function Modal({
     open,
     onClose,
     title,
     children,
+    maxWidth = 'max-w-md',
+    className,
 }: {
     open: boolean;
     onClose: () => void;
     title: string;
     children: ReactNode;
+    maxWidth?: string;
+    className?: string;
 }) {
     useEffect(() => {
         if (!open) {
@@ -41,7 +46,13 @@ export function Modal({
                 onClick={onClose}
                 className="fixed inset-0 bg-ink/30 backdrop-blur-sm"
             />
-            <div className="relative my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col rounded-3xl bg-surface shadow-xl">
+            <div
+                className={cn(
+                    'relative my-auto flex max-h-[calc(100dvh-2rem)] w-full flex-col rounded-3xl bg-surface shadow-xl',
+                    maxWidth,
+                    className,
+                )}
+            >
                 <div className="flex items-center justify-between gap-3 p-6 pb-4">
                     <h2 className="min-w-0 text-base font-bold text-ink">
                         {title}

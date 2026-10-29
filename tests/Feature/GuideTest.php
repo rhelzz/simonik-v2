@@ -36,7 +36,7 @@ class GuideTest extends TestCase
 
     public function test_any_role_can_view_guides(): void
     {
-        Guide::factory()->create();
+        Guide::factory()->create(['status' => Guide::STATUS_PUBLISHED]);
 
         $this->actingAs($this->user('siswa'))
             ->get('/panduan')
@@ -55,28 +55,50 @@ class GuideTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('can.manage', true));
     }
 
-    public function test_admin_can_upload_guide(): void
+    public function test_admin_can_upload_guide_with_document_and_image(): void
     {
         Storage::fake('public');
 
         $this->actingAs($this->user('admin'))
             ->post('/panduan', [
                 'judul' => 'Buku Panduan PKL',
+                'kategori' => 'Umum',
                 'deskripsi' => 'Petunjuk lengkap pelaksanaan PKL.',
+                'konten' => '<p>Isi panduan lengkap</p>',
+                'status' => 'published',
+                'urutan' => 1,
                 'dokumen' => UploadedFile::fake()->create('panduan.pdf', 200, 'application/pdf'),
+                'gambar' => UploadedFile::fake()->image('screenshot.png', 640, 480),
             ])
             ->assertSessionHas('success');
 
         $guide = Guide::firstOrFail();
         $this->assertSame('Buku Panduan PKL', $guide->judul);
+        $this->assertSame('Umum', $guide->kategori);
+        $this->assertSame(1, $guide->urutan);
         Storage::disk('public')->assertExists($guide->getRawOriginal('dokumen'));
+        Storage::disk('public')->assertExists($guide->getRawOriginal('gambar'));
     }
 
-    public function test_upload_requires_a_file(): void
+    public function test_admin_can_create_guide_without_file(): void
     {
         $this->actingAs($this->user('admin'))
-            ->post('/panduan', ['judul' => 'Tanpa berkas'])
-            ->assertSessionHasErrors('dokumen');
+            ->post('/panduan', [
+                'judul' => 'Panduan Tanpa Berkas',
+                'konten' => '<p>Hanya teks artikel.</p>',
+            ])
+            ->assertSessionHas('success');
+
+        $guide = Guide::firstOrFail();
+        $this->assertSame('Panduan Tanpa Berkas', $guide->judul);
+        $this->assertNull($guide->getRawOriginal('dokumen'));
+    }
+
+    public function test_create_requires_judul(): void
+    {
+        $this->actingAs($this->user('admin'))
+            ->post('/panduan', ['deskripsi' => 'Tanpa judul'])
+            ->assertSessionHasErrors('judul');
     }
 
     public function test_upload_rejects_invalid_file_type(): void
@@ -101,6 +123,52 @@ class GuideTest extends TestCase
                 'dokumen' => UploadedFile::fake()->create('panduan.pdf', 100, 'application/pdf'),
             ])
             ->assertForbidden();
+    }
+
+    public function test_non_admin_cannot_see_draft_guides(): void
+    {
+        Guide::factory()->create([
+            'judul' => 'Panduan Tayang',
+            'status' => Guide::STATUS_PUBLISHED,
+        ]);
+        Guide::factory()->create([
+            'judul' => 'Panduan Draf',
+            'status' => Guide::STATUS_DRAFT,
+        ]);
+
+        $this->actingAs($this->user('siswa'))
+            ->get('/panduan')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('guides', 1)
+                ->where('guides.0.judul', 'Panduan Tayang')
+            );
+
+        $this->actingAs($this->user('admin'))
+            ->get('/panduan')
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('guides', 2)
+            );
+    }
+
+    public function test_guides_are_ordered_by_urutan(): void
+    {
+        Guide::factory()->create([
+            'judul' => 'Panduan Kedua',
+            'urutan' => 2,
+            'status' => Guide::STATUS_PUBLISHED,
+        ]);
+        Guide::factory()->create([
+            'judul' => 'Panduan Pertama',
+            'urutan' => 1,
+            'status' => Guide::STATUS_PUBLISHED,
+        ]);
+
+        $this->actingAs($this->user('siswa'))
+            ->get('/panduan')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('guides.0.judul', 'Panduan Pertama')
+                ->where('guides.1.judul', 'Panduan Kedua')
+            );
     }
 
     public function test_admin_can_update_metadata_without_new_file(): void

@@ -21,8 +21,14 @@ class GuideFactory extends Factory
         return [
             'user_id' => User::factory(),
             'judul' => fake()->sentence(4),
+            'kategori' => fake()->randomElement(['Umum', 'Jurnal', 'Presensi', 'Tata Tertib']),
             'deskripsi' => fake()->optional()->paragraph(),
+            'konten' => '<p>'.fake()->paragraph().'</p>',
+            'gambar' => null,
             'dokumen' => 'guides/'.fake()->uuid().'.pdf',
+            'status' => Guide::STATUS_PUBLISHED,
+            'urutan' => fake()->numberBetween(0, 10),
+            'published_at' => now(),
         ];
     }
 }
