@@ -138,4 +138,18 @@ class ProfileTest extends TestCase
         $this->assertDatabaseHas('industries', array_merge(['id' => $industry->id], $payload));
         $this->assertTrue($industry->fresh()->hasCompleteDudiProfile());
     }
+
+    public function test_admin_can_access_dudi_industry_report_and_export(): void
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $this->actingAs($admin)
+            ->get('/admin/profil-industri')
+            ->assertOk();
+
+        $this->actingAs($admin)
+            ->get('/admin/profil-industri/export')
+            ->assertOk();
+    }
 }

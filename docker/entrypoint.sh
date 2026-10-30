@@ -18,4 +18,7 @@ chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 rm -f /etc/nginx/site-opts.d/http.conf /etc/nginx/site-opts.d/https.conf /etc/nginx/nginx.conf 2>/dev/null || true
 
+# Ensure public/storage symlink exists
+php /var/www/html/artisan storage:link --force 2>/dev/null || true
+
 exec /usr/local/bin/docker-php-serversideup-entrypoint "$@"

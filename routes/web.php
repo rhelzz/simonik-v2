@@ -18,6 +18,7 @@ use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\IndustryController;
+use App\Http\Controllers\IndustryDudiReportController;
 use App\Http\Controllers\JournalMonitorController;
 use App\Http\Controllers\KaprogController;
 use App\Http\Controllers\LeaveRequestController;
@@ -95,6 +96,9 @@ Route::middleware('auth')->group(function () {
 
     // Pengaturan favicon situs & User Management — hanya Super Admin.
     Route::middleware('role:admin')->group(function () {
+        Route::get('admin/profil-industri', [IndustryDudiReportController::class, 'index'])->name('admin.industry-dudi.index');
+        Route::get('admin/profil-industri/export', [IndustryDudiReportController::class, 'export'])->name('admin.industry-dudi.export');
+
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::post('users/bulk-reset-password', [UserController::class, 'bulkResetPassword'])->name('users.bulk-reset-password');
         Route::delete('users/bulk', [UserController::class, 'bulkDestroy'])->name('users.bulk-destroy');
@@ -111,6 +115,8 @@ Route::middleware('auth')->group(function () {
 
     // Panduan PKL — semua role bisa lihat & unduh; kelola hanya admin/kaprog.
     Route::get('panduan', [GuideController::class, 'index'])->name('guides.index');
+    Route::get('panduan/{guide}/dokumen', [GuideController::class, 'dokumen'])->name('guides.dokumen');
+    Route::get('panduan/{guide}/gambar', [GuideController::class, 'gambar'])->name('guides.gambar');
     Route::middleware('role:admin|kaprog')->group(function () {
         Route::post('panduan', [GuideController::class, 'store'])->name('guides.store');
         Route::put('panduan/{guide}', [GuideController::class, 'update'])->name('guides.update');
@@ -399,3 +405,8 @@ Route::middleware('auth')->group(function () {
         Route::get('statistik', [StatistikController::class, 'index'])->name('statistik.index');
     });
 });
+
+// Fallback untuk berkas storage publik jika web server / proxy tidak mengizinkan akses langsung symlink.
+Route::get('storage/{path}', [GuideController::class, 'serveStorage'])
+    ->where('path', '.*')
+    ->name('storage.fallback');
