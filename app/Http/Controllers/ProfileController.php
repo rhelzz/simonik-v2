@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Http\Requests\UpdateIndustryDudiProfileRequest;
 use App\Http\Requests\UpdateStudentProfileRequest;
+use App\Models\Industry;
 use App\Models\Student;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +22,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $student = $user->hasRole('siswa') ? $user->students : null;
+        $industry = $user->hasRole('pembimbing') ? $user->pembimbing?->industry : null;
 
         return Inertia::render('profile/edit', [
             'profile' => [
@@ -35,6 +38,25 @@ class ProfileController extends Controller
                 'alamat' => $student->alamat,
                 'image' => $student->image,
                 'complete' => $student->hasCompleteProfile(),
+            ] : null,
+            'industry' => $industry ? [
+                'id' => $industry->id,
+                'nib' => $industry->nib,
+                'name' => $industry->name,
+                'bidang' => $industry->bidang,
+                'alamat' => $industry->alamat,
+                'rt' => $industry->rt,
+                'rw' => $industry->rw,
+                'dusun' => $industry->dusun,
+                'kelurahan' => $industry->kelurahan,
+                'kecamatan' => $industry->kecamatan,
+                'kode_pos' => $industry->kode_pos,
+                'latitude' => $industry->latitude,
+                'longitude' => $industry->longitude,
+                'email' => $industry->email,
+                'website' => $industry->website,
+                'npwp' => $industry->npwp,
+                'complete' => $industry->hasCompleteDudiProfile(),
             ] : null,
         ]);
     }
@@ -76,5 +98,20 @@ class ProfileController extends Controller
         $student->update($data);
 
         return back()->with('success', 'Data diri berhasil diperbarui.');
+    }
+
+    /**
+     * Pembimbing melengkapi data Profil Industri (DUDI).
+     */
+    public function updateIndustryProfile(UpdateIndustryDudiProfileRequest $request): RedirectResponse
+    {
+        /** @var Industry|null $industry */
+        $industry = $request->user()->pembimbing?->industry;
+
+        abort_unless($industry !== null, 404);
+
+        $industry->update($request->validated());
+
+        return back()->with('success', 'Profil Industri berhasil diperbarui.');
     }
 }

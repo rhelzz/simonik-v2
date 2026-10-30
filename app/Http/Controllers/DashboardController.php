@@ -253,6 +253,10 @@ class DashboardController extends Controller
 
         $avgRaw = Evaluation::query()->whereIn('student_id', $studentIds)->avg('score');
 
+        $isPembimbing = $user->hasRole('pembimbing');
+        $industry = $isPembimbing ? $user->pembimbing?->industry : null;
+        $dudiIncomplete = $isPembimbing && ($industry === null || ! $industry->hasCompleteDudiProfile());
+
         return Inertia::render('dashboard-staff', [
             'stats' => [
                 'students' => (clone $scoped)->count(),
@@ -268,6 +272,7 @@ class DashboardController extends Controller
             ),
             'scopeLabel' => $this->scopeLabel($user),
             'today' => Carbon::now()->translatedFormat('l, d F Y'),
+            'dudiIncomplete' => $dudiIncomplete,
         ]);
     }
 

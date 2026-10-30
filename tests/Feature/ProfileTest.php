@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -10,6 +11,12 @@ use Tests\TestCase;
 class ProfileTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(RoleSeeder::class);
+    }
 
     public function test_guests_cannot_view_profile(): void
     {
@@ -92,5 +99,43 @@ class ProfileTest extends TestCase
                 'password_confirmation' => 'kata-sandi-baru',
             ])
             ->assertSessionHasErrors('current_password');
+    }
+
+    public function test_pembimbing_can_update_dudi_industry_profile(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('pembimbing');
+
+        $pembimbing = \App\Models\Pembimbing::factory()->create(['user_id' => $user->id]);
+        $industry = \App\Models\Industry::factory()->create([
+            'pembimbing_id' => $pembimbing->id,
+            'name' => 'PT Lama',
+            'alamat' => 'Alamat lama',
+        ]);
+
+        $payload = [
+            'nib' => '1234567890123',
+            'name' => 'PT Baru Maju',
+            'bidang' => 'Teknologi Informasi',
+            'alamat' => 'Jl. Jendral Sudirman No. 10',
+            'rt' => '001',
+            'rw' => '002',
+            'dusun' => 'Dusun Satu',
+            'kelurahan' => 'Kelurahan A',
+            'kecamatan' => 'Kecamatan B',
+            'kode_pos' => '12345',
+            'latitude' => '-6.200000',
+            'longitude' => '106.816666',
+            'email' => 'kontak@barumaju.co.id',
+            'website' => 'https://barumaju.co.id',
+            'npwp' => '01.234.567.8-901.000',
+        ];
+
+        $response = $this->actingAs($user)->patch('/profile/industri', $payload);
+
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('industries', array_merge(['id' => $industry->id], $payload));
+        $this->assertTrue($industry->fresh()->hasCompleteDudiProfile());
     }
 }

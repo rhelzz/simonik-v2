@@ -1,16 +1,20 @@
 import { Form, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
+    Building2,
     Check,
+    CheckCircle2,
     Eye,
     EyeOff,
     IdCard,
+    Info,
     LoaderCircle,
+    MapPin,
     ShieldCheck,
     UserCircle2,
 } from 'lucide-react';
-import { useState } from 'react';
-import type { ReactNode } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { ChangeEvent, ReactNode } from 'react';
 import { update as updatePassword } from '@/actions/App/Http/Controllers/PasswordController';
 import {
     update as updateProfile,
@@ -33,9 +37,30 @@ type StudentProfile = {
     complete: boolean;
 };
 
+type IndustryProfile = {
+    id: number;
+    nib: string | null;
+    name: string;
+    bidang: string;
+    alamat: string;
+    rt: string | null;
+    rw: string | null;
+    dusun: string | null;
+    kelurahan: string | null;
+    kecamatan: string | null;
+    kode_pos: string | null;
+    latitude: string | null;
+    longitude: string | null;
+    email: string | null;
+    website: string | null;
+    npwp: string | null;
+    complete: boolean;
+};
+
 type ProfileEditProps = {
     profile: { name: string; email: string };
     student: StudentProfile | null;
+    industry?: IndustryProfile | null;
 };
 
 const roleLabels: Record<Role, string> = {
@@ -165,9 +190,25 @@ function SubmitButton({
     );
 }
 
-export default function ProfileEdit({ profile, student }: ProfileEditProps) {
+export default function ProfileEdit({
+    profile,
+    student,
+    industry,
+}: ProfileEditProps) {
     const { auth } = usePage<SharedData>().props;
     const roles = auth.roles ?? [];
+    const isPembimbing = roles.includes('pembimbing');
+
+    const [activeTab, setActiveTab] = useState<'account' | 'industry'>(
+        'account',
+    );
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('tab') === 'industry' && isPembimbing) {
+            setActiveTab('industry');
+        }
+    }, [isPembimbing]);
 
     const [password, setPassword] = useState('');
     const [confirmation, setConfirmation] = useState('');
@@ -175,6 +216,68 @@ export default function ProfileEdit({ profile, student }: ProfileEditProps) {
 
     const [gender, setGender] = useState(student?.gender ?? '');
     const [bloodType, setBloodType] = useState(student?.bloodType ?? '');
+
+    // State form industri untuk progress bar real-time
+    const [industryForm, setIndustryForm] = useState({
+        nib: industry?.nib ?? '',
+        name: industry?.name ?? '',
+        bidang: industry?.bidang ?? '',
+        alamat: industry?.alamat ?? '',
+        rt: industry?.rt ?? '',
+        rw: industry?.rw ?? '',
+        dusun: industry?.dusun ?? '',
+        kelurahan: industry?.kelurahan ?? '',
+        kecamatan: industry?.kecamatan ?? '',
+        kode_pos: industry?.kode_pos ?? '',
+        latitude: industry?.latitude ?? '',
+        longitude: industry?.longitude ?? '',
+        email: industry?.email ?? '',
+        website: industry?.website ?? '',
+        npwp: industry?.npwp ?? '',
+    });
+
+    const handleIndustryChange = (
+        e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    ) => {
+        const { name, value } = e.target;
+        setIndustryForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const dudiFields = useMemo(() => {
+        return [
+            { key: 'nib', label: 'NIB', val: industryForm.nib },
+            { key: 'name', label: 'Nama Perusahaan', val: industryForm.name },
+            { key: 'bidang', label: 'Bidang Usaha', val: industryForm.bidang },
+            { key: 'alamat', label: 'Alamat Lokasi', val: industryForm.alamat },
+            { key: 'rt', label: 'RT', val: industryForm.rt },
+            { key: 'rw', label: 'RW', val: industryForm.rw },
+            { key: 'dusun', label: 'Nama Dusun', val: industryForm.dusun },
+            {
+                key: 'kelurahan',
+                label: 'Desa/Kelurahan',
+                val: industryForm.kelurahan,
+            },
+            {
+                key: 'kecamatan',
+                label: 'Kecamatan',
+                val: industryForm.kecamatan,
+            },
+            { key: 'kode_pos', label: 'Kode Pos', val: industryForm.kode_pos },
+            { key: 'latitude', label: 'Lintang', val: industryForm.latitude },
+            { key: 'longitude', label: 'Bujur', val: industryForm.longitude },
+            { key: 'email', label: 'Email', val: industryForm.email },
+            { key: 'website', label: 'Website', val: industryForm.website },
+            { key: 'npwp', label: 'NPWP', val: industryForm.npwp },
+        ];
+    }, [industryForm]);
+
+    const filledDudiCount = useMemo(() => {
+        return dudiFields.filter((f) => f.val && f.val.trim().length > 0).length;
+    }, [dudiFields]);
+
+    const progressPercentage = Math.round(
+        (filledDudiCount / dudiFields.length) * 100,
+    );
 
     const genderOptions: SelectOption[] = [
         { value: 'L', label: 'Laki-laki' },
@@ -221,316 +324,755 @@ export default function ProfileEdit({ profile, student }: ProfileEditProps) {
                     </div>
                 </section>
 
-                <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-                    {/* Informasi akun */}
-                    <Section
-                        icon={<UserCircle2 className="size-5" />}
-                        title="Informasi akun"
-                        description="Perbarui nama dan email akun Anda."
-                    >
-                        <Form
-                            action={updateProfile.url()}
-                            method="patch"
-                            className="space-y-4"
+                {/* Tab Menu Header untuk Role Pembimbing / Industri */}
+                {isPembimbing && (
+                    <div className="flex border-b border-line">
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('account')}
+                            className={`flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors ${
+                                activeTab === 'account'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted hover:text-ink'
+                            }`}
                         >
-                            {({ processing, errors }) => (
-                                <>
-                                    <Field
-                                        label="Nama lengkap"
-                                        htmlFor="name"
-                                        error={errors.name}
-                                        required
-                                    >
-                                        <input
-                                            id="name"
-                                            name="name"
-                                            defaultValue={profile.name}
-                                            placeholder="Nama lengkap Anda"
-                                            className={inputClass}
-                                            required
-                                        />
-                                    </Field>
-                                    <Field
-                                        label="Email"
-                                        htmlFor="email"
-                                        error={errors.email}
-                                        required
-                                    >
-                                        <input
-                                            id="email"
-                                            name="email"
-                                            type="email"
-                                            defaultValue={profile.email}
-                                            placeholder="nama@simonik.local"
-                                            className={inputClass}
-                                            required
-                                        />
-                                    </Field>
-                                    <div className="flex justify-end">
-                                        <SubmitButton processing={processing}>
-                                            Simpan perubahan
-                                        </SubmitButton>
-                                    </div>
-                                </>
+                            <UserCircle2 className="size-4" />
+                            Informasi Akun
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('industry')}
+                            className={`flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors ${
+                                activeTab === 'industry'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted hover:text-ink'
+                            }`}
+                        >
+                            <Building2 className="size-4" />
+                            Profil Industri
+                            {industry && (
+                                <span
+                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                        industry.complete
+                                            ? 'bg-emerald-100 text-emerald-700'
+                                            : 'bg-amber-100 text-amber-700'
+                                    }`}
+                                >
+                                    {industry.complete ? 'Lengkap' : `${progressPercentage}%`}
+                                </span>
                             )}
-                        </Form>
-                    </Section>
+                        </button>
+                    </div>
+                )}
 
-                    {/* Keamanan */}
-                    <Section
-                        icon={<ShieldCheck className="size-5" />}
-                        title="Keamanan"
-                        description="Gunakan kata sandi yang panjang dan unik agar akun tetap aman."
-                    >
-                        <Form
-                            action={updatePassword.url()}
-                            method="put"
-                            resetOnSuccess
-                            onSuccess={() => {
-                                setPassword('');
-                                setConfirmation('');
-                            }}
-                            className="space-y-4"
-                        >
-                            {({ processing, errors }) => (
-                                <>
-                                    <Field
-                                        label="Kata sandi saat ini"
-                                        htmlFor="current_password"
-                                        error={errors.current_password}
-                                        required
-                                    >
-                                        <div className="relative">
-                                            <input
-                                                id="current_password"
-                                                name="current_password"
-                                                type={
-                                                    showPassword
-                                                        ? 'text'
-                                                        : 'password'
-                                                }
-                                                autoComplete="current-password"
-                                                className={inputClass}
+                {/* Konten Tab: Informasi Akun */}
+                {(activeTab === 'account' || !isPembimbing) && (
+                    <div className="space-y-6">
+                        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+                            {/* Informasi akun */}
+                            <Section
+                                icon={<UserCircle2 className="size-5" />}
+                                title="Informasi akun"
+                                description="Perbarui nama dan email akun Anda."
+                            >
+                                <Form
+                                    action={updateProfile.url()}
+                                    method="patch"
+                                    className="space-y-4"
+                                >
+                                    {({ processing, errors }) => (
+                                        <>
+                                            <Field
+                                                label="Nama lengkap"
+                                                htmlFor="name"
+                                                error={errors.name}
                                                 required
-                                            />
-                                        </div>
-                                    </Field>
-                                    <Field
-                                        label="Kata sandi baru"
-                                        htmlFor="password"
-                                        error={errors.password}
-                                        hint="Minimal 8 karakter."
-                                        required
-                                    >
-                                        <div className="relative">
-                                            <input
-                                                id="password"
-                                                name="password"
-                                                type={
-                                                    showPassword
-                                                        ? 'text'
-                                                        : 'password'
-                                                }
-                                                autoComplete="new-password"
-                                                value={password}
-                                                onChange={(e) =>
-                                                    setPassword(e.target.value)
-                                                }
-                                                placeholder="Kata sandi baru"
-                                                className={inputClass}
-                                                required
-                                            />
-                                            <PasswordToggle
-                                                show={showPassword}
-                                                onToggle={() =>
-                                                    setShowPassword(
-                                                        !showPassword,
-                                                    )
-                                                }
-                                            />
-                                        </div>
-                                    </Field>
-                                    <Field
-                                        label="Konfirmasi kata sandi baru"
-                                        htmlFor="password_confirmation"
-                                        required
-                                    >
-                                        <input
-                                            id="password_confirmation"
-                                            name="password_confirmation"
-                                            type={
-                                                showPassword
-                                                    ? 'text'
-                                                    : 'password'
-                                            }
-                                            autoComplete="new-password"
-                                            value={confirmation}
-                                            onChange={(e) =>
-                                                setConfirmation(e.target.value)
-                                            }
-                                            placeholder="Ulangi kata sandi baru"
-                                            className={inputClass}
-                                            required
-                                        />
-                                        {confirmation && (
-                                            <div
-                                                className={`flex items-center gap-1.5 text-xs font-medium ${passwordMatch ? 'text-positive' : 'text-red-500'}`}
                                             >
-                                                {passwordMatch ? (
-                                                    <>
-                                                        <Check className="size-3.5" />
-                                                        Kata sandi cocok
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <AlertCircle className="size-3.5" />
-                                                        Kata sandi tidak cocok
-                                                    </>
-                                                )}
+                                                <input
+                                                    id="name"
+                                                    name="name"
+                                                    defaultValue={profile.name}
+                                                    placeholder="Nama lengkap Anda"
+                                                    className={inputClass}
+                                                    required
+                                                />
+                                            </Field>
+                                            <Field
+                                                label="Email"
+                                                htmlFor="email"
+                                                error={errors.email}
+                                                required
+                                            >
+                                                <input
+                                                    id="email"
+                                                    name="email"
+                                                    type="email"
+                                                    defaultValue={profile.email}
+                                                    placeholder="nama@simonik.local"
+                                                    className={inputClass}
+                                                    required
+                                                />
+                                            </Field>
+                                            <div className="flex justify-end">
+                                                <SubmitButton
+                                                    processing={processing}
+                                                >
+                                                    Simpan perubahan
+                                                </SubmitButton>
                                             </div>
-                                        )}
-                                    </Field>
-                                    <div className="flex justify-end">
-                                        <SubmitButton processing={processing}>
-                                            Perbarui kata sandi
-                                        </SubmitButton>
-                                    </div>
-                                </>
-                            )}
-                        </Form>
-                    </Section>
-                </div>
+                                        </>
+                                    )}
+                                </Form>
+                            </Section>
 
-                {student && (
-                    <Section
-                        icon={<IdCard className="size-5" />}
-                        title="Data diri"
-                        description="Lengkapi identitas Anda sesuai dokumen resmi. Boleh dicicil — tidak semua wajib diisi sekarang."
-                    >
-                        {!student.complete && (
-                            <p className="mb-4 flex items-center gap-1.5 text-xs font-medium text-amber-700">
-                                <AlertCircle className="size-3.5 shrink-0" />
-                                Belum lengkap
-                            </p>
+                            {/* Keamanan */}
+                            <Section
+                                icon={<ShieldCheck className="size-5" />}
+                                title="Keamanan"
+                                description="Gunakan kata sandi yang panjang dan unik agar akun tetap aman."
+                            >
+                                <Form
+                                    action={updatePassword.url()}
+                                    method="put"
+                                    resetOnSuccess
+                                    onSuccess={() => {
+                                        setPassword('');
+                                        setConfirmation('');
+                                    }}
+                                    className="space-y-4"
+                                >
+                                    {({ processing, errors }) => (
+                                        <>
+                                            <Field
+                                                label="Kata sandi saat ini"
+                                                htmlFor="current_password"
+                                                error={errors.current_password}
+                                                required
+                                            >
+                                                <div className="relative">
+                                                    <input
+                                                        id="current_password"
+                                                        name="current_password"
+                                                        type={
+                                                            showPassword
+                                                                ? 'text'
+                                                                : 'password'
+                                                        }
+                                                        autoComplete="current-password"
+                                                        className={inputClass}
+                                                        required
+                                                    />
+                                                </div>
+                                            </Field>
+                                            <Field
+                                                label="Kata sandi baru"
+                                                htmlFor="password"
+                                                error={errors.password}
+                                                hint="Minimal 8 karakter."
+                                                required
+                                            >
+                                                <div className="relative">
+                                                    <input
+                                                        id="password"
+                                                        name="password"
+                                                        type={
+                                                            showPassword
+                                                                ? 'text'
+                                                                : 'password'
+                                                        }
+                                                        autoComplete="new-password"
+                                                        value={password}
+                                                        onChange={(e) =>
+                                                            setPassword(
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        placeholder="Kata sandi baru"
+                                                        className={inputClass}
+                                                        required
+                                                    />
+                                                    <PasswordToggle
+                                                        show={showPassword}
+                                                        onToggle={() =>
+                                                            setShowPassword(
+                                                                !showPassword,
+                                                            )
+                                                        }
+                                                    />
+                                                </div>
+                                            </Field>
+                                            <Field
+                                                label="Konfirmasi kata sandi baru"
+                                                htmlFor="password_confirmation"
+                                                required
+                                            >
+                                                <input
+                                                    id="password_confirmation"
+                                                    name="password_confirmation"
+                                                    type={
+                                                        showPassword
+                                                            ? 'text'
+                                                            : 'password'
+                                                    }
+                                                    autoComplete="new-password"
+                                                    value={confirmation}
+                                                    onChange={(e) =>
+                                                        setConfirmation(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Ulangi kata sandi baru"
+                                                    className={inputClass}
+                                                    required
+                                                />
+                                                {confirmation && (
+                                                    <div
+                                                        className={`flex items-center gap-1.5 text-xs font-medium ${passwordMatch ? 'text-positive' : 'text-red-500'}`}
+                                                    >
+                                                        {passwordMatch ? (
+                                                            <>
+                                                                <Check className="size-3.5" />
+                                                                Kata sandi cocok
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <AlertCircle className="size-3.5" />
+                                                                Kata sandi tidak
+                                                                cocok
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </Field>
+                                            <div className="flex justify-end">
+                                                <SubmitButton
+                                                    processing={processing}
+                                                >
+                                                    Perbarui kata sandi
+                                                </SubmitButton>
+                                            </div>
+                                        </>
+                                    )}
+                                </Form>
+                            </Section>
+                        </div>
+
+                        {student && (
+                            <Section
+                                icon={<IdCard className="size-5" />}
+                                title="Data diri"
+                                description="Lengkapi identitas Anda sesuai dokumen resmi. Boleh dicicil — tidak semua wajib diisi sekarang."
+                            >
+                                {!student.complete && (
+                                    <p className="mb-4 flex items-center gap-1.5 text-xs font-medium text-amber-700">
+                                        <AlertCircle className="size-3.5 shrink-0" />
+                                        Belum lengkap
+                                    </p>
+                                )}
+                                <Form
+                                    action={updateStudentProfile.url()}
+                                    method="patch"
+                                    encType="multipart/form-data"
+                                >
+                                    {({ processing, errors }) => (
+                                        <>
+                                            <div className="grid gap-4 sm:grid-cols-2">
+                                                <Field
+                                                    label="NIS"
+                                                    htmlFor="nis"
+                                                    error={errors.nis}
+                                                >
+                                                    <input
+                                                        id="nis"
+                                                        name="nis"
+                                                        defaultValue={
+                                                            student.nis ?? ''
+                                                        }
+                                                        placeholder="Nomor Induk Siswa"
+                                                        className={inputClass}
+                                                    />
+                                                </Field>
+                                                <Field
+                                                    label="Tempat lahir"
+                                                    htmlFor="placeOfBirth"
+                                                    error={errors.placeOfBirth}
+                                                >
+                                                    <input
+                                                        id="placeOfBirth"
+                                                        name="placeOfBirth"
+                                                        defaultValue={
+                                                            student.placeOfBirth ??
+                                                            ''
+                                                        }
+                                                        placeholder="cth. Jakarta"
+                                                        className={inputClass}
+                                                    />
+                                                </Field>
+                                                <Field
+                                                    label="Tanggal lahir"
+                                                    htmlFor="dateOfBirth"
+                                                    error={errors.dateOfBirth}
+                                                >
+                                                    <input
+                                                        id="dateOfBirth"
+                                                        name="dateOfBirth"
+                                                        type="date"
+                                                        defaultValue={
+                                                            student.dateOfBirth ??
+                                                            ''
+                                                        }
+                                                        className={inputClass}
+                                                    />
+                                                </Field>
+                                                <Field
+                                                    label="Jenis kelamin"
+                                                    error={errors.gender}
+                                                >
+                                                    <Select
+                                                        name="gender"
+                                                        ariaLabel="Jenis kelamin"
+                                                        value={gender}
+                                                        options={genderOptions}
+                                                        onChange={setGender}
+                                                        placeholder="Pilih jenis kelamin…"
+                                                    />
+                                                </Field>
+                                                <Field
+                                                    label="Golongan darah"
+                                                    error={errors.bloodType}
+                                                >
+                                                    <Select
+                                                        name="bloodType"
+                                                        ariaLabel="Golongan darah"
+                                                        value={bloodType}
+                                                        options={bloodOptions}
+                                                        onChange={setBloodType}
+                                                        placeholder="— Tidak tahu"
+                                                    />
+                                                </Field>
+                                                <Field
+                                                    label="Foto"
+                                                    htmlFor="image"
+                                                    error={errors.image}
+                                                    hint="Opsional. Format gambar, maks. 2MB."
+                                                >
+                                                    <input
+                                                        id="image"
+                                                        name="image"
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary hover:file:bg-primary hover:file:text-white"
+                                                    />
+                                                </Field>
+                                                <Field
+                                                    label="Alamat"
+                                                    htmlFor="alamat"
+                                                    error={errors.alamat}
+                                                    full
+                                                >
+                                                    <textarea
+                                                        id="alamat"
+                                                        name="alamat"
+                                                        rows={2}
+                                                        defaultValue={
+                                                            student.alamat ?? ''
+                                                        }
+                                                        placeholder="Alamat tempat tinggal Anda"
+                                                        className={inputClass}
+                                                    />
+                                                </Field>
+                                            </div>
+                                            <div className="mt-4 flex justify-end">
+                                                <SubmitButton
+                                                    processing={processing}
+                                                >
+                                                    Simpan data diri
+                                                </SubmitButton>
+                                            </div>
+                                        </>
+                                    )}
+                                </Form>
+                            </Section>
                         )}
-                        <Form
-                            action={updateStudentProfile.url()}
-                            method="patch"
-                            encType="multipart/form-data"
-                        >
-                            {({ processing, errors }) => (
-                                <>
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <Field
-                                            label="NIS"
-                                            htmlFor="nis"
-                                            error={errors.nis}
-                                        >
-                                            <input
-                                                id="nis"
-                                                name="nis"
-                                                defaultValue={student.nis ?? ''}
-                                                placeholder="Nomor Induk Siswa"
-                                                className={inputClass}
-                                            />
-                                        </Field>
-                                        <Field
-                                            label="Tempat lahir"
-                                            htmlFor="placeOfBirth"
-                                            error={errors.placeOfBirth}
-                                        >
-                                            <input
-                                                id="placeOfBirth"
-                                                name="placeOfBirth"
-                                                defaultValue={
-                                                    student.placeOfBirth ?? ''
-                                                }
-                                                placeholder="cth. Jakarta"
-                                                className={inputClass}
-                                            />
-                                        </Field>
-                                        <Field
-                                            label="Tanggal lahir"
-                                            htmlFor="dateOfBirth"
-                                            error={errors.dateOfBirth}
-                                        >
-                                            <input
-                                                id="dateOfBirth"
-                                                name="dateOfBirth"
-                                                type="date"
-                                                defaultValue={
-                                                    student.dateOfBirth ?? ''
-                                                }
-                                                className={inputClass}
-                                            />
-                                        </Field>
-                                        <Field
-                                            label="Jenis kelamin"
-                                            error={errors.gender}
-                                        >
-                                            <Select
-                                                name="gender"
-                                                ariaLabel="Jenis kelamin"
-                                                value={gender}
-                                                options={genderOptions}
-                                                onChange={setGender}
-                                                placeholder="Pilih jenis kelamin…"
-                                            />
-                                        </Field>
-                                        <Field
-                                            label="Golongan darah"
-                                            error={errors.bloodType}
-                                        >
-                                            <Select
-                                                name="bloodType"
-                                                ariaLabel="Golongan darah"
-                                                value={bloodType}
-                                                options={bloodOptions}
-                                                onChange={setBloodType}
-                                                placeholder="— Tidak tahu"
-                                            />
-                                        </Field>
-                                        <Field
-                                            label="Foto"
-                                            htmlFor="image"
-                                            error={errors.image}
-                                            hint="Opsional. Format gambar, maks. 2MB."
-                                        >
-                                            <input
-                                                id="image"
-                                                name="image"
-                                                type="file"
-                                                accept="image/*"
-                                                className="w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary hover:file:bg-primary hover:file:text-white"
-                                            />
-                                        </Field>
-                                        <Field
-                                            label="Alamat"
-                                            htmlFor="alamat"
-                                            error={errors.alamat}
-                                            full
-                                        >
-                                            <textarea
-                                                id="alamat"
-                                                name="alamat"
-                                                rows={2}
-                                                defaultValue={
-                                                    student.alamat ?? ''
-                                                }
-                                                placeholder="Alamat tempat tinggal Anda"
-                                                className={inputClass}
-                                            />
-                                        </Field>
+                    </div>
+                )}
+
+                {/* Konten Tab: Profil Industri (DUDI) */}
+                {isPembimbing && activeTab === 'industry' && (
+                    <div className="space-y-6">
+                        {!industry ? (
+                            <div className="rounded-3xl border border-line bg-surface p-6 text-center text-muted">
+                                <Building2 className="mx-auto mb-2 size-8 text-muted" />
+                                <p className="font-semibold text-ink">
+                                    Belum Terhubung dengan Data Industri
+                                </p>
+                                <p className="text-xs">
+                                    Akun Anda belum dikaitkan dengan data industri oleh Administrator/Kaprog.
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Alert Pengingat e-Rapor */}
+                                <div
+                                    className={`relative flex items-start gap-3 rounded-2xl border p-4 sm:p-5 ${
+                                        industry.complete || progressPercentage === 100
+                                            ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                                            : 'border-amber-200 bg-amber-50 text-amber-900'
+                                    }`}
+                                >
+                                    {industry.complete || progressPercentage === 100 ? (
+                                        <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600" />
+                                    ) : (
+                                        <Info className="mt-0.5 size-5 shrink-0 text-amber-600" />
+                                    )}
+                                    <div className="flex-1 text-sm">
+                                        <h4 className="font-bold">
+                                            {industry.complete || progressPercentage === 100
+                                                ? 'Data Profil Industri Lengkap'
+                                                : 'Pemberitahuan Kelengkapan Data Industri (DUDI)'}
+                                        </h4>
+                                        <p className="mt-1 text-xs leading-relaxed opacity-90">
+                                            {industry.complete || progressPercentage === 100
+                                                ? 'Terima kasih, seluruh rincian informasi data industri telah lengkap untuk kebutuhan sinkronisasi e-Rapor Kemendikdasmen.'
+                                                : 'Harap melengkapi data Profil Industri (DUDI) di bawah ini. Fitur kebutuhan input data profil industri ini diperuntukkan melengkapi data inputan e-Rapor Kemendikdasmen.'}
+                                        </p>
                                     </div>
-                                    <div className="mt-4 flex justify-end">
-                                        <SubmitButton processing={processing}>
-                                            Simpan data diri
-                                        </SubmitButton>
+                                </div>
+
+                                {/* Progress Bar Card */}
+                                <div className="rounded-3xl border border-line bg-surface p-5 sm:p-6">
+                                    <div className="mb-2 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-semibold tracking-wider text-muted uppercase">
+                                                Kelengkapan Data DUDI
+                                            </span>
+                                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                                                {filledDudiCount} dari 15 Field
+                                            </span>
+                                        </div>
+                                        <span className="text-sm font-extrabold text-primary">
+                                            {progressPercentage}%
+                                        </span>
                                     </div>
-                                </>
-                            )}
-                        </Form>
-                    </Section>
+
+                                    {/* Bar track */}
+                                    <div className="h-2.5 w-full overflow-hidden rounded-full bg-canvas">
+                                        <div
+                                            className={`h-full transition-all duration-300 ease-out ${
+                                                progressPercentage === 100
+                                                    ? 'bg-emerald-500'
+                                                    : 'bg-primary'
+                                            }`}
+                                            style={{ width: `${progressPercentage}%` }}
+                                        />
+                                    </div>
+
+                                    {progressPercentage < 100 && (
+                                        <p className="mt-2 text-[11px] text-muted">
+                                            Field yang belum diisi:{' '}
+                                            <span className="font-medium text-amber-700">
+                                                {dudiFields
+                                                    .filter(
+                                                        (f) =>
+                                                            !f.val ||
+                                                            f.val.trim().length === 0,
+                                                    )
+                                                    .map((f) => f.label)
+                                                    .join(', ')}
+                                            </span>
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Form Input DUDI */}
+                                <Section
+                                    icon={<Building2 className="size-5" />}
+                                    title="Data Relasi Dunia Usaha dan Dunia Industri (DUDI)"
+                                    description="Isi dan lengkapi data profil industri untuk sinkronisasi administrasi."
+                                >
+                                    <Form
+                                        action="/profile/industri"
+                                        method="patch"
+                                        className="space-y-4"
+                                    >
+                                        {({ processing, errors }) => (
+                                            <>
+                                                <div className="grid gap-4 sm:grid-cols-2">
+                                                    {/* 1. NIB */}
+                                                    <Field
+                                                        label="Nomor Induk Berusaha (NIB)"
+                                                        htmlFor="nib"
+                                                        error={errors.nib}
+                                                        hint="cth. 9120001234567"
+                                                    >
+                                                        <input
+                                                            id="nib"
+                                                            name="nib"
+                                                            value={industryForm.nib}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="Nomor Induk Berusaha"
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+
+                                                    {/* 2. Nama Perusahaan */}
+                                                    <Field
+                                                        label="Nama Perusahaan"
+                                                        htmlFor="name"
+                                                        error={errors.name}
+                                                        required
+                                                    >
+                                                        <input
+                                                            id="name"
+                                                            name="name"
+                                                            value={industryForm.name}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="Nama PT / Studio / Perusahaan"
+                                                            className={inputClass}
+                                                            required
+                                                        />
+                                                    </Field>
+
+                                                    {/* 3. Bidang Usaha */}
+                                                    <Field
+                                                        label="Bidang Usaha"
+                                                        htmlFor="bidang"
+                                                        error={errors.bidang}
+                                                        required
+                                                    >
+                                                        <input
+                                                            id="bidang"
+                                                            name="bidang"
+                                                            value={industryForm.bidang}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="cth. Teknologi Informasi / Rekayasa Perangkat Lunak"
+                                                            className={inputClass}
+                                                            required
+                                                        />
+                                                    </Field>
+
+                                                    {/* 4. NPWP */}
+                                                    <Field
+                                                        label="NPWP Perusahaan"
+                                                        htmlFor="npwp"
+                                                        error={errors.npwp}
+                                                        hint="cth. 01.234.567.8-901.000"
+                                                    >
+                                                        <input
+                                                            id="npwp"
+                                                            name="npwp"
+                                                            value={industryForm.npwp}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="NPWP Perusahaan"
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+
+                                                    {/* 5. Alamat Lokasi */}
+                                                    <Field
+                                                        label="Alamat Lokasi Perusahaan"
+                                                        htmlFor="alamat"
+                                                        error={errors.alamat}
+                                                        full
+                                                        required
+                                                    >
+                                                        <textarea
+                                                            id="alamat"
+                                                            name="alamat"
+                                                            rows={2}
+                                                            value={industryForm.alamat}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="Jalan, Gedung, No. Kantor"
+                                                            className={inputClass}
+                                                            required
+                                                        />
+                                                    </Field>
+
+                                                    {/* 6. RT */}
+                                                    <Field
+                                                        label="RT"
+                                                        htmlFor="rt"
+                                                        error={errors.rt}
+                                                    >
+                                                        <input
+                                                            id="rt"
+                                                            name="rt"
+                                                            value={industryForm.rt}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="cth. 001"
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+
+                                                    {/* 7. RW */}
+                                                    <Field
+                                                        label="RW"
+                                                        htmlFor="rw"
+                                                        error={errors.rw}
+                                                    >
+                                                        <input
+                                                            id="rw"
+                                                            name="rw"
+                                                            value={industryForm.rw}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="cth. 005"
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+
+                                                    {/* 8. Nama Dusun */}
+                                                    <Field
+                                                        label="Nama Dusun"
+                                                        htmlFor="dusun"
+                                                        error={errors.dusun}
+                                                    >
+                                                        <input
+                                                            id="dusun"
+                                                            name="dusun"
+                                                            value={industryForm.dusun}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="Nama Dusun / Lingkungan"
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+
+                                                    {/* 9. Desa / Kelurahan */}
+                                                    <Field
+                                                        label="Desa / Kelurahan"
+                                                        htmlFor="kelurahan"
+                                                        error={errors.kelurahan}
+                                                    >
+                                                        <input
+                                                            id="kelurahan"
+                                                            name="kelurahan"
+                                                            value={industryForm.kelurahan}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="Desa atau Kelurahan"
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+
+                                                    {/* 10. Kecamatan */}
+                                                    <Field
+                                                        label="Kecamatan"
+                                                        htmlFor="kecamatan"
+                                                        error={errors.kecamatan}
+                                                    >
+                                                        <input
+                                                            id="kecamatan"
+                                                            name="kecamatan"
+                                                            value={industryForm.kecamatan}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="Kecamatan"
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+
+                                                    {/* 11. Kode Pos */}
+                                                    <Field
+                                                        label="Kode Pos"
+                                                        htmlFor="kode_pos"
+                                                        error={errors.kode_pos}
+                                                    >
+                                                        <input
+                                                            id="kode_pos"
+                                                            name="kode_pos"
+                                                            value={industryForm.kode_pos}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="cth. 40123"
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+
+                                                    {/* 12. Lintang (Latitude) */}
+                                                    <Field
+                                                        label="Lintang (Latitude)"
+                                                        htmlFor="latitude"
+                                                        error={errors.latitude}
+                                                        hint="cth. -6.917464"
+                                                    >
+                                                        <div className="relative">
+                                                            <input
+                                                                id="latitude"
+                                                                name="latitude"
+                                                                value={industryForm.latitude}
+                                                                onChange={handleIndustryChange}
+                                                                placeholder="-6.xxxxx"
+                                                                className={inputClass}
+                                                            />
+                                                            <MapPin className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted" />
+                                                        </div>
+                                                    </Field>
+
+                                                    {/* 13. Bujur (Longitude) */}
+                                                    <Field
+                                                        label="Bujur (Longitude)"
+                                                        htmlFor="longitude"
+                                                        error={errors.longitude}
+                                                        hint="cth. 107.619123"
+                                                    >
+                                                        <div className="relative">
+                                                            <input
+                                                                id="longitude"
+                                                                name="longitude"
+                                                                value={industryForm.longitude}
+                                                                onChange={handleIndustryChange}
+                                                                placeholder="107.xxxxx"
+                                                                className={inputClass}
+                                                            />
+                                                            <MapPin className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted" />
+                                                        </div>
+                                                    </Field>
+
+                                                    {/* 14. Email Perusahaan */}
+                                                    <Field
+                                                        label="Email Perusahaan"
+                                                        htmlFor="email"
+                                                        error={errors.email}
+                                                    >
+                                                        <input
+                                                            id="email"
+                                                            name="email"
+                                                            type="email"
+                                                            value={industryForm.email}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="hrd@perusahaan.com"
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+
+                                                    {/* 15. Website Perusahaan */}
+                                                    <Field
+                                                        label="Website Perusahaan"
+                                                        htmlFor="website"
+                                                        error={errors.website}
+                                                        hint="cth. https://perusahaan.com"
+                                                    >
+                                                        <input
+                                                            id="website"
+                                                            name="website"
+                                                            value={industryForm.website}
+                                                            onChange={handleIndustryChange}
+                                                            placeholder="https://..."
+                                                            className={inputClass}
+                                                        />
+                                                    </Field>
+                                                </div>
+
+                                                <div className="mt-6 flex justify-end">
+                                                    <SubmitButton
+                                                        processing={processing}
+                                                    >
+                                                        Simpan Profil Industri
+                                                    </SubmitButton>
+                                                </div>
+                                            </>
+                                        )}
+                                    </Form>
+                                </Section>
+                            </>
+                        )}
+                    </div>
                 )}
             </div>
         </AppLayout>

@@ -90,6 +90,7 @@ Route::middleware('auth')->group(function () {
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::patch('profile/data-diri', [ProfileController::class, 'updateStudentProfile'])->name('profile.student.update');
+    Route::patch('profile/industri', [ProfileController::class, 'updateIndustryProfile'])->name('profile.industry.update');
     Route::put('password', [PasswordController::class, 'update'])->name('password.update');
 
     // Pengaturan favicon situs & User Management — hanya Super Admin.
