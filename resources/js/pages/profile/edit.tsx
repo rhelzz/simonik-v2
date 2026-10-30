@@ -1,11 +1,13 @@
-import { Form, usePage } from '@inertiajs/react';
+import { Form, Link, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     Building2,
     Check,
     CheckCircle2,
+    ExternalLink,
     Eye,
     EyeOff,
+    FileSpreadsheet,
     IdCard,
     Info,
     LoaderCircle,
@@ -198,6 +200,7 @@ export default function ProfileEdit({
     const { auth } = usePage<SharedData>().props;
     const roles = auth.roles ?? [];
     const isPembimbing = roles.includes('pembimbing');
+    const isAdmin = roles.includes('admin');
 
     const [activeTab, setActiveTab] = useState<'account' | 'industry'>(
         'account',
@@ -324,8 +327,8 @@ export default function ProfileEdit({
                     </div>
                 </section>
 
-                {/* Tab Menu Header untuk Role Pembimbing / Industri */}
-                {isPembimbing && (
+                {/* Tab Menu Header untuk Role Pembimbing / Industri atau Admin */}
+                {(isPembimbing || isAdmin) && (
                     <div className="flex border-b border-line">
                         <button
                             type="button"
@@ -339,34 +342,48 @@ export default function ProfileEdit({
                             <UserCircle2 className="size-4" />
                             Informasi Akun
                         </button>
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab('industry')}
-                            className={`flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors ${
-                                activeTab === 'industry'
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-muted hover:text-ink'
-                            }`}
-                        >
-                            <Building2 className="size-4" />
-                            Profil Industri
-                            {industry && (
-                                <span
-                                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                                        industry.complete
-                                            ? 'bg-emerald-100 text-emerald-700'
-                                            : 'bg-amber-100 text-amber-700'
-                                    }`}
-                                >
-                                    {industry.complete ? 'Lengkap' : `${progressPercentage}%`}
+                        {isPembimbing && (
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('industry')}
+                                className={`flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors ${
+                                    activeTab === 'industry'
+                                        ? 'border-primary text-primary'
+                                        : 'border-transparent text-muted hover:text-ink'
+                                }`}
+                            >
+                                <Building2 className="size-4" />
+                                Profil Industri
+                                {industry && (
+                                    <span
+                                        className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                            industry.complete
+                                                ? 'bg-emerald-100 text-emerald-700'
+                                                : 'bg-amber-100 text-amber-700'
+                                        }`}
+                                    >
+                                        {industry.complete ? 'Lengkap' : `${progressPercentage}%`}
+                                    </span>
+                                )}
+                            </button>
+                        )}
+                        {isAdmin && (
+                            <Link
+                                href="/admin/profil-industri"
+                                className="flex items-center gap-2 border-b-2 border-transparent px-5 py-3 text-sm font-semibold text-muted transition-colors hover:border-primary hover:text-ink"
+                            >
+                                <Building2 className="size-4" />
+                                Profil Industri
+                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                    Rekapan e-Rapor
                                 </span>
-                            )}
-                        </button>
+                            </Link>
+                        )}
                     </div>
                 )}
 
                 {/* Konten Tab: Informasi Akun */}
-                {(activeTab === 'account' || !isPembimbing) && (
+                {(activeTab === 'account' || (!isPembimbing && !isAdmin)) && (
                     <div className="space-y-6">
                         <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
                             {/* Informasi akun */}

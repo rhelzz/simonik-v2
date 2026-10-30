@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 /**
  * Panduan PKL: artikel panduan beserta gambar, urutan, kategori, dan
@@ -157,6 +158,65 @@ class GuideController extends Controller
         $guide->delete();
 
         return back()->with('success', 'Panduan berhasil dihapus.');
+    }
+
+    /**
+     * Tampilkan atau unduh dokumen lampiran panduan.
+     */
+    public function dokumen(Request $request, Guide $guide): SymfonyResponse
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+        $canManage = $user?->hasAnyRole(['admin', 'kaprog']) ?? false;
+
+        if (! $canManage && $guide->status !== Guide::STATUS_PUBLISHED) {
+            abort(404);
+        }
+
+        $path = $guide->getRawOriginal('dokumen');
+        abort_if(! $path || ! Storage::disk('public')->exists($path), 404, 'Dokumen panduan tidak ditemukan.');
+
+        $ext = pathinfo((string) $path, PATHINFO_EXTENSION);
+        $filename = $guide->judul . ($ext ? ".{$ext}" : '');
+
+        return Storage::disk('public')->response($path, $filename, [
+            'Content-Disposition' => 'inline; filename="' . addslashes($filename) . '"',
+        ]);
+    }
+
+    /**
+     * Tampilkan berkas gambar sampul panduan.
+     */
+    public function gambar(Request $request, Guide $guide): SymfonyResponse
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+        $canManage = $user?->hasAnyRole(['admin', 'kaprog']) ?? false;
+
+        if (! $canManage && $guide->status !== Guide::STATUS_PUBLISHED) {
+            abort(404);
+        }
+
+        $path = $guide->getRawOriginal('gambar');
+        abort_if(! $path || ! Storage::disk('public')->exists($path), 404, 'Gambar tidak ditemukan.');
+
+        return Storage::disk('public')->response($path);
+    }
+
+    /**
+     * Fallback untuk melayani berkas storage publik jika web server / edge proxy tidak memiliki symlink.
+     */
+    public function serveStorage(string $path): SymfonyResponse
+    {
+        if (str_contains($path, '..')) {
+            abort(404);
+        }
+
+        abort_if(! Storage::disk('public')->exists($path), 404);
+
+        return Storage::disk('public')->response($path, null, [
+            'Content-Disposition' => 'inline',
+        ]);
     }
 
     private function deleteFile(?string $path): void

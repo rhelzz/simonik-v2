@@ -71,7 +71,15 @@ class Guide extends Model
     protected function dokumen(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value): ?string => $value ? asset("/storage/{$value}") : null,
+            get: function (?string $value, array $attributes): ?string {
+                if (! $value) {
+                    return null;
+                }
+
+                $id = $attributes['id'] ?? null;
+
+                return $id ? route('guides.dokumen', $id) : asset("/storage/{$value}");
+            },
         );
     }
 
@@ -83,7 +91,15 @@ class Guide extends Model
     protected function gambar(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value): ?string => $value ? asset("/storage/{$value}") : null,
+            get: function (?string $value, array $attributes): ?string {
+                if (! $value) {
+                    return null;
+                }
+
+                $id = $attributes['id'] ?? null;
+
+                return $id ? route('guides.gambar', $id) : asset("/storage/{$value}");
+            },
         );
     }
 }

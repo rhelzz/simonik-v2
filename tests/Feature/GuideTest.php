@@ -226,4 +226,47 @@ class GuideTest extends TestCase
 
         $this->assertDatabaseHas('guides', ['id' => $guide->id]);
     }
+
+    public function test_authenticated_user_can_download_published_guide_document(): void
+    {
+        Storage::fake('public');
+        $path = UploadedFile::fake()->create('panduan.pdf', 100, 'application/pdf')->store('guides', 'public');
+        $guide = Guide::factory()->create([
+            'judul' => 'Panduan Magang',
+            'dokumen' => $path,
+            'status' => Guide::STATUS_PUBLISHED,
+        ]);
+
+        $this->actingAs($this->user('siswa'))
+            ->get(route('guides.dokumen', $guide))
+            ->assertOk()
+            ->assertHeader('Content-Disposition', 'inline; filename="Panduan Magang.pdf"');
+    }
+
+    public function test_non_admin_cannot_download_draft_guide_document(): void
+    {
+        Storage::fake('public');
+        $path = UploadedFile::fake()->create('panduan.pdf', 100, 'application/pdf')->store('guides', 'public');
+        $guide = Guide::factory()->create([
+            'dokumen' => $path,
+            'status' => Guide::STATUS_DRAFT,
+        ]);
+
+        $this->actingAs($this->user('siswa'))
+            ->get(route('guides.dokumen', $guide))
+            ->assertNotFound();
+
+        $this->actingAs($this->user('admin'))
+            ->get(route('guides.dokumen', $guide))
+            ->assertOk();
+    }
+
+    public function test_storage_fallback_serves_existing_files(): void
+    {
+        Storage::fake('public');
+        $path = UploadedFile::fake()->create('buku.pdf', 50, 'application/pdf')->store('guides', 'public');
+
+        $this->get("/storage/{$path}")
+            ->assertOk();
+    }
 }
