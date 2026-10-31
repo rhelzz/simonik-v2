@@ -94,8 +94,10 @@ export function AppLayout({
                 </div>
             </div>
 
-            <PwaPrompt />
-            <DynamicPopup />
+            <div className="pointer-events-none fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-sm flex-col gap-3 sm:right-6 sm:bottom-6 sm:left-auto">
+                <DynamicPopup />
+                <PwaPrompt />
+            </div>
         </div>
     );
 }

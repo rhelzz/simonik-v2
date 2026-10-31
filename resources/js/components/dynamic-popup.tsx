@@ -83,48 +83,42 @@ export function DynamicPopup() {
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div
+        <div className="pointer-events-auto relative w-full rounded-2xl border border-line bg-surface p-5 text-center shadow-xl">
+            <button
+                type="button"
                 onClick={handleClose}
-                className="fixed inset-0 bg-ink/40 backdrop-blur-xs transition-opacity"
-            />
-            <div className="relative z-10 w-full max-w-sm overflow-hidden rounded-3xl bg-surface p-6 text-center shadow-2xl transition-all">
-                <button
-                    type="button"
-                    onClick={handleClose}
-                    aria-label="Tutup"
-                    className="absolute top-4 right-4 grid size-8 place-items-center rounded-full text-muted transition-colors hover:bg-canvas hover:text-ink"
-                >
-                    <X className="size-4" />
-                </button>
+                aria-label="Tutup"
+                className="absolute top-3 right-3 text-muted transition-colors hover:text-ink"
+            >
+                <X className="size-4" />
+            </button>
 
-                {/* Illustration Icon */}
-                <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                    <PopupIcon name={dynamicPopup.icon} className="size-8" />
-                </div>
-
-                <h3 className="text-lg font-bold text-ink">
-                    {dynamicPopup.title}
-                </h3>
-
-                {dynamicPopup.description && (
-                    <p className="mt-2 text-sm text-muted">
-                        {dynamicPopup.description}
-                    </p>
-                )}
-
-                {dynamicPopup.has_button && (
-                    <div className="mt-6">
-                        <button
-                            type="button"
-                            onClick={handleActionClick}
-                            className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
-                        >
-                            {dynamicPopup.button_text}
-                        </button>
-                    </div>
-                )}
+            {/* Illustration Icon */}
+            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <PopupIcon name={dynamicPopup.icon} className="size-6" />
             </div>
+
+            <h3 className="text-sm font-bold text-ink">
+                {dynamicPopup.title}
+            </h3>
+
+            {dynamicPopup.description && (
+                <p className="mt-1.5 text-xs text-muted">
+                    {dynamicPopup.description}
+                </p>
+            )}
+
+            {dynamicPopup.has_button && (
+                <div className="mt-4">
+                    <button
+                        type="button"
+                        onClick={handleActionClick}
+                        className="w-full rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-blue-700"
+                    >
+                        {dynamicPopup.button_text}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

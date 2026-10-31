@@ -118,7 +118,7 @@ export function PwaPrompt() {
     }
 
     return (
-        <div className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-sm flex-col gap-2 lg:right-6 lg:left-auto">
+        <div className="pointer-events-auto flex flex-col gap-2">
             {needRefresh && (
                 <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 shadow-lg">
                     <RefreshCw className="size-5 shrink-0 text-primary" />

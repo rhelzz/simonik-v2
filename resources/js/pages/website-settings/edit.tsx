@@ -438,10 +438,7 @@ export default function WebsiteSettingsEdit({
                             <h3 className="mb-3 text-xs font-semibold text-ink">
                                 Pratinjau Pop Up (Live Preview)
                             </h3>
-                            <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-3xl border border-line bg-canvas/60 p-6">
-                                {/* Simulated backdrop overlay */}
-                                <div className="backdrop-blur-2xs absolute inset-0 bg-ink/10" />
-
+                            <div className="relative flex min-h-80 flex-1 items-end justify-end overflow-hidden rounded-3xl border border-line bg-canvas/60 p-6">
                                 {/* Preview Card */}
                                 <div className="relative z-10 w-full max-w-xs rounded-2xl border border-line bg-surface p-5 text-center shadow-lg">
                                     <button
