@@ -224,20 +224,20 @@ function ScoreTable({
                 </p>
             ) : (
                 <div className="mt-4 overflow-x-auto">
-                    <table className="w-full min-w-160 border-collapse text-left text-sm">
+                    <table className="w-full min-w-160 table-fixed border-collapse text-left text-sm">
                         <thead>
                             <tr className="text-xs font-semibold tracking-wide text-muted uppercase">
-                                <th className="pb-3 font-semibold">No</th>
-                                <th className="pb-3 font-semibold">
+                                <th className="w-12 pb-3 font-semibold">No</th>
+                                <th className="pr-6 pb-3 font-semibold">
                                     Kemampuan
                                 </th>
-                                <th className="w-40 pb-3 font-semibold">
+                                <th className="w-44 pb-3 font-semibold">
                                     Nilai
                                 </th>
-                                <th className="w-20 pb-3 font-semibold">
+                                <th className="w-24 pb-3 font-semibold">
                                     Grade
                                 </th>
-                                <th className="pb-3 font-semibold">
+                                <th className="w-40 pb-3 font-semibold">
                                     Keterangan
                                 </th>
                             </tr>
@@ -266,7 +266,7 @@ function ScoreTable({
                                         <td className="py-4 align-middle text-ink/80">
                                             {row.no}
                                         </td>
-                                        <td className="py-4 align-middle font-medium text-ink">
+                                        <td className="py-4 pr-6 align-middle font-medium text-ink">
                                             {labelEditable ? (
                                                 <input
                                                     value={labels[row.id] ?? ''}
@@ -277,7 +277,7 @@ function ScoreTable({
                                                         )
                                                     }
                                                     placeholder="Tulis kemampuan teknis (cth. Pemrograman Web, Desain UI, dll)"
-                                                    className="w-full min-w-72 rounded-xl border border-line bg-canvas/40 px-3.5 py-2 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                                                    className="w-full rounded-xl border border-line bg-canvas/40 px-3.5 py-2 text-sm text-ink transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
                                                 />
                                             ) : (
                                                 (row.label ?? row.kemampuan)
