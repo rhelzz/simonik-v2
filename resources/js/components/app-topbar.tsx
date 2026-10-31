@@ -1,9 +1,7 @@
-import { Link, router, usePage } from '@inertiajs/react';
-import { Bell, Menu, Search } from 'lucide-react';
-import { useState } from 'react';
+import { Link, usePage } from '@inertiajs/react';
+import { Bell, Menu } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/ApprovalController';
-import { index as studentsIndex } from '@/actions/App/Http/Controllers/StudentController';
 import type { SharedData } from '@/types';
 
 export function AppTopbar({
@@ -16,13 +14,6 @@ export function AppTopbar({
     action?: ReactNode;
 }) {
     const { auth } = usePage<SharedData>().props;
-    const [search, setSearch] = useState('');
-
-    // Kotak cari mengarah ke Data Siswa — satu-satunya daftar induk yang
-    // dapat ditelusuri lintas halaman, dan hanya dimiliki admin/kaprog.
-    const canSearch = auth.roles.some((role) =>
-        ['admin', 'kaprog'].includes(role),
-    );
 
     // Lonceng adalah pintasan ke Inbox Persetujuan; hanya role penyetuju
     // yang punya antrian.
@@ -45,36 +36,6 @@ export function AppTopbar({
             <h1 className="text-lg font-bold text-ink sm:text-xl">{title}</h1>
 
             <div className="ml-auto flex items-center gap-2">
-                {canSearch && (
-                    <form
-                        onSubmit={(event) => {
-                            event.preventDefault();
-
-                            if (search.trim() !== '') {
-                                router.get(studentsIndex.url(), {
-                                    search: search.trim(),
-                                });
-                            }
-                        }}
-                        className="hidden items-center gap-2 rounded-full bg-surface px-4 py-2.5 text-sm text-muted md:flex"
-                    >
-                        <button
-                            type="submit"
-                            aria-label="Cari siswa"
-                            className="grid place-items-center text-muted transition-colors hover:text-ink"
-                        >
-                            <Search className="size-4" />
-                        </button>
-                        <input
-                            type="search"
-                            value={search}
-                            onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Cari siswa (nama / NIS)…"
-                            className="w-40 bg-transparent text-ink placeholder:text-muted focus:outline-none lg:w-56"
-                        />
-                    </form>
-                )}
-
                 {action}
 
                 {canApprove && (
