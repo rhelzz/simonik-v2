@@ -290,16 +290,16 @@ export const navSections: NavSection[] = [
                 roles: ['admin', 'kaprog'],
             },
             {
-                label: 'Rekap Penilaian',
-                icon: ClipboardCheck,
-                href: assessmentsIndex.url(),
-                roles: ['admin', 'wakasek', 'kaprog', 'pembimbing', 'orangtua'],
-            },
-            {
                 label: 'Penilaian PKL',
                 icon: FileText,
                 href: raporIndex.url(),
                 roles: ['admin', 'wakasek', 'kaprog', 'guru', 'siswa', 'orangtua'],
+            },
+            {
+                label: 'Rekap Penilaian',
+                icon: ClipboardCheck,
+                href: assessmentsIndex.url(),
+                roles: ['admin', 'wakasek', 'kaprog', 'pembimbing', 'orangtua'],
             },
             {
                 label: 'Sertifikat PKL',
