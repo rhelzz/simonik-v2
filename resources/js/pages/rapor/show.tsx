@@ -112,7 +112,7 @@ export default function RaporShow({
                 {!student.eligible && (
                     <div className="flex items-center gap-2 rounded-2xl bg-warning/10 px-4 py-3 text-sm font-medium text-warning print:hidden">
                         <TriangleAlert className="size-4 shrink-0" />
-                        Status PKL siswa belum “selesai”. Rapor tetap dapat
+                        Status PKL siswa belum “selesai”. Penilaian tetap dapat
                         dipratinjau, namun sebaiknya dicetak setelah nilai
                         dikunci.
                     </div>
@@ -126,7 +126,7 @@ export default function RaporShow({
                         {/* Kop */}
                         <header className="border-b-2 border-black pb-4 text-center">
                             <h1 className="text-lg font-extrabold tracking-wide uppercase">
-                                Rapor Praktik Kerja Lapangan
+                                PENILAIAN PRAKTEK KERJA LAPANGAN
                             </h1>
                             <p className="mt-0.5 text-xs text-black/70">
                                 Sistem Monitoring PKL — SIMONIK
@@ -178,7 +178,7 @@ export default function RaporShow({
                         {/* Sidang */}
                         <section className="mt-5 break-inside-avoid">
                             <h3 className="text-sm font-bold">
-                                C. Nilai Sidang / Uji Kompetensi
+                                C. Nilai Sidang PKL
                             </h3>
                             {sidang.scores.length === 0 ? (
                                 <p className="mt-1 text-xs text-black/60">
