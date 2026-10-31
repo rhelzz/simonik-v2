@@ -1,16 +1,20 @@
 import { router, useForm } from '@inertiajs/react';
 import {
+    ArrowRight,
     BookOpen,
     Calendar,
     ChevronDown,
+    ClipboardCheck,
     Download,
     Eye,
     FileText,
+    HelpCircle,
     Image as ImageIcon,
     LoaderCircle,
     Pencil,
     Plus,
     Search,
+    Smartphone,
     Trash2,
     X,
 } from 'lucide-react';
@@ -75,6 +79,39 @@ const CATEGORY_SUGGESTIONS = [
     'Tata Tertib',
     'Umum',
 ];
+
+function getGuideIcon(title: string, category?: string | null) {
+    const text = `${title} ${category ?? ''}`.toLowerCase();
+
+    if (
+        text.includes('simonik') ||
+        text.includes('aplikasi') ||
+        text.includes('fitur') ||
+        text.includes('penggunaan')
+    ) {
+        return Smartphone;
+    }
+
+    if (
+        text.includes('nilai') ||
+        text.includes('kompetensi') ||
+        text.includes('sikap') ||
+        text.includes('evaluasi')
+    ) {
+        return ClipboardCheck;
+    }
+
+    if (
+        text.includes('faq') ||
+        text.includes('tanya') ||
+        text.includes('kendala') ||
+        text.includes('bantuan')
+    ) {
+        return HelpCircle;
+    }
+
+    return BookOpen;
+}
 
 export default function GuidesIndex({ guides, categories = [], can }: Props) {
     const [openFormModal, setOpenFormModal] = useState(false);
@@ -223,29 +260,24 @@ export default function GuidesIndex({ guides, categories = [], can }: Props) {
     return (
         <AppLayout title="Panduan PKL">
             <section className="space-y-6">
-                {/* Header Card */}
-                <div className="rounded-3xl border border-line bg-surface p-5 shadow-xs sm:p-6">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-center gap-3">
-                            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary">
-                                <BookOpen className="size-6" />
-                            </span>
-                            <div>
-                                <h1 className="text-lg font-bold text-ink">
-                                    Panduan PKL
-                                </h1>
-                                <p className="text-sm text-muted">
-                                    Pedoman, instruksi teknis, dan dokumen
-                                    pelaksanaan PKL
-                                </p>
-                            </div>
+                {/* Header & Search Bar matching mockup */}
+                <div className="space-y-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h1 className="text-xl font-bold text-ink">
+                                Panduan PKL
+                            </h1>
+                            <p className="mt-1 text-sm text-muted">
+                                Pusat bantuan bagi Pembimbing Industri dalam
+                                mendampingi siswa dan menggunakan SIMONIK.
+                            </p>
                         </div>
 
                         {can.manage && (
                             <button
                                 type="button"
                                 onClick={openCreate}
-                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-primary-hover"
+                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-primary-hover"
                             >
                                 <Plus className="size-4" />
                                 Tambah panduan
@@ -253,32 +285,63 @@ export default function GuidesIndex({ guides, categories = [], can }: Props) {
                         )}
                     </div>
 
-                    {/* Filter, Search & Accordion Controls */}
-                    <div className="mt-6 flex flex-col gap-3 border-t border-line/60 pt-5 md:flex-row md:items-center md:justify-between">
-                        {/* Search Input */}
-                        <div className="relative max-w-md flex-1">
-                            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Cari artikel atau topik panduan…"
-                                className="w-full rounded-xl border border-line bg-canvas/50 py-2 pr-8 pl-10 text-sm text-ink placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                            />
-                            {searchQuery && (
+                    {/* Search Input full-width */}
+                    <div className="relative">
+                        <Search className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Cari panduan…"
+                            className="w-full rounded-2xl border border-line bg-surface py-3 pr-10 pl-11 text-sm text-ink placeholder:text-muted shadow-2xs transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                        />
+                        {searchQuery && (
+                            <button
+                                type="button"
+                                onClick={() => setSearchQuery('')}
+                                className="absolute top-1/2 right-3.5 -translate-y-1/2 text-muted hover:text-ink"
+                            >
+                                <X className="size-4" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Category Filter Pills & Accordion Controls */}
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                        {allCategories.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5">
                                 <button
                                     type="button"
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted hover:text-ink"
+                                    onClick={() => setSelectedCategory('all')}
+                                    className={cn(
+                                        'rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors',
+                                        selectedCategory === 'all'
+                                            ? 'bg-primary text-white shadow-xs'
+                                            : 'border border-line bg-surface text-muted hover:bg-primary-soft hover:text-primary',
+                                    )}
                                 >
-                                    <X className="size-4" />
+                                    Semua Kategori
                                 </button>
-                            )}
-                        </div>
+                                {allCategories.map((cat) => (
+                                    <button
+                                        key={cat}
+                                        type="button"
+                                        onClick={() => setSelectedCategory(cat)}
+                                        className={cn(
+                                            'rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors',
+                                            selectedCategory === cat
+                                                ? 'bg-primary text-white shadow-xs'
+                                                : 'border border-line bg-surface text-muted hover:bg-primary-soft hover:text-primary',
+                                        )}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
 
-                        {/* Expand/Collapse Toggle Actions */}
                         {filteredGuides.length > 0 && (
-                            <div className="flex items-center gap-2 text-xs font-semibold text-muted">
+                            <div className="ml-auto flex items-center gap-2 text-xs font-semibold text-muted">
                                 <button
                                     type="button"
                                     onClick={expandAll}
@@ -297,39 +360,6 @@ export default function GuidesIndex({ guides, categories = [], can }: Props) {
                             </div>
                         )}
                     </div>
-
-                    {/* Category Filter Pills */}
-                    {allCategories.length > 0 && (
-                        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-                            <button
-                                type="button"
-                                onClick={() => setSelectedCategory('all')}
-                                className={cn(
-                                    'rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors',
-                                    selectedCategory === 'all'
-                                        ? 'bg-primary text-white shadow-xs'
-                                        : 'bg-canvas text-muted hover:bg-primary-soft hover:text-primary',
-                                )}
-                            >
-                                Semua Kategori
-                            </button>
-                            {allCategories.map((cat) => (
-                                <button
-                                    key={cat}
-                                    type="button"
-                                    onClick={() => setSelectedCategory(cat)}
-                                    className={cn(
-                                        'rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors',
-                                        selectedCategory === cat
-                                            ? 'bg-primary text-white shadow-xs'
-                                            : 'bg-canvas text-muted hover:bg-primary-soft hover:text-primary',
-                                    )}
-                                >
-                                    {cat}
-                                </button>
-                            ))}
-                        </div>
-                    )}
                 </div>
 
                 {/* Empty State */}
@@ -360,157 +390,138 @@ export default function GuidesIndex({ guides, categories = [], can }: Props) {
                         )}
                     </div>
                 ) : (
-                    /* Accordion Cards Container */
-                    <div className="space-y-3">
+                    /* Grid Cards Container (2 columns matching mockup) */
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {filteredGuides.map((guide) => {
                             const isOpen = openAccordionIds.includes(guide.id);
+                            const IconComponent = getGuideIcon(
+                                guide.judul,
+                                guide.kategori,
+                            );
 
                             return (
                                 <article
                                     key={guide.id}
                                     className={cn(
-                                        'overflow-hidden rounded-3xl border transition-all duration-200',
+                                        'flex flex-col justify-between rounded-2xl border bg-surface transition-all duration-200',
                                         isOpen
-                                            ? 'border-primary/40 bg-surface shadow-sm ring-1 ring-primary/20'
-                                            : 'border-line bg-surface/90 hover:border-line hover:bg-surface',
+                                            ? 'border-primary/40 shadow-sm ring-1 ring-primary/20'
+                                            : 'border-line hover:border-primary/40 hover:shadow-2xs',
                                     )}
                                 >
-                                    {/* Accordion Header / Summary button */}
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            toggleAccordion(guide.id)
-                                        }
-                                        className="flex w-full items-start justify-between gap-4 p-5 text-left focus:outline-none"
-                                        aria-expanded={isOpen}
-                                    >
-                                        <div className="flex min-w-0 flex-1 items-start gap-3.5">
-                                            <span
-                                                className={cn(
-                                                    'grid size-10 shrink-0 place-items-center rounded-2xl transition-colors',
-                                                    isOpen
-                                                        ? 'bg-primary text-white shadow-xs'
-                                                        : 'bg-canvas text-primary',
-                                                )}
-                                            >
-                                                <FileText className="size-5" />
-                                            </span>
+                                    <div className="p-5 sm:p-6">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <IconComponent className="size-6 shrink-0 text-primary" />
 
-                                            <div className="min-w-0 flex-1 space-y-1.5">
-                                                {/* Meta Pills */}
-                                                <div className="flex flex-wrap items-center gap-2 text-xs">
-                                                    {guide.kategori && (
-                                                        <span className="rounded-lg bg-primary-soft px-2.5 py-0.5 font-semibold text-primary">
-                                                            {guide.kategori}
-                                                        </span>
-                                                    )}
-                                                    {can.manage && (
-                                                        <>
-                                                            <span
-                                                                className={cn(
-                                                                    'rounded-lg px-2.5 py-0.5 font-semibold',
-                                                                    guide.status ===
-                                                                        'published'
-                                                                        ? 'bg-emerald-500/10 text-emerald-600'
-                                                                        : 'bg-amber-500/10 text-amber-600',
-                                                                )}
-                                                            >
-                                                                {guide.status ===
-                                                                'published'
-                                                                    ? 'Tayang'
-                                                                    : 'Draf'}
-                                                            </span>
-                                                            <span className="text-muted">
-                                                                Urutan #
-                                                                {guide.urutan}
-                                                            </span>
-                                                        </>
-                                                    )}
-                                                    <span className="inline-flex items-center gap-1 text-muted">
-                                                        <Calendar className="size-3.5" />
-                                                        {guide.publishedAtFormatted ??
-                                                            guide.uploadedAt ??
-                                                            'Terbaru'}
+                                            <div className="flex items-center gap-1.5">
+                                                {guide.kategori && (
+                                                    <span className="rounded-lg bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">
+                                                        {guide.kategori}
                                                     </span>
-                                                    {guide.dokumen && (
-                                                        <span className="rounded-md border border-line bg-canvas px-2 py-0.5 font-medium text-muted">
-                                                            PDF / Berkas
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Title */}
-                                                <h2 className="text-base font-bold text-ink">
-                                                    {guide.judul}
-                                                </h2>
-
-                                                {/* Short Preview (when collapsed) */}
-                                                {!isOpen && guide.deskripsi && (
-                                                    <p className="line-clamp-1 text-sm text-muted">
-                                                        {guide.deskripsi}
-                                                    </p>
                                                 )}
+                                                {can.manage && (
+                                                    <span
+                                                        className={cn(
+                                                            'rounded-lg px-2 py-0.5 text-xs font-semibold',
+                                                            guide.status ===
+                                                                'published'
+                                                                ? 'bg-emerald-500/10 text-emerald-600'
+                                                                : 'bg-amber-500/10 text-amber-600',
+                                                        )}
+                                                    >
+                                                        {guide.status ===
+                                                        'published'
+                                                            ? 'Tayang'
+                                                            : 'Draf'}
+                                                    </span>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        toggleAccordion(guide.id)
+                                                    }
+                                                    aria-label={
+                                                        isOpen
+                                                            ? 'Tutup rincian'
+                                                            : 'Buka rincian'
+                                                    }
+                                                    title={
+                                                        isOpen
+                                                            ? 'Tutup rincian'
+                                                            : 'Buka rincian'
+                                                    }
+                                                    className={cn(
+                                                        'grid size-8 place-items-center rounded-lg text-muted transition-transform hover:bg-canvas hover:text-ink',
+                                                        isOpen &&
+                                                            'rotate-180 text-primary',
+                                                    )}
+                                                >
+                                                    <ChevronDown className="size-4" />
+                                                </button>
                                             </div>
                                         </div>
 
-                                        <span
-                                            className={cn(
-                                                'grid size-8 shrink-0 place-items-center rounded-xl bg-canvas text-muted transition-transform duration-200',
-                                                isOpen &&
-                                                    'rotate-180 text-primary',
+                                        <h2 className="mt-4 text-base font-bold text-ink">
+                                            {guide.judul}
+                                        </h2>
+
+                                        {guide.deskripsi && (
+                                            <p className="mt-1 text-sm text-muted">
+                                                {guide.deskripsi}
+                                            </p>
+                                        )}
+
+                                        <div className="mt-5 flex items-center justify-between border-t border-line/40 pt-4">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setReadingGuide(guide)
+                                                }
+                                                className="group inline-flex items-center gap-1.5 text-xs font-semibold text-primary transition-colors hover:text-primary-hover hover:underline"
+                                            >
+                                                <span>Lihat konsep</span>
+                                                <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                                            </button>
+
+                                            {guide.dokumen && (
+                                                <span className="rounded-md border border-line bg-canvas px-2 py-0.5 text-[11px] font-medium text-muted">
+                                                    PDF / Dokumen
+                                                </span>
                                             )}
-                                        >
-                                            <ChevronDown className="size-4" />
-                                        </span>
-                                    </button>
+                                        </div>
+                                    </div>
 
                                     {/* Accordion Body */}
                                     {isOpen && (
                                         <div className="border-t border-line/60 bg-canvas/30 px-5 py-4 sm:px-6">
-                                            {/* Optional Image Preview in Card */}
+                                            {/* Optional Image Preview */}
                                             {guide.gambar && (
-                                                <div className="mb-4 max-h-56 overflow-hidden rounded-2xl border border-line bg-surface">
+                                                <div className="mb-3 max-h-48 overflow-hidden rounded-xl border border-line bg-surface">
                                                     <img
                                                         src={guide.gambar}
                                                         alt={guide.judul}
-                                                        className="h-56 w-full object-cover"
+                                                        className="h-48 w-full object-cover"
                                                         loading="lazy"
                                                     />
                                                 </div>
                                             )}
 
-                                            {/* Deskripsi / Ringkasan */}
-                                            {guide.deskripsi && (
-                                                <p className="text-sm leading-relaxed font-medium text-ink/80">
-                                                    {guide.deskripsi}
-                                                </p>
-                                            )}
-
                                             {/* Supporting Document Download Button (if present) */}
                                             {guide.dokumen && (
-                                                <div className="mt-3 flex items-center justify-between rounded-2xl border border-line bg-surface p-3 sm:p-4">
-                                                    <div className="flex min-w-0 items-center gap-3">
-                                                        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary-soft text-primary">
-                                                            <FileText className="size-4" />
+                                                <div className="mb-3 flex items-center justify-between rounded-xl border border-line bg-surface p-3">
+                                                    <div className="flex min-w-0 items-center gap-2.5">
+                                                        <FileText className="size-4 shrink-0 text-primary" />
+                                                        <span className="truncate text-xs font-medium text-ink">
+                                                            Dokumen Pendukung (
+                                                            {guide.type ?? 'PDF'}
+                                                            )
                                                         </span>
-                                                        <div className="min-w-0">
-                                                            <p className="truncate text-sm font-semibold text-ink">
-                                                                Dokumen Lampiran
-                                                            </p>
-                                                            <p className="text-xs text-muted">
-                                                                {guide.type ??
-                                                                    'PDF'}
-                                                                {guide.size
-                                                                    ? ` · ${guide.size}`
-                                                                    : ''}
-                                                            </p>
-                                                        </div>
                                                     </div>
                                                     <a
                                                         href={guide.dokumen}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-primary-soft px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/20"
+                                                        className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
                                                     >
                                                         <Download className="size-3.5" />
                                                         Unduh
@@ -518,21 +529,19 @@ export default function GuidesIndex({ guides, categories = [], can }: Props) {
                                                 </div>
                                             )}
 
-                                            {/* Card Action Footer */}
-                                            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line/50 pt-3">
-                                                {/* Primary Button to open reading modal */}
+                                            {/* Action buttons inside accordion */}
+                                            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                                                 <button
                                                     type="button"
                                                     onClick={() =>
                                                         setReadingGuide(guide)
                                                     }
-                                                    className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-primary-hover"
+                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-primary-hover"
                                                 >
-                                                    <Eye className="size-4" />
-                                                    Baca Panduan Lengkap
+                                                    <Eye className="size-3.5" />
+                                                    Baca Selengkapnya
                                                 </button>
 
-                                                {/* Admin Manage Actions */}
                                                 {can.manage && (
                                                     <div className="flex items-center gap-1.5">
                                                         <button
@@ -540,20 +549,18 @@ export default function GuidesIndex({ guides, categories = [], can }: Props) {
                                                             onClick={() =>
                                                                 openEdit(guide)
                                                             }
-                                                            className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:border-primary/40 hover:text-primary"
+                                                            className="rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink hover:text-primary"
                                                         >
-                                                            <Pencil className="size-3.5" />
-                                                            Edit
+                                                            <Pencil className="size-3" />
                                                         </button>
                                                         <button
                                                             type="button"
                                                             onClick={() =>
                                                                 remove(guide)
                                                             }
-                                                            className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/50 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-100"
+                                                            className="rounded-lg border border-red-200 bg-red-50/50 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-100"
                                                         >
-                                                            <Trash2 className="size-3.5" />
-                                                            Hapus
+                                                            <Trash2 className="size-3" />
                                                         </button>
                                                     </div>
                                                 )}
