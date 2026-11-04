@@ -5,11 +5,6 @@ import {
     CheckCircle2,
     Download,
     Eye,
-    Filter,
-    Globe,
-    Mail,
-    MapPin,
-    Phone,
     Search,
     User,
     XCircle,
@@ -63,9 +58,8 @@ export default function IndustryDudiIndex({
     filters,
 }: Props) {
     const [search, setSearch] = useState(filters.search || '');
-    const [selectedIndustry, setSelectedIndustry] = useState<IndustryRow | null>(
-        null,
-    );
+    const [selectedIndustry, setSelectedIndustry] =
+        useState<IndustryRow | null>(null);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -106,7 +100,8 @@ export default function IndustryDudiIndex({
                             Rekapan Profil Industri (DUDI)
                         </h1>
                         <p className="text-sm text-muted">
-                            Data kelengkapan profil industri untuk kebutuhan sinkronisasi e-Rapor Kemendikdasmen.
+                            Data kelengkapan profil industri untuk kebutuhan
+                            sinkronisasi e-Rapor Kemendikdasmen.
                         </p>
                     </div>
 
@@ -202,7 +197,7 @@ export default function IndustryDudiIndex({
                     <div className="flex flex-col gap-3 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between">
                         <form
                             onSubmit={handleSearch}
-                            className="relative flex-1 max-w-md"
+                            className="relative max-w-md flex-1"
                         >
                             <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" />
                             <input
@@ -232,7 +227,9 @@ export default function IndustryDudiIndex({
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => handleStatusFilter('complete')}
+                                    onClick={() =>
+                                        handleStatusFilter('complete')
+                                    }
                                     className={`rounded-lg px-2.5 py-1 transition-colors ${
                                         filters.status === 'complete'
                                             ? 'bg-surface text-emerald-700 shadow-xs'
@@ -243,7 +240,9 @@ export default function IndustryDudiIndex({
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => handleStatusFilter('incomplete')}
+                                    onClick={() =>
+                                        handleStatusFilter('incomplete')
+                                    }
                                     className={`rounded-lg px-2.5 py-1 transition-colors ${
                                         filters.status === 'incomplete'
                                             ? 'bg-surface text-amber-700 shadow-xs'
@@ -261,12 +260,20 @@ export default function IndustryDudiIndex({
                         <table className="w-full text-left text-sm text-ink">
                             <thead className="border-b border-line bg-canvas/40 text-[11px] font-bold tracking-wider text-muted uppercase">
                                 <tr>
-                                    <th className="px-5 py-3.5">Industri / DUDI</th>
+                                    <th className="px-5 py-3.5">
+                                        Industri / DUDI
+                                    </th>
                                     <th className="px-4 py-3.5">NIB & NPWP</th>
-                                    <th className="px-4 py-3.5">Lokasi / Alamat</th>
+                                    <th className="px-4 py-3.5">
+                                        Lokasi / Alamat
+                                    </th>
                                     <th className="px-4 py-3.5">Pembimbing</th>
-                                    <th className="px-4 py-3.5 text-center">Status e-Rapor</th>
-                                    <th className="px-5 py-3.5 text-right">Aksi</th>
+                                    <th className="px-4 py-3.5 text-center">
+                                        Status e-Rapor
+                                    </th>
+                                    <th className="px-5 py-3.5 text-right">
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-line">
@@ -295,14 +302,20 @@ export default function IndustryDudiIndex({
                                             </td>
                                             <td className="px-4 py-4 text-xs">
                                                 <div>
-                                                    <span className="text-muted">NIB:</span>{' '}
+                                                    <span className="text-muted">
+                                                        NIB:
+                                                    </span>{' '}
                                                     <span className="font-semibold">
                                                         {item.nib || '—'}
                                                     </span>
                                                 </div>
                                                 <div className="mt-0.5">
-                                                    <span className="text-muted">NPWP:</span>{' '}
-                                                    <span>{item.npwp || '—'}</span>
+                                                    <span className="text-muted">
+                                                        NPWP:
+                                                    </span>{' '}
+                                                    <span>
+                                                        {item.npwp || '—'}
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td className="max-w-xs px-4 py-4 text-xs text-muted">
@@ -310,15 +323,21 @@ export default function IndustryDudiIndex({
                                                     {item.alamat}
                                                 </p>
                                                 <p className="truncate text-[11px]">
-                                                    {[item.kecamatan, item.kelurahan, item.kode_pos]
+                                                    {[
+                                                        item.kecamatan,
+                                                        item.kelurahan,
+                                                        item.kode_pos,
+                                                    ]
                                                         .filter(Boolean)
-                                                        .join(', ') || 'Wilayah belum lengkap'}
+                                                        .join(', ') ||
+                                                        'Wilayah belum lengkap'}
                                                 </p>
                                             </td>
                                             <td className="px-4 py-4 text-xs">
                                                 <div className="flex items-center gap-1.5 font-medium text-ink">
                                                     <User className="size-3.5 text-muted" />
-                                                    {item.pembimbing || 'Belum ditugaskan'}
+                                                    {item.pembimbing ||
+                                                        'Belum ditugaskan'}
                                                 </div>
                                             </td>
                                             <td className="px-4 py-4 text-center">
@@ -345,7 +364,11 @@ export default function IndustryDudiIndex({
                                             <td className="px-5 py-4 text-right">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setSelectedIndustry(item)}
+                                                    onClick={() =>
+                                                        setSelectedIndustry(
+                                                            item,
+                                                        )
+                                                    }
                                                     className="inline-flex items-center gap-1.5 rounded-xl border border-line bg-canvas/60 px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:border-primary hover:text-primary"
                                                 >
                                                     <Eye className="size-3.5" />
@@ -363,11 +386,15 @@ export default function IndustryDudiIndex({
                     {industries.last_page > 1 && (
                         <div className="flex items-center justify-between border-t border-line px-5 py-4 text-xs text-muted">
                             <span>
-                                Menampilkan {industries.data.length} dari {industries.total} industri
+                                Menampilkan {industries.data.length} dari{' '}
+                                {industries.total} industri
                             </span>
                             <div className="flex gap-1.5">
-                                {Array.from({ length: industries.last_page }).map((_, i) => {
+                                {Array.from({
+                                    length: industries.last_page,
+                                }).map((_, i) => {
                                     const p = i + 1;
+
                                     return (
                                         <button
                                             key={p}
@@ -409,7 +436,8 @@ export default function IndustryDudiIndex({
                                     {selectedIndustry.name}
                                 </h3>
                                 <p className="text-xs text-muted">
-                                    Rincian 15 field DUDI untuk sinkronisasi e-Rapor
+                                    Rincian 15 field DUDI untuk sinkronisasi
+                                    e-Rapor
                                 </p>
                             </div>
                             <button
@@ -421,78 +449,104 @@ export default function IndustryDudiIndex({
                             </button>
                         </div>
 
-                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 text-xs">
+                        <div className="mt-4 grid grid-cols-1 gap-3 text-xs sm:grid-cols-2">
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">NIB:</span>
+                                <span className="font-semibold text-muted">
+                                    NIB:
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
                                     {selectedIndustry.nib || '— (Kosong)'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">NPWP:</span>
+                                <span className="font-semibold text-muted">
+                                    NPWP:
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
                                     {selectedIndustry.npwp || '— (Kosong)'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3 sm:col-span-2">
-                                <span className="font-semibold text-muted">Bidang Usaha:</span>
+                                <span className="font-semibold text-muted">
+                                    Bidang Usaha:
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
                                     {selectedIndustry.bidang || '—'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3 sm:col-span-2">
-                                <span className="font-semibold text-muted">Alamat Lengkap:</span>
+                                <span className="font-semibold text-muted">
+                                    Alamat Lengkap:
+                                </span>
                                 <p className="mt-0.5 text-sm font-medium text-ink">
                                     {selectedIndustry.alamat || '—'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">RT / RW:</span>
+                                <span className="font-semibold text-muted">
+                                    RT / RW:
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
-                                    RT {selectedIndustry.rt || '-'} / RW {selectedIndustry.rw || '-'}
+                                    RT {selectedIndustry.rt || '-'} / RW{' '}
+                                    {selectedIndustry.rw || '-'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">Dusun:</span>
+                                <span className="font-semibold text-muted">
+                                    Dusun:
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
                                     {selectedIndustry.dusun || '— (Kosong)'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">Desa / Kelurahan:</span>
+                                <span className="font-semibold text-muted">
+                                    Desa / Kelurahan:
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
                                     {selectedIndustry.kelurahan || '— (Kosong)'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">Kecamatan:</span>
+                                <span className="font-semibold text-muted">
+                                    Kecamatan:
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
                                     {selectedIndustry.kecamatan || '— (Kosong)'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">Kode Pos:</span>
+                                <span className="font-semibold text-muted">
+                                    Kode Pos:
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
                                     {selectedIndustry.kode_pos || '— (Kosong)'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">Koordinat (Lintang, Bujur):</span>
+                                <span className="font-semibold text-muted">
+                                    Koordinat (Lintang, Bujur):
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
-                                    {selectedIndustry.latitude && selectedIndustry.longitude
+                                    {selectedIndustry.latitude &&
+                                    selectedIndustry.longitude
                                         ? `${selectedIndustry.latitude}, ${selectedIndustry.longitude}`
                                         : '— (Kosong)'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">Email Perusahaan:</span>
+                                <span className="font-semibold text-muted">
+                                    Email Perusahaan:
+                                </span>
                                 <p className="mt-0.5 text-sm font-bold text-ink">
                                     {selectedIndustry.email || '— (Kosong)'}
                                 </p>
                             </div>
                             <div className="rounded-2xl border border-line p-3">
-                                <span className="font-semibold text-muted">Website Perusahaan:</span>
-                                <p className="mt-0.5 text-sm font-bold text-ink truncate">
+                                <span className="font-semibold text-muted">
+                                    Website Perusahaan:
+                                </span>
+                                <p className="mt-0.5 truncate text-sm font-bold text-ink">
                                     {selectedIndustry.website || '— (Kosong)'}
                                 </p>
                             </div>

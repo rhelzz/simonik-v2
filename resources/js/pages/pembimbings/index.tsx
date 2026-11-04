@@ -321,80 +321,80 @@ export default function PembimbingsIndex({
                                                 />
                                             </td>
                                             <td className="py-3 pr-3 pl-2">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar
-                                                    name={pembimbing.name}
-                                                />
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-semibold text-ink">
-                                                        {pembimbing.name}
-                                                    </p>
-                                                    <p className="truncate text-xs text-muted">
-                                                        {pembimbing.no_hp}
-                                                        {pembimbing.email
-                                                            ? ` · ${pembimbing.email}`
-                                                            : ''}
-                                                    </p>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar
+                                                        name={pembimbing.name}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="truncate font-semibold text-ink">
+                                                            {pembimbing.name}
+                                                        </p>
+                                                        <p className="truncate text-xs text-muted">
+                                                            {pembimbing.no_hp}
+                                                            {pembimbing.email
+                                                                ? ` · ${pembimbing.email}`
+                                                                : ''}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-3 text-ink/80">
-                                            {/* Tanpa industri, akun ini tidak
+                                            </td>
+                                            <td className="px-3 py-3 text-ink/80">
+                                                {/* Tanpa industri, akun ini tidak
                                                 bisa memakai fitur apa pun. */}
-                                            {pembimbing.industry ?? (
-                                                <span
-                                                    title="Belum ditautkan ke industri manapun — akun ini tidak akan melihat anak magang, penilaian, maupun pengajuan."
-                                                    className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700"
-                                                >
-                                                    <TriangleAlert className="size-3.5" />
-                                                    Belum ditautkan
+                                                {pembimbing.industry ?? (
+                                                    <span
+                                                        title="Belum ditautkan ke industri manapun — akun ini tidak akan melihat anak magang, penilaian, maupun pengajuan."
+                                                        className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                                                    >
+                                                        <TriangleAlert className="size-3.5" />
+                                                        Belum ditautkan
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-ink/70">
+                                                    <UsersRound className="size-3.5" />
+                                                    {pembimbing.students_count}
                                                 </span>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-3">
-                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-ink/70">
-                                                <UsersRound className="size-3.5" />
-                                                {pembimbing.students_count}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 pr-2 pl-3">
-                                            <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                                                <Link
-                                                    href={show.url(
-                                                        pembimbing.id,
-                                                    )}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Lihat detail ${pembimbing.name}`}
-                                                >
-                                                    <Eye className="size-4" />
-                                                </Link>
-                                                <Link
-                                                    href={edit.url(
-                                                        pembimbing.id,
-                                                    )}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Edit ${pembimbing.name}`}
-                                                >
-                                                    <Pencil className="size-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        remove(pembimbing)
-                                                    }
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
-                                                    aria-label={`Hapus ${pembimbing.name}`}
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                            </td>
+                                            <td className="py-3 pr-2 pl-3">
+                                                <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                                                    <Link
+                                                        href={show.url(
+                                                            pembimbing.id,
+                                                        )}
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                        aria-label={`Lihat detail ${pembimbing.name}`}
+                                                    >
+                                                        <Eye className="size-4" />
+                                                    </Link>
+                                                    <Link
+                                                        href={edit.url(
+                                                            pembimbing.id,
+                                                        )}
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                        aria-label={`Edit ${pembimbing.name}`}
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            remove(pembimbing)
+                                                        }
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
+                                                        aria-label={`Hapus ${pembimbing.name}`}
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
                 )}
 
                 <Pagination meta={pembimbings} />

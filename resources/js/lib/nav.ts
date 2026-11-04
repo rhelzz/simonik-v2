@@ -293,7 +293,14 @@ export const navSections: NavSection[] = [
                 label: 'Penilaian PKL',
                 icon: FileText,
                 href: raporIndex.url(),
-                roles: ['admin', 'wakasek', 'kaprog', 'guru', 'siswa', 'orangtua'],
+                roles: [
+                    'admin',
+                    'wakasek',
+                    'kaprog',
+                    'guru',
+                    'siswa',
+                    'orangtua',
+                ],
             },
             {
                 label: 'Rekap Penilaian',

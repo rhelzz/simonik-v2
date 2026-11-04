@@ -61,7 +61,9 @@ export default function DashboardStaff({
                                 Profil Industri (DUDI) Belum Lengkap
                             </h3>
                             <p className="mt-0.5 text-xs text-amber-800">
-                                Harap segera melengkapi 15 rincian data DUDI perusahaan Anda untuk sinkronisasi kelengkapan e-Rapor Kemendikdasmen.
+                                Harap segera melengkapi 15 rincian data DUDI
+                                perusahaan Anda untuk sinkronisasi kelengkapan
+                                e-Rapor Kemendikdasmen.
                             </p>
                         </div>
                     </div>

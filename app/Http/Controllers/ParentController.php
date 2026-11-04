@@ -234,6 +234,7 @@ class ParentController extends Controller
             foreach ($parents as $parent) {
                 if ($parent->students()->exists()) {
                     $blocked++;
+
                     continue;
                 }
 

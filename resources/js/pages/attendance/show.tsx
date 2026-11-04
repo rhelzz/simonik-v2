@@ -76,8 +76,11 @@ function DetailItem({
     );
 }
 
-function getAttendanceStatus(attendance: AttendanceShowProps['attendance']): string {
+function getAttendanceStatus(
+    attendance: AttendanceShowProps['attendance'],
+): string {
     const raw = (attendance.status ?? '').toLowerCase();
+
     if (raw === 'hadir' || raw === 'masuk') {
         if (
             attendance.isLate ||
@@ -87,14 +90,19 @@ function getAttendanceStatus(attendance: AttendanceShowProps['attendance']): str
         ) {
             return 'terlambat';
         }
+
         if (!attendance.departureTime) {
             return 'belum-lengkap';
         }
     }
+
     return attendance.status ?? '';
 }
 
-export default function AttendanceShow({ attendance, student }: AttendanceShowProps) {
+export default function AttendanceShow({
+    attendance,
+    student,
+}: AttendanceShowProps) {
     const status = getAttendanceStatus(attendance);
     const mapsUrl =
         attendance.latitude && attendance.longitude
@@ -131,14 +139,8 @@ export default function AttendanceShow({ attendance, student }: AttendanceShowPr
                         </span>
                     </div>
                     <div className="grid gap-6 sm:grid-cols-2">
-                        <DetailItem
-                            label="Nama"
-                            value={student?.name}
-                        />
-                        <DetailItem
-                            label="Kelas"
-                            value={student?.class}
-                        />
+                        <DetailItem label="Nama" value={student?.name} />
+                        <DetailItem label="Kelas" value={student?.class} />
                         <DetailItem
                             label="Industri"
                             value={student?.industry}
@@ -169,7 +171,9 @@ export default function AttendanceShow({ attendance, student }: AttendanceShowPr
                                         {attendance.lateMinutes} menit terlambat
                                     </span>
                                 ) : (
-                                    <span className="text-muted">Tepat waktu</span>
+                                    <span className="text-muted">
+                                        Tepat waktu
+                                    </span>
                                 )
                             ) : (
                                 '—'

@@ -335,91 +335,97 @@ export default function TeachersIndex({
                                                 />
                                             </td>
                                             <td className="py-3 pr-3 pl-2">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar name={teacher.name} />
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-semibold text-ink">
-                                                        {teacher.name}
-                                                    </p>
-                                                    <p className="truncate text-xs text-muted">
-                                                        {teacher.no_hp}
-                                                        {teacher.email
-                                                            ? ` · ${teacher.email}`
-                                                            : ''}
-                                                    </p>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar
+                                                        name={teacher.name}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="truncate font-semibold text-ink">
+                                                            {teacher.name}
+                                                        </p>
+                                                        <p className="truncate text-xs text-muted">
+                                                            {teacher.no_hp}
+                                                            {teacher.email
+                                                                ? ` · ${teacher.email}`
+                                                                : ''}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-3 text-ink/80">
-                                            {teacher.departemen ?? '—'}
-                                        </td>
-                                        <td className="px-3 py-3">
-                                            {/* Tanpa industri, guru ini tidak
+                                            </td>
+                                            <td className="px-3 py-3 text-ink/80">
+                                                {teacher.departemen ?? '—'}
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                {/* Tanpa industri, guru ini tidak
                                                 akan melihat siswa manapun. */}
-                                            <span
-                                                title={
-                                                    teacher.industries_count ===
-                                                    0
-                                                        ? 'Belum ditugaskan ke industri manapun — akun ini tidak akan melihat siswa, nilai, maupun pengajuan.'
-                                                        : undefined
-                                                }
-                                                className={cn(
-                                                    'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
-                                                    teacher.industries_count ===
+                                                <span
+                                                    title={
+                                                        teacher.industries_count ===
                                                         0
-                                                        ? 'bg-amber-100 text-amber-700'
-                                                        : 'bg-canvas text-ink/70',
-                                                )}
-                                            >
-                                                {teacher.industries_count ===
-                                                0 ? (
-                                                    <TriangleAlert className="size-3.5" />
-                                                ) : (
-                                                    <Building2 className="size-3.5" />
-                                                )}
-                                                {teacher.industries_count}
-                                            </span>
-                                        </td>
-                                        <td className="px-3 py-3">
-                                            <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-ink/70">
-                                                <UsersRound className="size-3.5" />
-                                                {teacher.students_count}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 pr-2 pl-3">
-                                            <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                                                <Link
-                                                    href={show.url(teacher.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Lihat detail ${teacher.name}`}
-                                                >
-                                                    <Eye className="size-4" />
-                                                </Link>
-                                                <Link
-                                                    href={edit.url(teacher.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Edit ${teacher.name}`}
-                                                >
-                                                    <Pencil className="size-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        remove(teacher)
+                                                            ? 'Belum ditugaskan ke industri manapun — akun ini tidak akan melihat siswa, nilai, maupun pengajuan.'
+                                                            : undefined
                                                     }
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
-                                                    aria-label={`Hapus ${teacher.name}`}
+                                                    className={cn(
+                                                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
+                                                        teacher.industries_count ===
+                                                            0
+                                                            ? 'bg-amber-100 text-amber-700'
+                                                            : 'bg-canvas text-ink/70',
+                                                    )}
                                                 >
-                                                    <Trash2 className="size-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                                    {teacher.industries_count ===
+                                                    0 ? (
+                                                        <TriangleAlert className="size-3.5" />
+                                                    ) : (
+                                                        <Building2 className="size-3.5" />
+                                                    )}
+                                                    {teacher.industries_count}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-canvas px-2.5 py-1 text-xs font-semibold text-ink/70">
+                                                    <UsersRound className="size-3.5" />
+                                                    {teacher.students_count}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 pr-2 pl-3">
+                                                <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                                                    <Link
+                                                        href={show.url(
+                                                            teacher.id,
+                                                        )}
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                        aria-label={`Lihat detail ${teacher.name}`}
+                                                    >
+                                                        <Eye className="size-4" />
+                                                    </Link>
+                                                    <Link
+                                                        href={edit.url(
+                                                            teacher.id,
+                                                        )}
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                        aria-label={`Edit ${teacher.name}`}
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            remove(teacher)
+                                                        }
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
+                                                        aria-label={`Hapus ${teacher.name}`}
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
                 )}
 
                 <Pagination meta={teachers} />

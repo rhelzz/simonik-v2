@@ -177,10 +177,10 @@ class GuideController extends Controller
         abort_if(! $path || ! Storage::disk('public')->exists($path), 404, 'Dokumen panduan tidak ditemukan.');
 
         $ext = pathinfo((string) $path, PATHINFO_EXTENSION);
-        $filename = $guide->judul . ($ext ? ".{$ext}" : '');
+        $filename = $guide->judul.($ext ? ".{$ext}" : '');
 
         return Storage::disk('public')->response($path, $filename, [
-            'Content-Disposition' => 'inline; filename="' . addslashes($filename) . '"',
+            'Content-Disposition' => 'inline; filename="'.addslashes($filename).'"',
         ]);
     }
 

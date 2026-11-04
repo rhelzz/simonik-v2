@@ -258,48 +258,52 @@ export default function WakaseksIndex({
                                                 />
                                             </td>
                                             <td className="py-3 pr-3 pl-2">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar name={wakasek.name} />
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-semibold text-ink">
-                                                        {wakasek.name}
-                                                    </p>
-                                                    <p className="truncate text-xs text-muted">
-                                                        {wakasek.email}
-                                                    </p>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar
+                                                        name={wakasek.name}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="truncate font-semibold text-ink">
+                                                            {wakasek.name}
+                                                        </p>
+                                                        <p className="truncate text-xs text-muted">
+                                                            {wakasek.email}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-3 text-ink/80">
-                                            {wakasek.created_at ?? '—'}
-                                        </td>
-                                        <td className="py-3 pr-2 pl-3">
-                                            <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                                                <Link
-                                                    href={edit.url(wakasek.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Edit ${wakasek.name}`}
-                                                >
-                                                    <Pencil className="size-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        remove(wakasek)
-                                                    }
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
-                                                    aria-label={`Hapus ${wakasek.name}`}
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                            </td>
+                                            <td className="px-3 py-3 text-ink/80">
+                                                {wakasek.created_at ?? '—'}
+                                            </td>
+                                            <td className="py-3 pr-2 pl-3">
+                                                <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                                                    <Link
+                                                        href={edit.url(
+                                                            wakasek.id,
+                                                        )}
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                        aria-label={`Edit ${wakasek.name}`}
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            remove(wakasek)
+                                                        }
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
+                                                        aria-label={`Hapus ${wakasek.name}`}
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
                 )}
 
                 <Pagination meta={wakaseks} />

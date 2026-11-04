@@ -320,65 +320,70 @@ export default function KaprogsIndex({
                                                 />
                                             </td>
                                             <td className="py-3 pr-3 pl-2">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar name={kaprog.name} />
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-semibold text-ink">
-                                                        {kaprog.name}
-                                                    </p>
-                                                    <p className="truncate text-xs text-muted">
-                                                        {kaprog.email}
-                                                    </p>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar
+                                                        name={kaprog.name}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="truncate font-semibold text-ink">
+                                                            {kaprog.name}
+                                                        </p>
+                                                        <p className="truncate text-xs text-muted">
+                                                            {kaprog.email}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-3">
-                                            {kaprog.departemens.length === 0 ? (
-                                                <span className="text-muted">
-                                                    —
-                                                </span>
-                                            ) : (
-                                                <div className="flex flex-wrap gap-1">
-                                                    {kaprog.departemens.map(
-                                                        (name) => (
-                                                            <span
-                                                                key={name}
-                                                                className="inline-flex rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary"
-                                                            >
-                                                                {name}
-                                                            </span>
-                                                        ),
-                                                    )}
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                {kaprog.departemens.length ===
+                                                0 ? (
+                                                    <span className="text-muted">
+                                                        —
+                                                    </span>
+                                                ) : (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {kaprog.departemens.map(
+                                                            (name) => (
+                                                                <span
+                                                                    key={name}
+                                                                    className="inline-flex rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary"
+                                                                >
+                                                                    {name}
+                                                                </span>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="py-3 pr-2 pl-3">
+                                                <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                                                    <Link
+                                                        href={edit.url(
+                                                            kaprog.id,
+                                                        )}
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                        aria-label={`Edit ${kaprog.name}`}
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            remove(kaprog)
+                                                        }
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
+                                                        aria-label={`Hapus ${kaprog.name}`}
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </button>
                                                 </div>
-                                            )}
-                                        </td>
-                                        <td className="py-3 pr-2 pl-3">
-                                            <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                                                <Link
-                                                    href={edit.url(kaprog.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Edit ${kaprog.name}`}
-                                                >
-                                                    <Pencil className="size-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        remove(kaprog)
-                                                    }
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
-                                                    aria-label={`Hapus ${kaprog.name}`}
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
                 )}
 
                 <Pagination meta={kaprogs} />

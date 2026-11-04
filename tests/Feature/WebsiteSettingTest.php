@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Setting;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 class WebsiteSettingTest extends TestCase
@@ -127,7 +129,7 @@ class WebsiteSettingTest extends TestCase
 
     public function test_dynamic_popup_is_shared_when_active(): void
     {
-        \App\Models\Setting::query()->firstOrCreate([])->update([
+        Setting::query()->firstOrCreate([])->update([
             'popup_active' => true,
             'popup_icon' => 'sparkles',
             'popup_title' => 'Info Aktif',
@@ -140,7 +142,7 @@ class WebsiteSettingTest extends TestCase
 
         $this->get('/')
             ->assertOk()
-            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('dynamicPopup.active', true)
                 ->where('dynamicPopup.icon', 'sparkles')
                 ->where('dynamicPopup.title', 'Info Aktif')
@@ -152,13 +154,13 @@ class WebsiteSettingTest extends TestCase
 
     public function test_dynamic_popup_is_null_when_inactive(): void
     {
-        \App\Models\Setting::query()->firstOrCreate([])->update([
+        Setting::query()->firstOrCreate([])->update([
             'popup_active' => false,
         ]);
 
         $this->get('/')
             ->assertOk()
-            ->assertInertia(fn (\Inertia\Testing\AssertableInertia $page) => $page
+            ->assertInertia(fn (AssertableInertia $page) => $page
                 ->where('dynamicPopup', null)
             );
     }

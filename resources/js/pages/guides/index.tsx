@@ -293,7 +293,7 @@ export default function GuidesIndex({ guides, categories = [], can }: Props) {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Cari panduan…"
-                            className="w-full rounded-2xl border border-line bg-surface py-3 pr-10 pl-11 text-sm text-ink placeholder:text-muted shadow-2xs transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                            className="w-full rounded-2xl border border-line bg-surface py-3 pr-10 pl-11 text-sm text-ink shadow-2xs transition-colors placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
                         />
                         {searchQuery && (
                             <button
@@ -438,7 +438,9 @@ export default function GuidesIndex({ guides, categories = [], can }: Props) {
                                                 <button
                                                     type="button"
                                                     onClick={() =>
-                                                        toggleAccordion(guide.id)
+                                                        toggleAccordion(
+                                                            guide.id,
+                                                        )
                                                     }
                                                     aria-label={
                                                         isOpen
@@ -513,7 +515,8 @@ export default function GuidesIndex({ guides, categories = [], can }: Props) {
                                                         <FileText className="size-4 shrink-0 text-primary" />
                                                         <span className="truncate text-xs font-medium text-ink">
                                                             Dokumen Pendukung (
-                                                            {guide.type ?? 'PDF'}
+                                                            {guide.type ??
+                                                                'PDF'}
                                                             )
                                                         </span>
                                                     </div>

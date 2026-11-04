@@ -4,10 +4,8 @@ import {
     Building2,
     Check,
     CheckCircle2,
-    ExternalLink,
     Eye,
     EyeOff,
-    FileSpreadsheet,
     IdCard,
     Info,
     LoaderCircle,
@@ -15,7 +13,7 @@ import {
     ShieldCheck,
     UserCircle2,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ChangeEvent, ReactNode } from 'react';
 import { update as updatePassword } from '@/actions/App/Http/Controllers/PasswordController';
 import {
@@ -202,16 +200,17 @@ export default function ProfileEdit({
     const isPembimbing = roles.includes('pembimbing');
     const isAdmin = roles.includes('admin');
 
-    const [activeTab, setActiveTab] = useState<'account' | 'industry'>(
-        'account',
-    );
+    const [activeTab, setActiveTab] = useState<'account' | 'industry'>(() => {
+        if (typeof window !== 'undefined' && isPembimbing) {
+            const params = new URLSearchParams(window.location.search);
 
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('tab') === 'industry' && isPembimbing) {
-            setActiveTab('industry');
+            if (params.get('tab') === 'industry') {
+                return 'industry';
+            }
         }
-    }, [isPembimbing]);
+
+        return 'account';
+    });
 
     const [password, setPassword] = useState('');
     const [confirmation, setConfirmation] = useState('');
@@ -275,7 +274,8 @@ export default function ProfileEdit({
     }, [industryForm]);
 
     const filledDudiCount = useMemo(() => {
-        return dudiFields.filter((f) => f.val && f.val.trim().length > 0).length;
+        return dudiFields.filter((f) => f.val && f.val.trim().length > 0)
+            .length;
     }, [dudiFields]);
 
     const progressPercentage = Math.round(
@@ -362,7 +362,9 @@ export default function ProfileEdit({
                                                 : 'bg-amber-100 text-amber-700'
                                         }`}
                                     >
-                                        {industry.complete ? 'Lengkap' : `${progressPercentage}%`}
+                                        {industry.complete
+                                            ? 'Lengkap'
+                                            : `${progressPercentage}%`}
                                     </span>
                                 )}
                             </button>
@@ -724,7 +726,8 @@ export default function ProfileEdit({
                                     Belum Terhubung dengan Data Industri
                                 </p>
                                 <p className="text-xs">
-                                    Akun Anda belum dikaitkan dengan data industri oleh Administrator/Kaprog.
+                                    Akun Anda belum dikaitkan dengan data
+                                    industri oleh Administrator/Kaprog.
                                 </p>
                             </div>
                         ) : (
@@ -732,24 +735,28 @@ export default function ProfileEdit({
                                 {/* Alert Pengingat e-Rapor */}
                                 <div
                                     className={`relative flex items-start gap-3 rounded-2xl border p-4 sm:p-5 ${
-                                        industry.complete || progressPercentage === 100
+                                        industry.complete ||
+                                        progressPercentage === 100
                                             ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
                                             : 'border-amber-200 bg-amber-50 text-amber-900'
                                     }`}
                                 >
-                                    {industry.complete || progressPercentage === 100 ? (
+                                    {industry.complete ||
+                                    progressPercentage === 100 ? (
                                         <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-emerald-600" />
                                     ) : (
                                         <Info className="mt-0.5 size-5 shrink-0 text-amber-600" />
                                     )}
                                     <div className="flex-1 text-sm">
                                         <h4 className="font-bold">
-                                            {industry.complete || progressPercentage === 100
+                                            {industry.complete ||
+                                            progressPercentage === 100
                                                 ? 'Data Profil Industri Lengkap'
                                                 : 'Pemberitahuan Kelengkapan Data Industri (DUDI)'}
                                         </h4>
                                         <p className="mt-1 text-xs leading-relaxed opacity-90">
-                                            {industry.complete || progressPercentage === 100
+                                            {industry.complete ||
+                                            progressPercentage === 100
                                                 ? 'Terima kasih, seluruh rincian informasi data industri telah lengkap untuk kebutuhan sinkronisasi e-Rapor Kemendikdasmen.'
                                                 : 'Harap melengkapi data Profil Industri (DUDI) di bawah ini. Fitur kebutuhan input data profil industri ini diperuntukkan melengkapi data inputan e-Rapor Kemendikdasmen.'}
                                         </p>
@@ -780,7 +787,9 @@ export default function ProfileEdit({
                                                     ? 'bg-emerald-500'
                                                     : 'bg-primary'
                                             }`}
-                                            style={{ width: `${progressPercentage}%` }}
+                                            style={{
+                                                width: `${progressPercentage}%`,
+                                            }}
                                         />
                                     </div>
 
@@ -792,7 +801,8 @@ export default function ProfileEdit({
                                                     .filter(
                                                         (f) =>
                                                             !f.val ||
-                                                            f.val.trim().length === 0,
+                                                            f.val.trim()
+                                                                .length === 0,
                                                     )
                                                     .map((f) => f.label)
                                                     .join(', ')}
@@ -825,10 +835,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="nib"
                                                             name="nib"
-                                                            value={industryForm.nib}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.nib
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="Nomor Induk Berusaha"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
 
@@ -842,10 +858,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="name"
                                                             name="name"
-                                                            value={industryForm.name}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.name
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="Nama PT / Studio / Perusahaan"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                             required
                                                         />
                                                     </Field>
@@ -860,10 +882,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="bidang"
                                                             name="bidang"
-                                                            value={industryForm.bidang}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.bidang
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="cth. Teknologi Informasi / Rekayasa Perangkat Lunak"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                             required
                                                         />
                                                     </Field>
@@ -878,10 +906,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="npwp"
                                                             name="npwp"
-                                                            value={industryForm.npwp}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.npwp
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="NPWP Perusahaan"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
 
@@ -897,10 +931,16 @@ export default function ProfileEdit({
                                                             id="alamat"
                                                             name="alamat"
                                                             rows={2}
-                                                            value={industryForm.alamat}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.alamat
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="Jalan, Gedung, No. Kantor"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                             required
                                                         />
                                                     </Field>
@@ -914,10 +954,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="rt"
                                                             name="rt"
-                                                            value={industryForm.rt}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.rt
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="cth. 001"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
 
@@ -930,10 +976,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="rw"
                                                             name="rw"
-                                                            value={industryForm.rw}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.rw
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="cth. 005"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
 
@@ -946,10 +998,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="dusun"
                                                             name="dusun"
-                                                            value={industryForm.dusun}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.dusun
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="Nama Dusun / Lingkungan"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
 
@@ -962,10 +1020,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="kelurahan"
                                                             name="kelurahan"
-                                                            value={industryForm.kelurahan}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.kelurahan
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="Desa atau Kelurahan"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
 
@@ -978,10 +1042,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="kecamatan"
                                                             name="kecamatan"
-                                                            value={industryForm.kecamatan}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.kecamatan
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="Kecamatan"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
 
@@ -994,10 +1064,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="kode_pos"
                                                             name="kode_pos"
-                                                            value={industryForm.kode_pos}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.kode_pos
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="cth. 40123"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
 
@@ -1012,10 +1088,16 @@ export default function ProfileEdit({
                                                             <input
                                                                 id="latitude"
                                                                 name="latitude"
-                                                                value={industryForm.latitude}
-                                                                onChange={handleIndustryChange}
+                                                                value={
+                                                                    industryForm.latitude
+                                                                }
+                                                                onChange={
+                                                                    handleIndustryChange
+                                                                }
                                                                 placeholder="-6.xxxxx"
-                                                                className={inputClass}
+                                                                className={
+                                                                    inputClass
+                                                                }
                                                             />
                                                             <MapPin className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted" />
                                                         </div>
@@ -1032,10 +1114,16 @@ export default function ProfileEdit({
                                                             <input
                                                                 id="longitude"
                                                                 name="longitude"
-                                                                value={industryForm.longitude}
-                                                                onChange={handleIndustryChange}
+                                                                value={
+                                                                    industryForm.longitude
+                                                                }
+                                                                onChange={
+                                                                    handleIndustryChange
+                                                                }
                                                                 placeholder="107.xxxxx"
-                                                                className={inputClass}
+                                                                className={
+                                                                    inputClass
+                                                                }
                                                             />
                                                             <MapPin className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted" />
                                                         </div>
@@ -1051,10 +1139,16 @@ export default function ProfileEdit({
                                                             id="email"
                                                             name="email"
                                                             type="email"
-                                                            value={industryForm.email}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.email
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="hrd@perusahaan.com"
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
 
@@ -1068,10 +1162,16 @@ export default function ProfileEdit({
                                                         <input
                                                             id="website"
                                                             name="website"
-                                                            value={industryForm.website}
-                                                            onChange={handleIndustryChange}
+                                                            value={
+                                                                industryForm.website
+                                                            }
+                                                            onChange={
+                                                                handleIndustryChange
+                                                            }
                                                             placeholder="https://..."
-                                                            className={inputClass}
+                                                            className={
+                                                                inputClass
+                                                            }
                                                         />
                                                     </Field>
                                                 </div>

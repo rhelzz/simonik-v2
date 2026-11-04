@@ -77,14 +77,17 @@ function EmotionBadge({ emotion }: { emotion: EmotionKey }) {
 
 function getAttendanceStatus(row: AttendanceRecord): string {
     const raw = (row.status ?? '').toLowerCase();
+
     if (raw === 'hadir' || raw === 'masuk') {
         if (row.isLate || (row.lateMinutes !== null && row.lateMinutes > 0)) {
             return 'terlambat';
         }
+
         if (!row.departureTime) {
             return 'belum-lengkap';
         }
     }
+
     return row.status ?? '';
 }
 
@@ -157,16 +160,21 @@ export default function AttendanceIndex({
                                                     <span
                                                         className={cn(
                                                             'inline-flex rounded-full px-2.5 py-1 text-xs font-semibold',
-                                                            attendanceStyle(status),
+                                                            attendanceStyle(
+                                                                status,
+                                                            ),
                                                         )}
                                                     >
-                                                        {attendanceLabel(status)}
+                                                        {attendanceLabel(
+                                                            status,
+                                                        )}
                                                     </span>
                                                 </td>
                                                 <td className="py-3 text-ink/80">
                                                     <div className="flex flex-wrap items-center gap-1.5">
                                                         <span>
-                                                            {row.arrivalTime ?? '—'}
+                                                            {row.arrivalTime ??
+                                                                '—'}
                                                         </span>
                                                         {row.isSuspect && (
                                                             <span
@@ -182,13 +190,19 @@ export default function AttendanceIndex({
                                                     {row.departureTime ?? '—'}
                                                 </td>
                                                 <td className="py-3 text-ink/80">
-                                                    {row.lateMinutes !== null ? (
+                                                    {row.lateMinutes !==
+                                                    null ? (
                                                         row.lateMinutes > 0 ? (
                                                             <span className="inline-flex rounded bg-orange-500/15 px-2 py-0.5 text-xs font-semibold text-orange-600">
-                                                                {row.lateMinutes} menit terlambat
+                                                                {
+                                                                    row.lateMinutes
+                                                                }{' '}
+                                                                menit terlambat
                                                             </span>
                                                         ) : (
-                                                            <span className="text-muted">Tepat waktu</span>
+                                                            <span className="text-muted">
+                                                                Tepat waktu
+                                                            </span>
                                                         )
                                                     ) : (
                                                         '—'
@@ -196,7 +210,9 @@ export default function AttendanceIndex({
                                                 </td>
                                                 <td className="py-3 text-right">
                                                     <Link
-                                                        href={showUrl.url(row.id)}
+                                                        href={showUrl.url(
+                                                            row.id,
+                                                        )}
                                                         className="inline-grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-canvas hover:text-primary"
                                                         aria-label="Lihat detail"
                                                     >

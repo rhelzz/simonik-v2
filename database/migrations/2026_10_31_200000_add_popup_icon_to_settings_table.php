@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('settings', function (Blueprint $table) {
-            if (!Schema::hasColumn('settings', 'popup_icon')) {
+            if (! Schema::hasColumn('settings', 'popup_icon')) {
                 $table->string('popup_icon')->default('smartphone')->after('popup_active');
             }
         });

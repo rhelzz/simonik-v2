@@ -7,6 +7,7 @@ use App\Models\Teacher;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -148,7 +149,7 @@ class UserManagementTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password', $target->fresh()->password));
+        $this->assertTrue(Hash::check('password', $target->fresh()->password));
     }
 
     public function test_admin_cannot_reset_their_own_password(): void
@@ -174,8 +175,8 @@ class UserManagementTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password', $u1->fresh()->password));
-        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('password', $u2->fresh()->password));
+        $this->assertTrue(Hash::check('password', $u1->fresh()->password));
+        $this->assertTrue(Hash::check('password', $u2->fresh()->password));
     }
 
     public function test_admin_can_delete_user(): void

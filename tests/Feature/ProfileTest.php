@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Industry;
+use App\Models\Pembimbing;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -106,8 +108,8 @@ class ProfileTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('pembimbing');
 
-        $pembimbing = \App\Models\Pembimbing::factory()->create(['user_id' => $user->id]);
-        $industry = \App\Models\Industry::factory()->create([
+        $pembimbing = Pembimbing::factory()->create(['user_id' => $user->id]);
+        $industry = Industry::factory()->create([
             'pembimbing_id' => $pembimbing->id,
             'name' => 'PT Lama',
             'alamat' => 'Alamat lama',

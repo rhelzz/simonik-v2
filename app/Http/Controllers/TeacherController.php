@@ -231,6 +231,7 @@ class TeacherController extends Controller
             foreach ($teachers as $teacher) {
                 if ($teacher->students()->exists()) {
                     $blocked++;
+
                     continue;
                 }
 

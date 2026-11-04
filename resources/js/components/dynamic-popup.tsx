@@ -98,9 +98,7 @@ export function DynamicPopup() {
                 <PopupIcon name={dynamicPopup.icon} className="size-6" />
             </div>
 
-            <h3 className="text-sm font-bold text-ink">
-                {dynamicPopup.title}
-            </h3>
+            <h3 className="text-sm font-bold text-ink">{dynamicPopup.title}</h3>
 
             {dynamicPopup.description && (
                 <p className="mt-1.5 text-xs text-muted">

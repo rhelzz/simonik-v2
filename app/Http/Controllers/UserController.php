@@ -170,6 +170,7 @@ class UserController extends Controller
             foreach ($users as $user) {
                 if ($user->id === Auth::id() || ($user->teachers && $user->teachers->students()->exists())) {
                     $blocked++;
+
                     continue;
                 }
                 $user->delete();

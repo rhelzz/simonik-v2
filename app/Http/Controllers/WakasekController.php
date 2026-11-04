@@ -163,6 +163,7 @@ class WakasekController extends Controller
             foreach ($wakaseks as $wakasek) {
                 if ($wakasek->id === Auth::id()) {
                     $blocked++;
+
                     continue;
                 }
 

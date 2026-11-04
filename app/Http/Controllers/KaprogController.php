@@ -193,6 +193,7 @@ class KaprogController extends Controller
             foreach ($kaprogs as $kaprog) {
                 if ($kaprog->id === Auth::id()) {
                     $blocked++;
+
                     continue;
                 }
 

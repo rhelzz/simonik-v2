@@ -317,82 +317,87 @@ export default function ParentsIndex({ parents, filters }: ParentsIndexProps) {
                                                 />
                                             </td>
                                             <td className="py-3 pr-3 pl-2">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar name={parent.nama} />
-                                                <div className="min-w-0">
-                                                    <p className="truncate font-semibold text-ink">
-                                                        {parent.nama}
-                                                    </p>
-                                                    <p className="truncate text-xs text-muted">
-                                                        {parent.phoneNumber}
-                                                        {parent.email
-                                                            ? ` · ${parent.email}`
-                                                            : ''}
-                                                    </p>
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar
+                                                        name={parent.nama}
+                                                    />
+                                                    <div className="min-w-0">
+                                                        <p className="truncate font-semibold text-ink">
+                                                            {parent.nama}
+                                                        </p>
+                                                        <p className="truncate text-xs text-muted">
+                                                            {parent.phoneNumber}
+                                                            {parent.email
+                                                                ? ` · ${parent.email}`
+                                                                : ''}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-3 text-ink/80">
-                                            {parent.gender ?? (
-                                                <span className="text-muted">
-                                                    —
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-3 text-ink/80">
-                                            {parent.occupation ?? (
-                                                <span className="text-muted">
-                                                    —
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-3">
-                                            {parent.students.length === 0 ? (
-                                                <span className="text-muted">
-                                                    —
-                                                </span>
-                                            ) : (
-                                                <div className="flex flex-wrap gap-1">
-                                                    {parent.students.map(
-                                                        (name, idx) => (
-                                                            <span
-                                                                key={idx}
-                                                                className="inline-flex rounded-full bg-canvas px-2.5 py-0.5 text-xs font-medium text-ink/70"
-                                                            >
-                                                                {name}
-                                                            </span>
-                                                        ),
-                                                    )}
+                                            </td>
+                                            <td className="px-3 py-3 text-ink/80">
+                                                {parent.gender ?? (
+                                                    <span className="text-muted">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-3 py-3 text-ink/80">
+                                                {parent.occupation ?? (
+                                                    <span className="text-muted">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                {parent.students.length ===
+                                                0 ? (
+                                                    <span className="text-muted">
+                                                        —
+                                                    </span>
+                                                ) : (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {parent.students.map(
+                                                            (name, idx) => (
+                                                                <span
+                                                                    key={idx}
+                                                                    className="inline-flex rounded-full bg-canvas px-2.5 py-0.5 text-xs font-medium text-ink/70"
+                                                                >
+                                                                    {name}
+                                                                </span>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="py-3 pr-2 pl-3">
+                                                <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
+                                                    <Link
+                                                        href={edit.url(
+                                                            parent.id,
+                                                        )}
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
+                                                        aria-label={`Edit ${parent.nama}`}
+                                                    >
+                                                        <Pencil className="size-4" />
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            remove(parent)
+                                                        }
+                                                        className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
+                                                        aria-label={`Hapus ${parent.nama}`}
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </button>
                                                 </div>
-                                            )}
-                                        </td>
-                                        <td className="py-3 pr-2 pl-3">
-                                            <div className="flex items-center justify-end gap-1 opacity-60 transition-opacity group-hover:opacity-100">
-                                                <Link
-                                                    href={edit.url(parent.id)}
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-primary-soft hover:text-primary"
-                                                    aria-label={`Edit ${parent.nama}`}
-                                                >
-                                                    <Pencil className="size-4" />
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        remove(parent)
-                                                    }
-                                                    className="grid size-8 place-items-center rounded-lg text-muted transition-colors hover:bg-red-50 hover:text-red-500"
-                                                    aria-label={`Hapus ${parent.nama}`}
-                                                >
-                                                    <Trash2 className="size-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
                 )}
 
                 <Pagination meta={parents} />
